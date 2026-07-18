@@ -131,6 +131,11 @@
   transform: rotate(-45deg) translate(5px, -5px);
 }
 
+.downloadIcon {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .mobileCta {
   display: none;
 }

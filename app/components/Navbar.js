@@ -1,8 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import styles from "./Navbar.module.css";
+
+const STORE_LINKS = {
+  ios: "https://apps.apple.com/app/pumpfun/id0000000000",
+  android: "https://play.google.com/store/apps/details?id=com.pumpfun",
+  fallback: "https://pumpfun.com",
+};
+
+function getPumpFunUrl() {
+  if (typeof navigator === "undefined") return STORE_LINKS.fallback;
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/i.test(ua)) return STORE_LINKS.ios;
+  if (/Android/i.test(ua)) return STORE_LINKS.android;
+  return STORE_LINKS.fallback;
+}
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -51,6 +65,9 @@ export default function Navbar() {
           <a href="#developers" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Developers
           </a>
+          <a href="/leaderboard" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+            Leaderboard
+          </a>
           <a href="#how-it-works" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             How It Works
           </a>
@@ -58,12 +75,13 @@ export default function Navbar() {
             Stats
           </a>
           <a
-            href="https://pumpfun.com"
+            href={getPumpFunUrl()}
             target="_blank"
             rel="noopener noreferrer"
             className={`btn-primary ${styles.mobileCta}`}
             onClick={() => setMobileOpen(false)}
           >
+            <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
             Download PumpFun
           </a>
         </div>
@@ -71,8 +89,12 @@ export default function Navbar() {
         <div className={styles.navActions}>
           <button
             className={styles.themeToggle}
-            onClick={toggleTheme}
-            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            onClick={() => {
+              const next = theme === "dark" ? "light" : "dark";
+              setTheme(next);
+              document.documentElement.setAttribute("data-theme", next);
+            }}
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -94,16 +116,12 @@ export default function Navbar() {
           </button>
 
           <a
-            href="https://pumpfun.com"
+            href={getPumpFunUrl()}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary btn-sm"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
+            <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
             Download PumpFun
           </a>
 

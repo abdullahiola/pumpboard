@@ -1,0 +1,401 @@
+.section {
+  padding: 100px 0;
+  position: relative;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Header */
+.header {
+  margin-bottom: 40px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--pb-text-primary);
+}
+
+.title svg {
+  color: #D4A537;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(13, 147, 115, 0.12);
+  color: var(--pb-accent);
+}
+
+.subtitle {
+  color: var(--pb-text-muted);
+  font-size: 0.95rem;
+}
+
+/* Podium */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  gap: 16px;
+  margin-bottom: 40px;
+  align-items: end;
+}
+
+.podiumCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  transition: all 0.2s;
+}
+
+.podiumCard:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.podium1 {
+  padding: 32px 16px 24px;
+  border-color: rgba(212, 165, 55, 0.2);
+  background: linear-gradient(180deg, rgba(212, 165, 55, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.podium2 {
+  border-color: rgba(192, 192, 192, 0.15);
+}
+
+.podium3 {
+  border-color: rgba(205, 127, 50, 0.15);
+}
+
+.podiumMedal {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+.podium1 .podiumMedal {
+  font-size: 1.8rem;
+}
+
+.podiumAvatar {
+  margin-bottom: 10px;
+}
+
+.podiumImg {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.podiumInitials {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pb-accent), #4ecdc4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.podiumInitialsLg {
+  width: 64px;
+  height: 64px;
+  font-size: 1rem;
+}
+
+.podiumName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.podiumType {
+  font-size: 0.7rem;
+  color: var(--pb-text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.podiumAmount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--pb-accent);
+}
+
+.podium1 .podiumAmount {
+  font-size: 1.3rem;
+}
+
+.podiumSol {
+  font-size: 0.75rem;
+  color: var(--pb-text-muted);
+  margin-top: 2px;
+}
+
+/* Table */
+.tableWrap {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.table th {
+  padding: 12px 16px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--pb-text-muted);
+  text-align: left;
+  font-weight: 600;
+}
+
+.thRank {
+  width: 48px;
+  text-align: center !important;
+}
+
+.thRight {
+  text-align: right !important;
+}
+
+.table td {
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.table tbody tr {
+  transition: background 0.15s;
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.topRow {
+  background: rgba(13, 147, 115, 0.03);
+}
+
+/* Rank */
+.rank {
+  text-align: center;
+}
+
+.medalCell {
+  font-size: 1.1rem;
+}
+
+.rankNum {
+  font-size: 0.82rem;
+  color: var(--pb-text-muted);
+  font-weight: 600;
+}
+
+/* Profile Cell */
+.profileCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tableAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.tableInitials {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pb-accent), #4ecdc4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.profileName {
+  font-weight: 600;
+  color: var(--pb-text-primary);
+  font-size: 0.88rem;
+}
+
+.profileHandle {
+  font-size: 0.72rem;
+  color: var(--pb-text-muted);
+}
+
+/* Type Pill */
+.typePill {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.developer {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.creator {
+  background: rgba(236, 72, 153, 0.12);
+  color: #f472b6;
+}
+
+/* Amount */
+.amountCell {
+  text-align: right;
+  font-weight: 700;
+  color: var(--pb-accent);
+  font-size: 0.9rem;
+}
+
+.solCell {
+  text-align: right;
+  color: var(--pb-text-muted);
+  font-size: 0.82rem;
+}
+
+/* Skeleton */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonRow {
+  height: 48px;
+  border-radius: 8px;
+  background: var(--pb-border);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .podium {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .podiumCard {
+    flex-direction: row;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .podiumMedal {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+  }
+
+  .podium1 .podiumMedal {
+    font-size: 1.4rem;
+  }
+
+  .podium1 {
+    padding: 16px;
+  }
+
+  .podiumAvatar {
+    margin-bottom: 0;
+  }
+
+  .podiumImg {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .podiumInitials,
+  .podiumInitialsLg {
+    width: 40px;
+    height: 40px;
+    font-size: 0.8rem;
+  }
+
+  .podiumName {
+    text-align: left;
+    flex: 1;
+  }
+
+  .podiumType {
+    display: none;
+  }
+
+  .podiumAmount {
+    font-size: 1rem;
+  }
+
+  .podium1 .podiumAmount {
+    font-size: 1.1rem;
+  }
+
+  .podiumSol {
+    display: none;
+  }
+
+  .table th:nth-child(3),
+  .table td:nth-child(3) {
+    display: none;
+  }
+
+  .table th:nth-child(5),
+  .table td:nth-child(5) {
+    display: none;
+  }
+}

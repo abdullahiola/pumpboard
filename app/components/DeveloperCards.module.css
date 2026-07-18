@@ -219,6 +219,29 @@
   color: var(--pb-accent);
 }
 
+.socialLinks {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.socialLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--pb-accent-dim);
+  color: var(--pb-text-secondary);
+  transition: all var(--pb-transition);
+}
+
+.socialLink:hover {
+  background: var(--pb-accent);
+  color: #fff;
+}
+
 .rankBadge {
   width: 30px;
   height: 30px;
@@ -260,26 +283,52 @@
   background: rgba(13, 147, 115, 0.1);
   border: 1px solid rgba(13, 147, 115, 0.15);
 }
-
-/* Stats Row */
-.statsRow {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 18px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--pb-border);
-}
-
-.stat {
+/* Repo + Stars Row */
+.repoRow {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  color: var(--pb-text-muted);
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 16px;
+  text-decoration: none;
+  transition: all var(--pb-transition);
 }
 
-.stat svg {
-  color: var(--pb-text-muted);
+.repoRow:hover {
+  border-color: rgba(13, 147, 115, 0.25);
+  background: rgba(13, 147, 115, 0.05);
+}
+
+.repoName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--pb-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.repoRow:hover .repoName {
+  color: var(--pb-accent);
+}
+
+.starBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(212, 165, 55, 0.1);
+  color: #D4A537;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.starBadge svg {
+  fill: #D4A537;
 }
 
 /* Claimed Section */
@@ -379,7 +428,23 @@
 
 @media (max-width: 600px) {
   .grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+
+  .grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .grid > :global(*) {
+    flex: 0 0 85%;
+    scroll-snap-align: center;
+    min-width: 0;
   }
 
   .filterBar {
@@ -389,5 +454,112 @@
   .filterBtn {
     padding: 6px 14px;
     font-size: 0.8rem;
+  }
+}
+
+/* Swipe hint — mobile only */
+.swipeHint {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .swipeHint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--pb-text-muted);
+    font-size: 0.8rem;
+    margin-top: 12px;
+    animation: pulseHint 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulseHint {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* All loaded message */
+.allLoaded {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--pb-text-muted);
+  font-size: 0.88rem;
+  padding: 12px;
+}
+
+/* Avatar images */
+.avatarImg,
+.leaderAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Loading skeleton */
+.loadingState {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.skeletonCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--pb-border);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeletonLine {
+  height: 14px;
+  border-radius: 6px;
+  background: var(--pb-border);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* Error state */
+.errorState {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--pb-text-secondary);
+}
+
+.errorState code {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: var(--pb-accent-dim);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--pb-text-muted);
+}
+
+@media (max-width: 968px) {
+  .loadingState {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .loadingState {
+    grid-template-columns: 1fr;
   }
 }

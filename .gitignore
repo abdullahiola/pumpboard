@@ -54,3 +54,9 @@ next-env.d.ts
 
 # OS files
 Thumbs.db
+
+# Python / backend
+__pycache__/
+*.pyc
+backend/venv/
+backend/.env
