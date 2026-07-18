@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    container_name: pumpboard-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/developers')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
