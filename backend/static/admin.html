@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PumpBoard Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0f1c;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #0d9373, #4ecdc4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      background: rgba(13, 147, 115, 0.15);
+      color: #4ecdc4;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: #a0a0a0;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .tab:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .tab.active {
+      background: linear-gradient(135deg, #0d9373, #0ba37f);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    /* Forms */
+    .form-section {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .form-section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 0.8rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: #0d9373;
+    }
+
+    .form-group textarea { resize: vertical; min-height: 60px; }
+
+    .form-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0d9373, #0ba37f);
+      color: #fff;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: #a0a0a0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+    /* Table */
+    .table-section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    td {
+      padding: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.9rem;
+    }
+
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .avatar-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar-cell img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .avatar-cell .initials {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0d9373, #4ecdc4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .type-badge {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .type-badge.developer {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .type-badge.creator {
+      background: rgba(236, 72, 153, 0.15);
+      color: #f472b6;
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .delete-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #ef4444;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      z-index: 100;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #0d9373; color: #fff; }
+    .toast.error { background: #ef4444; color: #fff; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .tabs { flex-wrap: wrap; }
+      table { font-size: 0.8rem; }
+      td, th { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚡ PumpBoard Admin</h1>
+      <span class="badge" id="countBadge">0 profiles</span>
+    </header>
+
+    <!-- Add Form -->
+    <div class="form-section">
+      <h2>Add Profile</h2>
+      <div class="tabs">
+        <button class="tab active" onclick="switchForm('developer')">Developer</button>
+        <button class="tab" onclick="switchForm('creator')">Creator</button>
+      </div>
+
+      <!-- Developer Form -->
+      <form id="devForm" onsubmit="addDeveloper(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>GitHub Username *</label>
+            <input type="text" id="dev_github" placeholder="e.g. torvalds" required />
+          </div>
+          <div class="form-group">
+            <label>Repo (owner/repo)</label>
+            <input type="text" id="dev_repo" placeholder="e.g. torvalds/linux" />
+          </div>
+          <div class="form-group">
+            <label>X Handle</label>
+            <input type="text" id="dev_x" placeholder="e.g. abiosoft" />
+          </div>
+          <div class="form-group">
+            <label>Tags (comma-separated)</label>
+            <input type="text" id="dev_tags" placeholder="e.g. Rust, Solana, DeFi" />
+          </div>
+          <div class="form-group">
+            <label>Total Claimed (USD)</label>
+            <input type="number" id="dev_claimed" placeholder="0" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label>SOL Amount</label>
+            <input type="number" id="dev_sol" placeholder="0" step="0.01" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">+ Add Developer</button>
+          <button type="reset" class="btn btn-secondary">Clear</button>
+        </div>
+      </form>
+
+      <!-- Creator Form -->
+      <form id="creatorForm" style="display:none" onsubmit="addCreator(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Name *</label>
+            <input type="text" id="cr_name" placeholder="e.g. Jane Doe" required />
+          </div>
+          <div class="form-group">
+            <label>Avatar URL</label>
+            <input type="text" id="cr_avatar" placeholder="https://..." />
+          </div>
+          <div class="form-group">
+            <label>Instagram Handle</label>
+            <input type="text" id="cr_instagram" placeholder="e.g. janedoe" />
+          </div>
+          <div class="form-group">
+            <label>TikTok Handle</label>
+            <input type="text" id="cr_tiktok" placeholder="e.g. janedoecrypto" />
+          </div>
+          <div class="form-group full">
+            <label>Bio</label>
+            <textarea id="cr_bio" placeholder="Short bio..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Tags (comma-separated)</label>
+            <input type="text" id="cr_tags" placeholder="e.g. Content, Community" />
+          </div>
+          <div class="form-group">
+            <label>Total Claimed (USD)</label>
+            <input type="number" id="cr_claimed" placeholder="0" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label>SOL Amount</label>
+            <input type="number" id="cr_sol" placeholder="0" step="0.01" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">+ Add Creator</button>
+          <button type="reset" class="btn btn-secondary">Clear</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Profiles Table -->
+    <div class="table-section">
+      <h2>Current Profiles</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Profile</th>
+            <th>Type</th>
+            <th>Social</th>
+            <th>Repo</th>
+            <th>Claimed</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = window.location.origin;
+
+    function switchForm(type) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('devForm').style.display = type === 'developer' ? 'block' : 'none';
+      document.getElementById('creatorForm').style.display = type === 'creator' ? 'block' : 'none';
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function loadProfiles() {
+      try {
+        const res = await fetch(`${API}/api/developers`);
+        const devs = await res.json();
+        document.getElementById('countBadge').textContent = `${devs.length} profile${devs.length !== 1 ? 's' : ''}`;
+
+        if (devs.length === 0) {
+          document.getElementById('tableBody').innerHTML =
+            '<tr><td colspan="6" class="empty-state">No profiles yet. Add one above!</td></tr>';
+          return;
+        }
+
+        document.getElementById('tableBody').innerHTML = devs.map(dev => {
+          const identifier = dev.github || dev.name || '?';
+          const avatarHtml = dev.avatar_url
+            ? `<img src="${dev.avatar_url}" alt="${dev.name || dev.github}" />`
+            : `<div class="initials">${(dev.name || dev.github || '??').substring(0, 2).toUpperCase()}</div>`;
+
+          const socialHtml = dev.type === 'creator'
+            ? [dev.instagram ? `IG: @${dev.instagram}` : '', dev.tiktok ? `TT: @${dev.tiktok}` : ''].filter(Boolean).join(', ') || '—'
+            : `GH: @${dev.github}`;
+
+          const repoHtml = dev.repo
+            ? `<a href="https://github.com/${dev.repo}" target="_blank" style="color:#4ecdc4;text-decoration:none">${dev.repo.split('/')[1] || dev.repo}</a>`
+            : '—';
+
+          return `<tr>
+            <td><div class="avatar-cell">${avatarHtml}<span>${dev.name || dev.github}</span></div></td>
+            <td><span class="type-badge ${dev.type}">${dev.type}</span></td>
+            <td>${socialHtml}</td>
+            <td>${repoHtml}</td>
+            <td>$${(dev.totalClaimed || 0).toLocaleString()}</td>
+            <td><button class="delete-btn" onclick="deleteProfile('${identifier}', '${dev.type}')">Delete</button></td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="5" class="empty-state">Failed to load profiles.</td></tr>';
+      }
+    }
+
+    async function addDeveloper(e) {
+      e.preventDefault();
+      const body = {
+        github: document.getElementById('dev_github').value.trim(),
+        repo: document.getElementById('dev_repo').value.trim(),
+        x: document.getElementById('dev_x').value.trim(),
+        type: 'developer',
+        tags: document.getElementById('dev_tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        totalClaimed: parseFloat(document.getElementById('dev_claimed').value) || 0,
+        solAmount: parseFloat(document.getElementById('dev_sol').value) || 0,
+      };
+
+      try {
+        const res = await fetch(`${API}/api/developers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (res.status === 409) { showToast('Developer already exists!', 'error'); return; }
+        if (!res.ok) throw new Error();
+
+        showToast(`Added @${body.github}`);
+        e.target.reset();
+        loadProfiles();
+      } catch { showToast('Failed to add developer', 'error'); }
+    }
+
+    async function addCreator(e) {
+      e.preventDefault();
+      const body = {
+        type: 'creator',
+        name: document.getElementById('cr_name').value.trim(),
+        bio: document.getElementById('cr_bio').value.trim(),
+        avatar_url: document.getElementById('cr_avatar').value.trim(),
+        instagram: document.getElementById('cr_instagram').value.trim(),
+        tiktok: document.getElementById('cr_tiktok').value.trim(),
+        tags: document.getElementById('cr_tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        totalClaimed: parseFloat(document.getElementById('cr_claimed').value) || 0,
+        solAmount: parseFloat(document.getElementById('cr_sol').value) || 0,
+      };
+
+      try {
+        const res = await fetch(`${API}/api/developers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (res.status === 409) { showToast('Creator already exists!', 'error'); return; }
+        if (!res.ok) throw new Error();
+
+        showToast(`Added ${body.name}`);
+        e.target.reset();
+        loadProfiles();
+      } catch { showToast('Failed to add creator', 'error'); }
+    }
+
+    async function deleteProfile(identifier, type) {
+      if (!confirm(`Delete ${identifier}?`)) return;
+
+      try {
+        const res = await fetch(`${API}/api/developers/${encodeURIComponent(identifier)}`, {
+          method: 'DELETE',
+        });
+
+        if (!res.ok) throw new Error();
+        showToast(`Deleted ${identifier}`);
+        loadProfiles();
+      } catch { showToast('Failed to delete', 'error'); }
+    }
+
+    loadProfiles();
+  </script>
+</body>
+</html>

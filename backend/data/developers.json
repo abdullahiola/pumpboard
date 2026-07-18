@@ -1,0 +1,47 @@
+[
+  {
+    "github": "abiosoft",
+    "repo": "abiosoft/colima",
+    "type": "developer",
+    "x": "abiosoft",
+    "tags": ["Go", "Docker", "DevOps"],
+    "totalClaimed": 0,
+    "solAmount": 0
+  },
+  {
+    "github": "David-patrick-chuks",
+    "repo": "David-patrick-chuks/Riona-AI-Agent",
+    "type": "developer",
+    "x": "david_patrick01",
+    "tags": ["AI", "Python", "Agents"],
+    "totalClaimed": 0,
+    "solAmount": 0
+  },
+  {
+    "github": "vudovn",
+    "repo": "vudovn/ag-kit",
+    "type": "developer",
+    "x": "vudovn354",
+    "tags": ["TypeScript", "AI", "Tools"],
+    "totalClaimed": 0,
+    "solAmount": 0
+  },
+  {
+    "github": "Ashutoshx7",
+    "repo": "Ashutoshx7/VengenceUI",
+    "type": "developer",
+    "x": "Ashutosh_7x7",
+    "tags": ["UI", "React", "Design"],
+    "totalClaimed": 0,
+    "solAmount": 0
+  },
+  {
+    "github": "hacktivist123",
+    "repo": "hacktivist123/agent-session-resume",
+    "type": "developer",
+    "x": "coder_blvck",
+    "tags": ["AI", "Agents", "Python"],
+    "totalClaimed": 0,
+    "solAmount": 0
+  }
+]
