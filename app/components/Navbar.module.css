@@ -181,3 +181,44 @@
     display: none;
   }
 }
+
+/* Download dropdown */
+.downloadWrap {
+  position: relative;
+}
+
+.storeDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--pb-bg-card);
+  border: 1px solid var(--pb-border);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 180px;
+  box-shadow: var(--pb-shadow-lg);
+  z-index: 50;
+  animation: fadeInUp 0.2s ease;
+}
+
+.storeLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--pb-text-primary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.storeLink:hover {
+  background: var(--pb-bg-hover);
+}
+
+.storeLink svg {
+  color: var(--pb-accent);
+  flex-shrink: 0;
+}

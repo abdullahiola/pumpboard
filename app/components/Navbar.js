@@ -18,20 +18,21 @@ function getPumpFunUrl() {
   return null;
 }
 
-function handleDownloadClick(e) {
-  const url = getPumpFunUrl();
-  if (url) {
-    window.open(url, "_blank", "noopener,noreferrer");
-  } else {
-    e.preventDefault();
-    alert("PumpFun is only available on the App Store (iOS) and Google Play Store (Android).");
-  }
-}
-
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState("dark");
+  const [showStoreMenu, setShowStoreMenu] = useState(false);
+
+  const handleDownload = useCallback((e) => {
+    const url = getPumpFunUrl();
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      e.preventDefault();
+      setShowStoreMenu((prev) => !prev);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,7 +87,7 @@ export default function Navbar() {
           </a>
           <button
             className={`btn-primary ${styles.mobileCta}`}
-            onClick={(e) => { setMobileOpen(false); handleDownloadClick(e); }}
+            onClick={(e) => { setMobileOpen(false); handleDownload(e); }}
           >
             <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
             Download PumpFun
@@ -122,13 +123,27 @@ export default function Navbar() {
             )}
           </button>
 
-          <button
-            className="btn-primary btn-sm"
-            onClick={handleDownloadClick}
-          >
-            <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
-            Download PumpFun
-          </button>
+          <div className={styles.downloadWrap}>
+            <button
+              className="btn-primary btn-sm"
+              onClick={handleDownload}
+            >
+              <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
+              Download PumpFun
+            </button>
+            {showStoreMenu && (
+              <div className={styles.storeDropdown}>
+                <a href={STORE_LINKS.ios} target="_blank" rel="noopener noreferrer" className={styles.storeLink}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                  App Store
+                </a>
+                <a href={STORE_LINKS.android} target="_blank" rel="noopener noreferrer" className={styles.storeLink}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 2.27l1.443 1.443-2.462 2.462a7.472 7.472 0 011.996 5.075H21v2h-2.5v1.25a7.5 7.5 0 01-13 0V13.25H3v-2h2.5a7.472 7.472 0 011.996-5.075L5.034 3.713l1.443-1.443 2.77 2.77a7.468 7.468 0 015.506 0l2.77-2.77zM12 6a5.5 5.5 0 00-5.5 5.5v2a5.5 5.5 0 0011 0v-2A5.5 5.5 0 0012 6zm-2 5.5a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 112 0 1 1 0 01-2 0z"/></svg>
+                  Google Play
+                </a>
+              </div>
+            )}
+          </div>
 
           <button
             className={`${styles.burger} ${mobileOpen ? styles.burgerActive : ""}`}
