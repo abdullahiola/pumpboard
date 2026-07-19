@@ -26,25 +26,6 @@ export default function Contact() {
           </p>
         </section>
 
-        <section className={styles.section}>
-          <h2>Developer Onboarding</h2>
-          <p>
-            Want to be featured on PumpBoard? Send us your GitHub username and 
-            Solana wallet address, and we&apos;ll get you set up on the platform.
-          </p>
-          <p>
-            Email us at{" "}
-            <a href="mailto:developers@pumpboard.dev">developers@pumpboard.dev</a>
-          </p>
-        </section>
-
-        <section className={styles.section}>
-          <h2>Report an Issue</h2>
-          <p>
-            Found a bug or have a security concern? Please report it to{" "}
-            <a href="mailto:security@pumpboard.dev">security@pumpboard.dev</a>.
-          </p>
-        </section>
       </div>
     </div>
   );
