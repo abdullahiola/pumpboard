@@ -75,9 +75,9 @@ export default function Footer() {
             © {new Date().getFullYear()} PumpBoard. Built on Solana. Powered by PumpFun.
           </p>
           <div className={styles.bottomLinks}>
-            <a href="#" className={styles.bottomLink}>Privacy</a>
-            <a href="#" className={styles.bottomLink}>Terms</a>
-            <a href="#" className={styles.bottomLink}>Contact</a>
+            <a href="/privacy" className={styles.bottomLink}>Privacy</a>
+            <a href="/terms" className={styles.bottomLink}>Terms</a>
+            <a href="/contact" className={styles.bottomLink}>Contact</a>
           </div>
         </div>
       </div>
