@@ -326,15 +326,15 @@ async def admin_login_page():
 <title>PumpBoard Admin Login</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,sans-serif;background:#0a0f1c;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center}
-  .card{background:rgba(15,23,41,0.9);border:1px solid rgba(78,205,196,0.15);border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center}
-  h1{font-size:1.3rem;margin-bottom:8px;background:linear-gradient(135deg,#0d9373,#4ecdc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  body{font-family:-apple-system,sans-serif;background:#0a0f1c;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:rgba(15,23,41,0.9);border:1px solid rgba(78,205,196,0.15);border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center;margin:auto}
+  h1{font-size:1.3rem;margin-bottom:8px;background:linear-gradient(135deg,#0d9373,#4ecdc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
   p{color:#5a6f7e;font-size:0.85rem;margin-bottom:24px}
-  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid rgba(78,205,196,0.2);background:rgba(255,255,255,0.05);color:#e0e0e0;font-size:0.9rem;margin-bottom:16px}
-  input:focus{outline:none;border-color:rgba(78,205,196,0.5)}
-  button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#0d9373,#00d4aa);color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer}
+  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid rgba(78,205,196,0.2);background:rgba(255,255,255,0.05);color:#e0e0e0;font-size:0.9rem;margin-bottom:16px;outline:none}
+  input:focus{border-color:rgba(78,205,196,0.5)}
+  button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#0d9373,#00d4aa);color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;transition:opacity 0.2s}
   button:hover{opacity:0.9}
-  .err{color:#f87171;font-size:0.8rem;margin-top:8px;display:none}
+  .err{color:#f87171;font-size:0.8rem;margin-top:12px;display:none}
 </style></head><body>
 <div class="card">
   <h1>PumpBoard Admin</h1>

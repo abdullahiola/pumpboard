@@ -4,25 +4,47 @@
     "repo": "abiosoft/colima",
     "type": "developer",
     "x": "abiosoft",
-    "tags": ["Go", "Docker", "DevOps"],
-    "totalClaimed": 0,
-    "solAmount": 0
+    "tags": [
+      "Go",
+      "Docker",
+      "DevOps"
+    ],
+    "totalClaimed": 1286,
+    "solAmount": 0,
+    "name": "Abiola Ibrahim",
+    "instagram": "",
+    "tiktok": "",
+    "avatar_url": "https://avatars.githubusercontent.com/u/240448?v=4",
+    "bio": "Software Craftsman"
   },
   {
     "github": "David-patrick-chuks",
     "repo": "David-patrick-chuks/Riona-AI-Agent",
     "type": "developer",
     "x": "david_patrick01",
-    "tags": ["AI", "Python", "Agents"],
-    "totalClaimed": 0,
-    "solAmount": 0
+    "tags": [
+      "AI",
+      "Python",
+      "Agents"
+    ],
+    "totalClaimed": 3500,
+    "solAmount": 0,
+    "name": "David Patrick",
+    "instagram": "",
+    "tiktok": "",
+    "avatar_url": "https://avatars.githubusercontent.com/u/161928481?v=4",
+    "bio": "Developer & problem solver.\ud83d\udc7e || Building Ai Agent for FUN || 7x hackwinner"
   },
   {
     "github": "vudovn",
     "repo": "vudovn/ag-kit",
     "type": "developer",
     "x": "vudovn354",
-    "tags": ["TypeScript", "AI", "Tools"],
+    "tags": [
+      "TypeScript",
+      "AI",
+      "Tools"
+    ],
     "totalClaimed": 0,
     "solAmount": 0
   },
@@ -31,7 +53,11 @@
     "repo": "Ashutoshx7/VengenceUI",
     "type": "developer",
     "x": "Ashutosh_7x7",
-    "tags": ["UI", "React", "Design"],
+    "tags": [
+      "UI",
+      "React",
+      "Design"
+    ],
     "totalClaimed": 0,
     "solAmount": 0
   },
@@ -40,7 +66,11 @@
     "repo": "hacktivist123/agent-session-resume",
     "type": "developer",
     "x": "coder_blvck",
-    "tags": ["AI", "Agents", "Python"],
+    "tags": [
+      "AI",
+      "Agents",
+      "Python"
+    ],
     "totalClaimed": 0,
     "solAmount": 0
   }

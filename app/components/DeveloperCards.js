@@ -31,6 +31,7 @@ export default function DeveloperCards() {
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [solPrice, setSolPrice] = useState(null);
 
   useEffect(() => {
     async function fetchDevelopers() {
@@ -48,6 +49,18 @@ export default function DeveloperCards() {
     }
     fetchDevelopers();
   }, []);
+
+  useEffect(() => {
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd")
+      .then((r) => r.json())
+      .then((data) => setSolPrice(data.solana?.usd || null))
+      .catch(() => {});
+  }, []);
+
+  function usdToSol(usd) {
+    if (!solPrice || !usd) return null;
+    return (usd / solPrice).toFixed(2);
+  }
 
   const sortedDevs = [...developers].sort((a, b) => b.totalClaimed - a.totalClaimed);
 
@@ -144,6 +157,9 @@ export default function DeveloperCards() {
                   <span className={styles.leaderName}>{dev.name || dev.github}</span>
                   <span className={styles.leaderAmount}>
                     {formatUSD(dev.totalClaimed)} claimed
+                    {usdToSol(dev.totalClaimed) && (
+                      <> · {usdToSol(dev.totalClaimed)} SOL</>
+                    )}
                   </span>
                 </div>
               </div>
@@ -288,7 +304,11 @@ export default function DeveloperCards() {
                   </div>
                   <div className={styles.claimedAmount}>
                     <span className={styles.amountUsd}>{formatUSD(dev.totalClaimed)}</span>
-                    <span className={styles.amountSol}>{dev.solAmount} SOL</span>
+                    <span className={styles.amountSol}>
+                      {usdToSol(dev.totalClaimed)
+                        ? `${usdToSol(dev.totalClaimed)} SOL`
+                        : `${dev.solAmount} SOL`}
+                    </span>
                   </div>
                   <div className={styles.progressBar}>
                     <div
