@@ -276,6 +276,59 @@
       table { font-size: 0.8rem; }
       td, th { padding: 8px; }
     }
+
+    /* Edit button */
+    .edit-btn {
+      background: transparent;
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      color: #4ecdc4;
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      margin-right: 6px;
+    }
+    .edit-btn:hover {
+      background: rgba(78, 205, 196, 0.15);
+      border-color: #4ecdc4;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #0f1729;
+      border: 1px solid rgba(78,205,196,0.2);
+      border-radius: 16px;
+      padding: 32px;
+      width: 90%;
+      max-width: 560px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal h2 {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #0d9373, #4ecdc4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .modal .form-actions { justify-content: flex-end; }
+    .btn-cancel {
+      background: rgba(255,255,255,0.06);
+      color: #a0a0a0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-cancel:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
@@ -421,6 +474,73 @@
     </div>
   </div>
 
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2 id="editTitle">Edit Profile</h2>
+      <form onsubmit="saveEdit(event)">
+        <input type="hidden" id="edit_identifier" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="edit_name" />
+          </div>
+          <div class="form-group">
+            <label>GitHub Username</label>
+            <input type="text" id="edit_github" />
+          </div>
+          <div class="form-group">
+            <label>Repo (owner/repo)</label>
+            <input type="text" id="edit_repo" />
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="edit_type">
+              <option value="developer">Developer</option>
+              <option value="creator">Creator</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Total Claimed (USD)</label>
+            <input type="number" id="edit_totalClaimed" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label>SOL Amount</label>
+            <input type="number" id="edit_solAmount" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label>Instagram</label>
+            <input type="text" id="edit_instagram" />
+          </div>
+          <div class="form-group">
+            <label>TikTok</label>
+            <input type="text" id="edit_tiktok" />
+          </div>
+          <div class="form-group">
+            <label>X (Twitter)</label>
+            <input type="text" id="edit_x" />
+          </div>
+          <div class="form-group">
+            <label>Avatar URL</label>
+            <input type="text" id="edit_avatar_url" />
+          </div>
+          <div class="form-group full">
+            <label>Bio</label>
+            <textarea id="edit_bio"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>Tags (comma-separated)</label>
+            <input type="text" id="edit_tags" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -477,6 +597,64 @@
       } catch { showToast('Failed to save stats', 'error'); }
     }
 
+    let _editId = '';
+
+    function editProfile(dev) {
+      _editId = dev.github || dev.name || '';
+      document.getElementById('editTitle').textContent = `Edit: ${dev.name || dev.github}`;
+      document.getElementById('edit_identifier').value = _editId;
+      document.getElementById('edit_name').value = dev.name || '';
+      document.getElementById('edit_github').value = dev.github || '';
+      document.getElementById('edit_repo').value = dev.repo || '';
+      document.getElementById('edit_type').value = dev.type || 'developer';
+      document.getElementById('edit_totalClaimed').value = dev.totalClaimed || 0;
+      document.getElementById('edit_solAmount').value = dev.solAmount || 0;
+      document.getElementById('edit_instagram').value = dev.instagram || '';
+      document.getElementById('edit_tiktok').value = dev.tiktok || '';
+      document.getElementById('edit_x').value = dev.x || '';
+      document.getElementById('edit_avatar_url').value = dev.avatar_url || '';
+      document.getElementById('edit_bio').value = dev.bio || '';
+      document.getElementById('edit_tags').value = (dev.tags || []).join(', ');
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    async function saveEdit(e) {
+      e.preventDefault();
+      const body = {
+        name: document.getElementById('edit_name').value.trim(),
+        github: document.getElementById('edit_github').value.trim(),
+        repo: document.getElementById('edit_repo').value.trim(),
+        type: document.getElementById('edit_type').value,
+        totalClaimed: parseFloat(document.getElementById('edit_totalClaimed').value) || 0,
+        solAmount: parseFloat(document.getElementById('edit_solAmount').value) || 0,
+        instagram: document.getElementById('edit_instagram').value.trim(),
+        tiktok: document.getElementById('edit_tiktok').value.trim(),
+        x: document.getElementById('edit_x').value.trim(),
+        avatar_url: document.getElementById('edit_avatar_url').value.trim(),
+        bio: document.getElementById('edit_bio').value.trim(),
+        tags: document.getElementById('edit_tags').value.split(',').map(t => t.trim()).filter(Boolean),
+      };
+      try {
+        const res = await fetch(`${API}/api/developers/${encodeURIComponent(_editId)}`, {
+          method: 'PUT',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error();
+        showToast('Profile updated!');
+        closeModal();
+        loadProfiles();
+      } catch { showToast('Failed to update profile', 'error'); }
+    }
+
     async function loadProfiles() {
       try {
         const res = await fetch(`${API}/api/developers`);
@@ -509,7 +687,10 @@
             <td>${socialHtml}</td>
             <td>${repoHtml}</td>
             <td>$${(dev.totalClaimed || 0).toLocaleString()}</td>
-            <td><button class="delete-btn" onclick="deleteProfile('${identifier}', '${dev.type}')">Delete</button></td>
+            <td style="white-space:nowrap">
+              <button class="edit-btn" onclick='editProfile(${JSON.stringify(dev).replace(/'/g, "&#39;")})'>Edit</button>
+              <button class="delete-btn" onclick="deleteProfile('${identifier}', '${dev.type}')">Delete</button>
+            </td>
           </tr>`;
         }).join('');
       } catch (err) {

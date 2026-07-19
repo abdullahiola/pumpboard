@@ -270,6 +270,32 @@ async def remove_developer(identifier: str):
     _cache.pop(identifier, None)
 
 
+@app.put("/api/developers/{identifier}", response_model=DeveloperOut, dependencies=[Depends(require_admin)])
+async def update_developer(identifier: str, updates: dict):
+    """Update a developer/creator by GitHub username or name. Requires X-API-Key header."""
+    devs = load_developers()
+    target = None
+    for d in devs:
+        if d.get("github") == identifier or d.get("name") == identifier:
+            target = d
+            break
+
+    if not target:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    allowed_fields = {
+        "github", "repo", "type", "tags", "totalClaimed", "solAmount",
+        "instagram", "tiktok", "x", "name", "bio", "avatar_url",
+    }
+    for key, value in updates.items():
+        if key in allowed_fields:
+            target[key] = value
+
+    save_developers(devs)
+    _cache.pop(identifier, None)
+    return await enrich_developer(target)
+
+
 # --- Stats endpoints ---
 
 @app.get("/api/stats")
