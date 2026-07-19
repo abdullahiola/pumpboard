@@ -121,13 +121,6 @@ export default function DeveloperCards() {
           </div>
         )}
 
-        {/* Error State */}
-        {error && !loading && (
-          <div className={styles.errorState}>
-            <p>Could not load developers. Make sure the API is running.</p>
-            <code>{API_URL}/api/developers</code>
-          </div>
-        )}
 
         {/* Leaderboard Summary */}
         {!loading && !error && (
@@ -170,7 +163,7 @@ export default function DeveloperCards() {
         {/* Developer Cards Grid */}
         {!loading && !error && (
           <div className={styles.grid}>
-            {filteredDevs.map((dev, index) => (
+            {filteredDevs.slice(0, 5).map((dev, index) => (
               <div
                 key={dev.github || dev.name}
                 className={`glass-card ${styles.devCard}`}
@@ -323,27 +316,6 @@ export default function DeveloperCards() {
           </div>
         )}
 
-        {/* Swipe hint (mobile only) */}
-        {!loading && !error && filteredDevs.length > 1 && (
-          <div className={styles.swipeHint}>
-            <span>Swipe to see more</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </div>
-        )}
-
-        {/* Load More */}
-        {!loading && !error && filteredDevs.length > 0 && (
-          <div className={styles.loadMore}>
-            <div className={styles.allLoaded}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              All {filter === "all" ? "profiles" : filter === "developer" ? "developers" : "creators"} loaded
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );
