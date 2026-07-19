@@ -39,6 +39,7 @@ app.add_middleware(
 # Paths
 DATA_DIR = Path(__file__).parent / "data"
 DEVELOPERS_FILE = DATA_DIR / "developers.json"
+STATS_FILE = DATA_DIR / "stats.json"
 STATIC_DIR = Path(__file__).parent / "static"
 
 # GitHub config
@@ -101,6 +102,27 @@ def save_developers(devs: list[dict]):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with open(DEVELOPERS_FILE, "w") as f:
         json.dump(devs, f, indent=2)
+
+
+DEFAULT_STATS = {
+    "totalDonated": 0,
+    "developers": 0,
+    "transactions": 0,
+    "activeProjects": 0,
+}
+
+
+def load_stats() -> dict:
+    if not STATS_FILE.exists():
+        return {**DEFAULT_STATS}
+    with open(STATS_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_stats(data: dict):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(STATS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 
 # --- GitHub API helpers ---
@@ -246,6 +268,25 @@ async def remove_developer(identifier: str):
 
     save_developers(filtered)
     _cache.pop(identifier, None)
+
+
+# --- Stats endpoints ---
+
+@app.get("/api/stats")
+async def get_stats():
+    """Get platform stats (public)."""
+    return load_stats()
+
+
+@app.put("/api/stats", dependencies=[Depends(require_admin)])
+async def update_stats(stats: dict):
+    """Update platform stats. Requires X-API-Key header."""
+    current = load_stats()
+    for key in DEFAULT_STATS:
+        if key in stats:
+            current[key] = stats[key]
+    save_stats(current)
+    return current
 
 
 # --- Admin UI ---

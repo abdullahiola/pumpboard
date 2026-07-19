@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import styles from "./Stats.module.css";
 
-const stats = [
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+const statConfig = [
   {
-    value: 2400000,
+    key: "totalDonated",
     prefix: "$",
     suffix: "+",
     label: "Total Donated",
@@ -18,7 +20,7 @@ const stats = [
     ),
   },
   {
-    value: 1247,
+    key: "developers",
     prefix: "",
     suffix: "",
     label: "Developers Onboarded",
@@ -33,7 +35,7 @@ const stats = [
     ),
   },
   {
-    value: 89000,
+    key: "transactions",
     prefix: "",
     suffix: "+",
     label: "Transactions",
@@ -45,7 +47,7 @@ const stats = [
     ),
   },
   {
-    value: 340,
+    key: "activeProjects",
     prefix: "",
     suffix: "+",
     label: "Active Projects",
@@ -72,7 +74,7 @@ function useCountUp(target, duration = 2000, shouldStart = false) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!shouldStart) return;
+    if (!shouldStart || !target) return;
 
     let startTime = null;
     let animationFrame;
@@ -80,7 +82,7 @@ function useCountUp(target, duration = 2000, shouldStart = false) {
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.floor(eased * target));
 
       if (progress < 1) {
@@ -95,19 +97,19 @@ function useCountUp(target, duration = 2000, shouldStart = false) {
   return count;
 }
 
-function StatCard({ stat, index, isVisible }) {
-  const count = useCountUp(stat.value, 2000 + index * 300, isVisible);
+function StatCard({ config, value, index, isVisible }) {
+  const count = useCountUp(value, 2000 + index * 300, isVisible);
 
   return (
     <div className={`glass-card ${styles.statCard}`}>
-      <div className={styles.cardIcon}>{stat.icon}</div>
+      <div className={styles.cardIcon}>{config.icon}</div>
       <div className={styles.cardValue}>
-        <span className={styles.prefix}>{stat.prefix}</span>
+        <span className={styles.prefix}>{config.prefix}</span>
         <span className={styles.number}>{formatNumber(count)}</span>
-        <span className={styles.suffix}>{stat.suffix}</span>
+        <span className={styles.suffix}>{config.suffix}</span>
       </div>
-      <span className={styles.cardLabel}>{stat.label}</span>
-      <span className={styles.cardDesc}>{stat.description}</span>
+      <span className={styles.cardLabel}>{config.label}</span>
+      <span className={styles.cardDesc}>{config.description}</span>
       <div className={styles.cardGlow}></div>
     </div>
   );
@@ -115,7 +117,15 @@ function StatCard({ stat, index, isVisible }) {
 
 export default function Stats() {
   const [isVisible, setIsVisible] = useState(false);
+  const [stats, setStats] = useState(null);
   const sectionRef = useRef(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/stats`)
+      .then((r) => r.json())
+      .then(setStats)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -157,8 +167,14 @@ export default function Stats() {
         </div>
 
         <div className={styles.grid}>
-          {stats.map((stat, index) => (
-            <StatCard key={index} stat={stat} index={index} isVisible={isVisible} />
+          {statConfig.map((config, index) => (
+            <StatCard
+              key={config.key}
+              config={config}
+              value={stats ? stats[config.key] : 0}
+              index={index}
+              isVisible={isVisible && !!stats}
+            />
           ))}
         </div>
       </div>

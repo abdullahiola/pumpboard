@@ -391,6 +391,36 @@
     </div>
   </div>
 
+    <!-- Platform Stats Editor -->
+    <div class="table-section">
+      <h2>Platform Stats</h2>
+      <p style="color:#5a6f7e;font-size:0.85rem;margin-bottom:16px">Update the numbers shown on the homepage hero and stats section.</p>
+      <form id="statsForm" onsubmit="saveStats(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Total Donated (USD)</label>
+            <input type="number" id="stat_totalDonated" placeholder="2400000" step="1" />
+          </div>
+          <div class="form-group">
+            <label>Developers</label>
+            <input type="number" id="stat_developers" placeholder="1247" step="1" />
+          </div>
+          <div class="form-group">
+            <label>Transactions</label>
+            <input type="number" id="stat_transactions" placeholder="89000" step="1" />
+          </div>
+          <div class="form-group">
+            <label>Active Projects</label>
+            <input type="number" id="stat_activeProjects" placeholder="340" step="1" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save Stats</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -415,6 +445,36 @@
       t.textContent = msg;
       t.className = `toast ${type} show`;
       setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API}/api/stats`);
+        const data = await res.json();
+        document.getElementById('stat_totalDonated').value = data.totalDonated || 0;
+        document.getElementById('stat_developers').value = data.developers || 0;
+        document.getElementById('stat_transactions').value = data.transactions || 0;
+        document.getElementById('stat_activeProjects').value = data.activeProjects || 0;
+      } catch {}
+    }
+
+    async function saveStats(e) {
+      e.preventDefault();
+      const body = {
+        totalDonated: parseFloat(document.getElementById('stat_totalDonated').value) || 0,
+        developers: parseFloat(document.getElementById('stat_developers').value) || 0,
+        transactions: parseFloat(document.getElementById('stat_transactions').value) || 0,
+        activeProjects: parseFloat(document.getElementById('stat_activeProjects').value) || 0,
+      };
+      try {
+        const res = await fetch(`${API}/api/stats`, {
+          method: 'PUT',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error();
+        showToast('Stats updated!');
+      } catch { showToast('Failed to save stats', 'error'); }
     }
 
     async function loadProfiles() {
@@ -532,6 +592,7 @@
     }
 
     loadProfiles();
+    loadStats();
   </script>
 </body>
 </html>

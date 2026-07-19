@@ -1,9 +1,27 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./Hero.module.css";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+function formatShort(num) {
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + "M";
+  if (num >= 1_000) return (num / 1_000).toFixed(num % 1000 === 0 ? 0 : 1) + "K";
+  return num.toString();
+}
+
 export default function Hero() {
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/stats`)
+      .then((r) => r.json())
+      .then(setStats)
+      .catch(() => {});
+  }, []);
+
   return (
     <section className={styles.hero} id="hero">
       {/* Background Effects */}
@@ -57,17 +75,23 @@ export default function Hero() {
 
           <div className={`${styles.heroStats} animate-fade-in-up delay-5`}>
             <div className={styles.statItem}>
-              <span className={styles.statValue}>$2.4M+</span>
+              <span className={styles.statValue}>
+                ${stats ? formatShort(stats.totalDonated) : "—"}+
+              </span>
               <span className={styles.statLabel}>Total Donated</span>
             </div>
             <div className={styles.statDivider}></div>
             <div className={styles.statItem}>
-              <span className={styles.statValue}>1,247</span>
+              <span className={styles.statValue}>
+                {stats ? formatShort(stats.developers) : "—"}
+              </span>
               <span className={styles.statLabel}>Developers</span>
             </div>
             <div className={styles.statDivider}></div>
             <div className={styles.statItem}>
-              <span className={styles.statValue}>89K+</span>
+              <span className={styles.statValue}>
+                {stats ? formatShort(stats.transactions) : "—"}+
+              </span>
               <span className={styles.statLabel}>Transactions</span>
             </div>
           </div>
