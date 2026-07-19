@@ -11,11 +11,21 @@ const STORE_LINKS = {
 };
 
 function getPumpFunUrl() {
-  if (typeof navigator === "undefined") return STORE_LINKS.fallback;
+  if (typeof navigator === "undefined") return null;
   const ua = navigator.userAgent || "";
   if (/iPhone|iPad|iPod/i.test(ua)) return STORE_LINKS.ios;
   if (/Android/i.test(ua)) return STORE_LINKS.android;
-  return STORE_LINKS.fallback;
+  return null;
+}
+
+function handleDownloadClick(e) {
+  const url = getPumpFunUrl();
+  if (url) {
+    window.open(url, "_blank", "noopener,noreferrer");
+  } else {
+    e.preventDefault();
+    alert("PumpFun is only available on the App Store (iOS) and Google Play Store (Android).");
+  }
 }
 
 export default function Navbar() {
@@ -74,16 +84,13 @@ export default function Navbar() {
           <a href="/#stats" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Stats
           </a>
-          <a
-            href={getPumpFunUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
             className={`btn-primary ${styles.mobileCta}`}
-            onClick={() => setMobileOpen(false)}
+            onClick={(e) => { setMobileOpen(false); handleDownloadClick(e); }}
           >
             <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
             Download PumpFun
-          </a>
+          </button>
         </div>
 
         <div className={styles.navActions}>
@@ -115,15 +122,13 @@ export default function Navbar() {
             )}
           </button>
 
-          <a
-            href={getPumpFunUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
             className="btn-primary btn-sm"
+            onClick={handleDownloadClick}
           >
             <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
             Download PumpFun
-          </a>
+          </button>
 
           <button
             className={`${styles.burger} ${mobileOpen ? styles.burgerActive : ""}`}
