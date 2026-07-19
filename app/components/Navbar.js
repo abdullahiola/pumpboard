@@ -5,9 +5,9 @@ import Image from "next/image";
 import styles from "./Navbar.module.css";
 
 const STORE_LINKS = {
-  ios: "https://apps.apple.com/app/pumpfun/id0000000000",
-  android: "https://play.google.com/store/apps/details?id=com.pumpfun",
-  fallback: "https://pumpfun.com",
+  ios: "https://apps.apple.com/us/app/pump-fun-speculate-on-trends/id6717572591",
+  android: "https://play.google.com/store/apps/details?id=com.batonresearch.pump&hl=en",
+  fallback: "https://pump.fun",
 };
 
 function getPumpFunUrl() {
