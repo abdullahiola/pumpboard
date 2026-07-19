@@ -30,17 +30,7 @@ export default function Privacy() {
         </section>
 
         <section className={styles.section}>
-          <h2>3. How We Use Your Information</h2>
-          <ul>
-            <li>To create and display developer profiles on the PumpBoard leaderboard.</li>
-            <li>To facilitate decentralized donations via PumpFun on Solana.</li>
-            <li>To improve our platform and user experience.</li>
-            <li>To communicate important updates about the platform.</li>
-          </ul>
-        </section>
-
-        <section className={styles.section}>
-          <h2>4. Blockchain Transactions</h2>
+          <h2>3. Blockchain Transactions</h2>
           <p>
             All donations and claims are processed on the Solana blockchain. Blockchain transactions 
             are public and immutable by nature. We do not control or store private keys.
@@ -48,7 +38,7 @@ export default function Privacy() {
         </section>
 
         <section className={styles.section}>
-          <h2>5. Data Sharing</h2>
+          <h2>4. Data Sharing</h2>
           <p>
             We do not sell, trade, or rent your personal information to third parties. 
             Public profile data displayed on PumpBoard is sourced from your GitHub profile, 
@@ -57,15 +47,7 @@ export default function Privacy() {
         </section>
 
         <section className={styles.section}>
-          <h2>6. Data Security</h2>
-          <p>
-            We implement reasonable security measures to protect your information. 
-            However, no method of transmission over the internet is 100% secure.
-          </p>
-        </section>
-
-        <section className={styles.section}>
-          <h2>7. Changes to This Policy</h2>
+          <h2>5. Changes to This Policy</h2>
           <p>
             We may update this Privacy Policy from time to time. Changes will be posted 
             on this page with an updated revision date.
@@ -73,7 +55,7 @@ export default function Privacy() {
         </section>
 
         <section className={styles.section}>
-          <h2>8. Contact</h2>
+          <h2>6. Contact</h2>
           <p>
             If you have questions about this Privacy Policy, please contact us at{" "}
             <a href="mailto:contact@pumpboard.dev">contact@pumpboard.dev</a>.
