@@ -395,6 +395,13 @@
 
   <script>
     const API = window.location.origin;
+    const ADMIN_KEY = sessionStorage.getItem('pb-admin-key') || '';
+
+    if (!ADMIN_KEY) { window.location = '/admin'; }
+
+    function authHeaders(extra = {}) {
+      return { 'X-API-Key': ADMIN_KEY, ...extra };
+    }
 
     function switchForm(type) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -466,7 +473,7 @@
       try {
         const res = await fetch(`${API}/api/developers`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(body),
         });
 
@@ -496,7 +503,7 @@
       try {
         const res = await fetch(`${API}/api/developers`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(body),
         });
 
@@ -515,6 +522,7 @@
       try {
         const res = await fetch(`${API}/api/developers/${encodeURIComponent(identifier)}`, {
           method: 'DELETE',
+          headers: authHeaders(),
         });
 
         if (!res.ok) throw new Error();

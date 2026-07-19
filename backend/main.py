@@ -6,14 +6,25 @@ from typing import Optional
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
 load_dotenv()
 
 app = FastAPI(title="PumpBoard API", version="1.0.0")
+
+# Admin auth
+ADMIN_KEY = os.getenv("ADMIN_KEY", "")
+
+
+async def require_admin(x_api_key: str = Header(default="")):
+    """Dependency that checks X-API-Key header against ADMIN_KEY."""
+    if not ADMIN_KEY:
+        raise HTTPException(status_code=500, detail="ADMIN_KEY not configured on server")
+    if x_api_key != ADMIN_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
 
 # CORS
 origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
@@ -205,9 +216,9 @@ async def get_developer(github: str):
     return await enrich_developer(dev)
 
 
-@app.post("/api/developers", response_model=DeveloperOut, status_code=201)
+@app.post("/api/developers", response_model=DeveloperOut, status_code=201, dependencies=[Depends(require_admin)])
 async def add_developer(dev_in: DeveloperIn):
-    """Add a new developer by GitHub username."""
+    """Add a new developer by GitHub username. Requires X-API-Key header."""
     devs = load_developers()
 
     # Check for duplicates
@@ -221,9 +232,9 @@ async def add_developer(dev_in: DeveloperIn):
     return await enrich_developer(new_dev)
 
 
-@app.delete("/api/developers/{identifier}", status_code=204)
+@app.delete("/api/developers/{identifier}", status_code=204, dependencies=[Depends(require_admin)])
 async def remove_developer(identifier: str):
-    """Remove a developer by GitHub username or creator by name."""
+    """Remove a developer by GitHub username or creator by name. Requires X-API-Key header."""
     devs = load_developers()
     filtered = [
         d for d in devs
@@ -240,6 +251,52 @@ async def remove_developer(identifier: str):
 # --- Admin UI ---
 
 @app.get("/admin")
-async def admin_page():
-    """Serve the admin dashboard."""
+async def admin_login_page():
+    """Serve a password gate that unlocks the admin dashboard."""
+    return HTMLResponse("""
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PumpBoard Admin Login</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,sans-serif;background:#0a0f1c;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .card{background:rgba(15,23,41,0.9);border:1px solid rgba(78,205,196,0.15);border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center}
+  h1{font-size:1.3rem;margin-bottom:8px;background:linear-gradient(135deg,#0d9373,#4ecdc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  p{color:#5a6f7e;font-size:0.85rem;margin-bottom:24px}
+  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid rgba(78,205,196,0.2);background:rgba(255,255,255,0.05);color:#e0e0e0;font-size:0.9rem;margin-bottom:16px}
+  input:focus{outline:none;border-color:rgba(78,205,196,0.5)}
+  button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#0d9373,#00d4aa);color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer}
+  button:hover{opacity:0.9}
+  .err{color:#f87171;font-size:0.8rem;margin-top:8px;display:none}
+</style></head><body>
+<div class="card">
+  <h1>PumpBoard Admin</h1>
+  <p>Enter your admin key to continue</p>
+  <form onsubmit="return tryLogin()">
+    <input type="password" id="key" placeholder="Admin key" autofocus />
+    <button type="submit">Login</button>
+  </form>
+  <div class="err" id="err">Invalid key</div>
+</div>
+<script>
+function tryLogin(){
+  var k=document.getElementById('key').value;
+  fetch('/api/admin/verify',{headers:{'X-API-Key':k}})
+    .then(function(r){if(r.ok){sessionStorage.setItem('pb-admin-key',k);window.location='/admin/dashboard'}else{document.getElementById('err').style.display='block'}})
+    .catch(function(){document.getElementById('err').style.display='block'});
+  return false;
+}
+</script>
+</body></html>""")
+
+
+@app.get("/api/admin/verify")
+async def verify_admin_key(_: None = Depends(require_admin)):
+    """Verify the admin key is valid."""
+    return {"ok": True}
+
+
+@app.get("/admin/dashboard")
+async def admin_dashboard():
+    """Serve the admin dashboard (auth checked client-side via stored key)."""
     return FileResponse(STATIC_DIR / "admin.html")

@@ -59,19 +59,19 @@ export default function Navbar() {
         </a>
 
         <div className={`${styles.navLinks} ${mobileOpen ? styles.open : ""}`}>
-          <a href="#features" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          <a href="/#features" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Features
           </a>
-          <a href="#developers" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          <a href="/#developers" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Developers
           </a>
           <a href="/leaderboard" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Leaderboard
           </a>
-          <a href="#how-it-works" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          <a href="/#how-it-works" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             How It Works
           </a>
-          <a href="#stats" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          <a href="/#stats" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Stats
           </a>
           <a
