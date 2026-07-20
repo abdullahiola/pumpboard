@@ -26,6 +26,7 @@ const features = [
     description:
       "Built on PumpFun's decentralized donation infrastructure on Solana. Every donation is transparent, instant, and trustless.",
     tag: "Solana",
+    link: "https://pump.fun",
   },
   {
     icon: (
@@ -96,18 +97,25 @@ export default function Features() {
         </div>
 
         <div className={styles.grid}>
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className={`glass-card ${styles.featureCard}`}
-            >
-              <div className={styles.cardIcon}>{feature.icon}</div>
-              <div className={styles.cardTag}>{feature.tag}</div>
-              <h3 className={styles.cardTitle}>{feature.title}</h3>
-              <p className={styles.cardDescription}>{feature.description}</p>
-              <div className={styles.cardShine}></div>
-            </div>
-          ))}
+          {features.map((feature, index) => {
+            const CardWrapper = feature.link ? "a" : "div";
+            const wrapperProps = feature.link
+              ? { href: feature.link, target: "_blank", rel: "noopener noreferrer" }
+              : {};
+            return (
+              <CardWrapper
+                key={index}
+                className={`glass-card ${styles.featureCard}`}
+                {...wrapperProps}
+              >
+                <div className={styles.cardIcon}>{feature.icon}</div>
+                <div className={styles.cardTag}>{feature.tag}</div>
+                <h3 className={styles.cardTitle}>{feature.title}</h3>
+                <p className={styles.cardDescription}>{feature.description}</p>
+                <div className={styles.cardShine}></div>
+              </CardWrapper>
+            );
+          })}
         </div>
       </div>
     </section>
