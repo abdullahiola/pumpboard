@@ -1,14 +1,16 @@
 import json
 import os
 import time
+import uuid
 from pathlib import Path
 from typing import Optional
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 load_dotenv()
@@ -41,6 +43,11 @@ DATA_DIR = Path(__file__).parent / "data"
 DEVELOPERS_FILE = DATA_DIR / "developers.json"
 STATS_FILE = DATA_DIR / "stats.json"
 STATIC_DIR = Path(__file__).parent / "static"
+UPLOADS_DIR = Path(__file__).parent / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Serve uploaded files at /uploads/*
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # GitHub config
 GITHUB_API = "https://api.github.com"
@@ -317,6 +324,32 @@ async def update_stats(stats: dict):
             current[key] = stats[key]
     save_stats(current)
     return current
+
+
+# --- Image Upload ---
+
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_SIZE = 5 * 1024 * 1024  # 5MB
+
+
+@app.post("/api/upload", dependencies=[Depends(require_admin)])
+async def upload_image(file: UploadFile):
+    """Upload an avatar image. Returns the permanent URL. Requires X-API-Key header."""
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG, WebP, GIF allowed")
+
+    contents = await file.read()
+    if len(contents) > MAX_SIZE:
+        raise HTTPException(status_code=400, detail="File too large (max 5MB)")
+
+    ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    filepath = UPLOADS_DIR / filename
+
+    with open(filepath, "wb") as f:
+        f.write(contents)
+
+    return {"url": f"/uploads/{filename}"}
 
 
 # --- Admin UI ---
