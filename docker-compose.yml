@@ -1,10 +1,9 @@
 services:
+  # ── FastAPI Backend ──
   backend:
     build: ./backend
     container_name: pumpboard-api
     restart: unless-stopped
-    ports:
-      - "8001:8000"
     env_file:
       - ./backend/.env
     volumes:
@@ -20,3 +19,46 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # ── Next.js Frontend ──
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""
+    container_name: pumpboard-web
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Caddy Reverse Proxy (auto-HTTPS) ──
+  caddy:
+    image: caddy:2-alpine
+    container_name: pumpboard-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

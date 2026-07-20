@@ -7,7 +7,7 @@ set -e
 
 DOMAIN="api.pumpboard.dev"
 REPO_URL="https://github.com/$(git remote get-url origin 2>/dev/null | sed 's|.*github.com[:/]||;s|\.git$||' || echo 'YOUR_USERNAME/pumpboard')"
-APP_DIR="/opt/pumpboard"
+APP_DIR="/home/pumpboard"
 
 echo "══════════════════════════════════════"
 echo "  PumpBoard Backend Deploy"

@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.git/
+.agents/
+.gemini/
+.env
+.env.local
+.env.*.local
+*.md
+.DS_Store
+backend/
+nginx/
+deploy.sh
