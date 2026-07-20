@@ -244,8 +244,12 @@ async def add_developer(dev_in: DeveloperIn):
     devs = load_developers()
 
     # Check for duplicates
-    if any(d["github"] == dev_in.github for d in devs):
-        raise HTTPException(status_code=409, detail="Developer already exists")
+    if dev_in.type == "creator":
+        if dev_in.name and any(d.get("name") == dev_in.name and d.get("type") == "creator" for d in devs):
+            raise HTTPException(status_code=409, detail="Creator already exists")
+    else:
+        if dev_in.github and any(d["github"] == dev_in.github for d in devs):
+            raise HTTPException(status_code=409, detail="Developer already exists")
 
     new_dev = dev_in.model_dump()
     devs.append(new_dev)
