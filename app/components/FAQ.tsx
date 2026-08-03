@@ -15,14 +15,29 @@ const faqs: FAQItem[] = [
       "We launch a token for your work on PumpFun and redirect 100% of the trading fees it generates to you, tied to your GitHub identity. Every time your token trades, fees accumulate for you to claim — your earnings come from real trading activity, not from a pool we control.",
   },
   {
-    question: "What does the developer actually have to do?",
+    question: "Do I need to actively manage anything?",
     answer:
-      "Three things. Join the official community we create for your token, make a post about what you built so supporters know exactly what they're backing, and claim your fees. Token creation, launch, and fee routing are all handled by PumpBoard — you focus on building.",
+      "No. Join the community we create for your token, make one post about what you built, and claim your fees — from that point forward, fees flow to you automatically on every trade, permanently.",
   },
   {
-    question: "Does PumpBoard take a cut of the fees?",
+    question: "Do I need to know anything about crypto?",
     answer:
-      "No. 100% of the trading fees your token generates are redirected to you. What the token earns is what you can claim — there is no percentage skimmed along the way.",
+      "No. We handle token creation, fee routing, and all on-chain setup. You just connect your GitHub and share a wallet address — or we'll help you set one up.",
+  },
+  {
+    question: "How much will I earn?",
+    answer:
+      "Earnings depend on day to day trading volume and how much mindshare you currently have. Our team can always give a rough estimate.",
+  },
+  {
+    question: "What is pump.fun?",
+    answer:
+      "The leading token launchpad on Solana — run by attention, hundreds of millions in daily trading volume. Creator fees are paid automatically on every trade.",
+  },
+  {
+    question: "What does PumpBoard get out of helping developers claim what they're owed?",
+    answer:
+      "We launch the coin and buy supply, which covers listing costs — we generally make around 15–20% of how much the developer makes in fees. Your trading fees are never touched: 100% of them go to you.",
   },
   {
     question: "How are the leaderboard numbers calculated?",
@@ -35,24 +50,9 @@ const faqs: FAQItem[] = [
       "Yes. Fee routing and every claim are public transactions on the Solana blockchain. You can look up any wallet or transaction on an explorer like Solscan and confirm amounts independently — you don't have to take our word for anything.",
   },
   {
-    question: "Do I need crypto experience?",
-    answer:
-      "No. We handle token creation, fee routing, and all the on-chain setup. You download the PumpFun app, connect your GitHub account to verify your identity, and we take it from there — no smart-contract knowledge needed.",
-  },
-  {
-    question: "What is PumpFun?",
-    answer:
-      "PumpFun is the leading token launchpad on Solana, with hundreds of millions in daily trading volume. It powers the rails behind PumpBoard: your token is launched there, and its trading fees are what you claim.",
-  },
-  {
     question: "How do I get listed on PumpBoard?",
     answer:
       "Follow the steps in How It Works: get the PumpFun app, connect your GitHub, and complete onboarding. Profiles are reviewed before a token is launched so the directory stays limited to real open-source contributors — your repos and contribution history are what get you in.",
-  },
-  {
-    question: "How much can a developer earn?",
-    answer:
-      "It depends on your token's trading volume and how much attention your work attracts — there are no guaranteed amounts. The leaderboard shows real claimed totals for every listed developer, so the best answer is to look at what people are actually earning rather than projections.",
   },
 ];
 
