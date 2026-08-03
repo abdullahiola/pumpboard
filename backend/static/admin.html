@@ -14,27 +14,77 @@
       min-height: 100vh;
     }
 
+    body::before {
+      content: "";
+      position: fixed;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: rgba(13, 147, 115, 0.07);
+      filter: blur(90px);
+      top: -160px;
+      right: -120px;
+      pointer-events: none;
+    }
+
     .container {
       max-width: 960px;
       margin: 0 auto;
-      padding: 32px 20px;
+      padding: 0 20px 48px;
+      position: relative;
     }
 
     header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 32px;
-      padding-bottom: 20px;
+      gap: 12px;
+      margin: 0 -20px 28px;
+      padding: 14px 20px;
+      background: rgba(10, 15, 28, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0d9373, #4ecdc4);
+      font-size: 1.1rem;
+    }
+
     header h1 {
-      font-size: 1.5rem;
+      font-size: 1.15rem;
       font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       background: linear-gradient(135deg, #0d9373, #4ecdc4);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
     .badge {
@@ -44,7 +94,21 @@
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
+      white-space: nowrap;
     }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #a0a0a0;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover { color: #f87171; border-color: rgba(239,68,68,0.4); }
 
     /* Tabs */
     .tabs {
@@ -168,6 +232,11 @@
       color: #fff;
     }
 
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -276,13 +345,6 @@
       color: #555;
     }
 
-    @media (max-width: 600px) {
-      .form-grid { grid-template-columns: 1fr; }
-      .tabs { flex-wrap: wrap; }
-      table { font-size: 0.8rem; }
-      td, th { padding: 8px; }
-    }
-
     /* Edit button */
     .edit-btn {
       background: transparent;
@@ -361,13 +423,66 @@
       padding: 8px 12px;
       margin: 0;
     }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      .container { padding: 0 14px 40px; }
+      header { margin: 0 -14px 22px; padding: 12px 14px; }
+      .form-section { padding: 18px 14px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .tab { flex: 1; text-align: center; padding: 10px 8px; }
+      .form-actions { flex-wrap: wrap; }
+      .form-actions .btn { flex: 1; }
+
+      /* Profiles table becomes stacked cards */
+      table, tbody, tr, td { display: block; width: 100%; }
+      thead { display: none; }
+      tr {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        padding: 6px 14px;
+      }
+      tr:hover td { background: transparent; }
+      td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        font-size: 0.85rem;
+      }
+      td:last-child { border-bottom: none; }
+      td::before {
+        content: attr(data-label);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #5a6f7e;
+        flex-shrink: 0;
+      }
+      td[data-label="Profile"]::before, td.actions::before { display: none; }
+      td.actions { justify-content: flex-end; }
+      td.empty-state { justify-content: center; padding: 28px 0; }
+      .edit-btn, .delete-btn { padding: 8px 16px; font-size: 0.85rem; }
+      .modal { padding: 22px 18px; max-height: 92vh; }
+      .toast { left: 16px; right: 16px; text-align: center; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>⚡ PumpBoard Admin</h1>
-      <span class="badge" id="countBadge">0 profiles</span>
+      <div class="brand">
+        <span class="brand-logo">⚡</span>
+        <h1>PumpBoard Admin</h1>
+      </div>
+      <div class="header-right">
+        <span class="badge" id="countBadge">0 profiles</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
     </header>
 
     <!-- Add Form -->
@@ -480,6 +595,7 @@
     <!-- Profiles Table -->
     <div class="table-section">
       <h2>Current Profiles</h2>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr>
@@ -495,6 +611,7 @@
           <tr><td colspan="6" class="empty-state">Loading...</td></tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Platform Stats Editor -->
@@ -611,6 +728,11 @@
 
     function authHeaders(extra = {}) {
       return { 'X-API-Key': ADMIN_KEY, ...extra };
+    }
+
+    function logout() {
+      sessionStorage.removeItem('pb-admin-key');
+      window.location = '/admin';
     }
 
     function switchForm(type) {
@@ -742,12 +864,12 @@
             : '—';
 
           return `<tr>
-            <td><div class="avatar-cell">${avatarHtml}<span>${dev.name || dev.github}</span></div></td>
-            <td><span class="type-badge ${dev.type}">${dev.type}</span></td>
-            <td>${socialHtml}</td>
-            <td>${repoHtml}</td>
-            <td>$${(dev.totalClaimed || 0).toLocaleString()}</td>
-            <td style="white-space:nowrap">
+            <td data-label="Profile"><div class="avatar-cell">${avatarHtml}<span>${dev.name || dev.github}</span></div></td>
+            <td data-label="Type"><span class="type-badge ${dev.type}">${dev.type}</span></td>
+            <td data-label="Social">${socialHtml}</td>
+            <td data-label="Repo">${repoHtml}</td>
+            <td data-label="Claimed">$${(dev.totalClaimed || 0).toLocaleString()}</td>
+            <td class="actions" style="white-space:nowrap">
               <button class="edit-btn" onclick='editProfile(${JSON.stringify(dev).replace(/'/g, "&#39;")})'>Edit</button>
               <button class="delete-btn" onclick="deleteProfile('${identifier}', '${dev.type}')">Delete</button>
             </td>

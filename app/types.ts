@@ -12,6 +12,8 @@ export interface Developer {
   repo?: string;
   repo_url?: string;
   stars?: number;
+  followers?: number;
+  public_repos?: number;
   avatar_url?: string;
   bio?: string;
   summary?: string;

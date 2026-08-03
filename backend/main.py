@@ -52,7 +52,7 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 # GitHub config
 GITHUB_API = "https://api.github.com"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
-CACHE_TTL = 300  # 5 minutes
+CACHE_TTL = 1800  # 30 minutes — GitHub data changes slowly; keeps API usage low
 
 # In-memory cache: { github_username: { data: {...}, expires: timestamp } }
 _cache: dict = {}
@@ -164,6 +164,7 @@ async def fetch_github_profile(username: str, repo: str = "") -> dict:
         "repo_url": "",
         "languages": [],
     }
+    fetch_ok = False  # only cache when GitHub actually answered
 
     async with httpx.AsyncClient(timeout=10) as client:
         # Fetch profile
@@ -171,6 +172,7 @@ async def fetch_github_profile(username: str, repo: str = "") -> dict:
             resp = await client.get(f"{GITHUB_API}/users/{username}", headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
+                fetch_ok = True
                 result["name"] = data.get("name") or data.get("login", username)
                 result["avatar_url"] = data.get("avatar_url")
                 result["bio"] = data.get("bio")
@@ -212,7 +214,12 @@ async def fetch_github_profile(username: str, repo: str = "") -> dict:
             except httpx.RequestError:
                 pass
 
-    _cache[cache_key] = {"data": result, "expires": now + CACHE_TTL}
+    if fetch_ok:
+        _cache[cache_key] = {"data": result, "expires": now + CACHE_TTL}
+    elif cache_key in _cache:
+        # GitHub unavailable (rate limit/outage): serve the last good data
+        return _cache[cache_key]["data"]
+
     return result
 
 
@@ -378,36 +385,73 @@ async def admin_login_page():
     """Serve a password gate that unlocks the admin dashboard."""
     return HTMLResponse("""
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PumpBoard Admin Login</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,sans-serif;background:#0a0f1c;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .card{background:rgba(15,23,41,0.9);border:1px solid rgba(78,205,196,0.15);border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center;margin:auto}
-  h1{font-size:1.3rem;margin-bottom:8px;background:linear-gradient(135deg,#0d9373,#4ecdc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-  p{color:#5a6f7e;font-size:0.85rem;margin-bottom:24px}
-  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid rgba(78,205,196,0.2);background:rgba(255,255,255,0.05);color:#e0e0e0;font-size:0.9rem;margin-bottom:16px;outline:none}
-  input:focus{border-color:rgba(78,205,196,0.5)}
-  button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#0d9373,#00d4aa);color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;transition:opacity 0.2s}
-  button:hover{opacity:0.9}
-  .err{color:#f87171;font-size:0.8rem;margin-top:12px;display:none}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:#0a0f1c;color:#e0e0e0;
+    min-height:100dvh;display:flex;align-items:center;justify-content:center;
+    padding:20px;position:relative;overflow:hidden;
+  }
+  body::before,body::after{content:"";position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none}
+  body::before{width:420px;height:420px;background:rgba(13,147,115,0.16);top:-120px;right:-120px}
+  body::after{width:360px;height:360px;background:rgba(78,205,196,0.10);bottom:-140px;left:-100px}
+  .card{
+    position:relative;z-index:1;
+    background:rgba(15,23,41,0.88);
+    border:1px solid rgba(78,205,196,0.15);
+    border-radius:20px;padding:40px 30px;
+    width:100%;max-width:400px;text-align:center;
+    box-shadow:0 24px 64px rgba(0,0,0,0.45);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .logo{width:52px;height:52px;margin:0 auto 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:linear-gradient(135deg,#0d9373,#4ecdc4);box-shadow:0 8px 24px rgba(13,147,115,0.35)}
+  h1{font-size:1.35rem;margin-bottom:6px;background:linear-gradient(135deg,#0d9373,#4ecdc4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  p{color:#5a6f7e;font-size:0.85rem;margin-bottom:26px}
+  input{width:100%;padding:13px 16px;border-radius:10px;border:1px solid rgba(78,205,196,0.2);background:rgba(255,255,255,0.05);color:#e0e0e0;font-size:1rem;margin-bottom:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+  input:focus{border-color:rgba(78,205,196,0.55);box-shadow:0 0 0 3px rgba(78,205,196,0.12)}
+  button{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#0d9373,#00d4aa);color:#fff;font-size:0.95rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s}
+  button:hover{opacity:0.92}
+  button:active{transform:scale(0.985)}
+  button:disabled{opacity:0.6;cursor:wait}
+  .err{color:#f87171;font-size:0.82rem;margin-top:14px;display:none}
+  .card.shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+  @media (max-width:420px){.card{padding:32px 22px}}
 </style></head><body>
-<div class="card">
+<div class="card" id="card">
+  <div class="logo">⚡</div>
   <h1>PumpBoard Admin</h1>
   <p>Enter your admin key to continue</p>
   <form onsubmit="return tryLogin()">
-    <input type="password" id="key" placeholder="Admin key" autofocus />
-    <button type="submit">Login</button>
+    <input type="password" id="key" placeholder="Admin key" autocomplete="current-password" autofocus />
+    <button type="submit" id="btn">Login</button>
   </form>
-  <div class="err" id="err">Invalid key</div>
+  <div class="err" id="err">Invalid key — try again</div>
 </div>
 <script>
 function tryLogin(){
   var k=document.getElementById('key').value;
+  if(!k)return false;
+  var btn=document.getElementById('btn');
+  btn.disabled=true;btn.textContent='Checking…';
+  document.getElementById('err').style.display='none';
   fetch('/api/admin/verify',{headers:{'X-API-Key':k}})
-    .then(function(r){if(r.ok){sessionStorage.setItem('pb-admin-key',k);window.location='/admin/dashboard'}else{document.getElementById('err').style.display='block'}})
-    .catch(function(){document.getElementById('err').style.display='block'});
+    .then(function(r){
+      if(r.ok){sessionStorage.setItem('pb-admin-key',k);window.location='/admin/dashboard'}
+      else{loginFailed()}
+    })
+    .catch(loginFailed);
   return false;
+}
+function loginFailed(){
+  var btn=document.getElementById('btn');
+  btn.disabled=false;btn.textContent='Login';
+  document.getElementById('err').style.display='block';
+  var c=document.getElementById('card');
+  c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
 }
 </script>
 </body></html>""")

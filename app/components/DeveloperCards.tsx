@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./DeveloperCards.module.css";
 import type { Developer } from "../types";
 import { resolveImageUrl } from "../utils";
@@ -36,6 +37,19 @@ export default function DeveloperCards() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [solPrice, setSolPrice] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Developer | null>(null);
+
+  // Close the profile popup on Escape and lock page scroll while it's open
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSelected(null);
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [selected]);
 
   useEffect(() => {
     async function fetchDevelopers() {
@@ -72,11 +86,8 @@ export default function DeveloperCards() {
     (dev) => filter === "all" || dev.type === filter
   );
 
-  const visibleDevs = filteredDevs.slice(0, 5);
-
-  // Scale each card's progress bar relative to the top earner shown,
-  // so a $0-claimed dev no longer renders a full bar.
-  const maxClaimed = Math.max(...visibleDevs.map((d) => d.totalClaimed || 0), 1);
+  // Homepage teaser — the full list lives on /leaderboard
+  const visibleDevs = filteredDevs.slice(0, 6);
 
   return (
     <section className={`section ${styles.developers}`} id="developers">
@@ -138,7 +149,7 @@ export default function DeveloperCards() {
         {!loading && !error && (
           <div className={styles.leaderboard}>
             {sortedDevs.slice(0, 3).map((dev, idx) => (
-              <div key={dev.github} className={`${styles.leaderItem} ${styles[`leader${idx + 1}`]}`}>
+              <div key={dev.github || dev.name || idx} className={`${styles.leaderItem} ${styles[`leader${idx + 1}`]}`}>
                 <div
                   className={styles.leaderRank}
                   style={{ background: rankColors[idx + 1]?.bg, color: rankColors[idx + 1]?.text }}
@@ -155,7 +166,7 @@ export default function DeveloperCards() {
                       className={styles.leaderAvatarImg}
                     />
                   ) : (
-                    <span>{dev.github.substring(0, 2).toUpperCase()}</span>
+                    <span>{(dev.name || dev.github || "??").substring(0, 2).toUpperCase()}</span>
                   )}
                 </div>
                 <div className={styles.leaderInfo}>
@@ -177,8 +188,13 @@ export default function DeveloperCards() {
           <div className={styles.grid}>
             {visibleDevs.map((dev, index) => (
               <div
-                key={dev.github || dev.name}
+                key={dev.github || dev.name || index}
                 className={`glass-card ${styles.devCard}`}
+                onClick={(e) => {
+                  // Links inside the card keep their own behavior
+                  if ((e.target as HTMLElement).closest("a")) return;
+                  setSelected(dev);
+                }}
               >
                 {/* Card Header */}
                 <div className={styles.cardHeader}>
@@ -359,15 +375,7 @@ export default function DeveloperCards() {
                     </span>
                   </div>
                   <div className={styles.progressBar}>
-                    <div
-                      className={styles.progressFill}
-                      style={{
-                        width:
-                          dev.totalClaimed > 0
-                            ? `${Math.max((dev.totalClaimed / maxClaimed) * 100, 6)}%`
-                            : "0%",
-                      }}
-                    ></div>
+                    <div className={styles.progressFill} style={{ width: "100%" }}></div>
                   </div>
                 </div>
 
@@ -383,18 +391,162 @@ export default function DeveloperCards() {
           </div>
         )}
 
-        {/* Swipe hint — mobile only, cards scroll horizontally */}
-        {!loading && !error && visibleDevs.length > 1 && (
-          <p className={styles.swipeHint}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-            Swipe to explore
-          </p>
+        {/* See-more link → full leaderboard */}
+        {!loading && !error && (
+          <div className={styles.seeMoreWrap}>
+            <Link href="/leaderboard" className={styles.seeMoreBtn}>
+              See all developers
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
+          </div>
         )}
 
       </div>
+
+      {/* Developer Profile Popup */}
+      {selected && (
+        <div className={styles.modalOverlay} onClick={() => setSelected(null)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <button
+              className={styles.modalClose}
+              onClick={() => setSelected(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <div className={styles.modalHeader}>
+              <div className={styles.modalAvatar}>
+                {selected.avatar_url ? (
+                  <Image
+                    src={resolveImageUrl(selected.avatar_url)}
+                    alt={selected.name || selected.github}
+                    width={72}
+                    height={72}
+                    className={styles.modalAvatarImg}
+                  />
+                ) : (
+                  <span>{(selected.name || selected.github || "??").substring(0, 2).toUpperCase()}</span>
+                )}
+              </div>
+              <div className={styles.modalHeadInfo}>
+                <h3 className={styles.modalName}>{selected.name || selected.github}</h3>
+                <span className={styles.modalType}>
+                  {selected.type === "creator" ? "Creator" : "Developer"}
+                </span>
+              </div>
+            </div>
+
+            {selected.bio && <p className={styles.modalBio}>{selected.bio}</p>}
+
+            {(selected.languages?.length || selected.tags?.length) ? (
+              <div className={styles.tags}>
+                {(selected.languages?.length ? selected.languages : selected.tags ?? []).map((tag) => (
+                  <span key={tag} className={styles.tag}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            <div className={styles.modalStats}>
+              <div className={styles.modalStat}>
+                <span className={styles.modalStatValue}>{formatUSD(selected.totalClaimed)}</span>
+                <span className={styles.modalStatLabel}>Claimed</span>
+              </div>
+              <div className={styles.modalStat}>
+                <span className={styles.modalStatValue}>
+                  {usdToSol(selected.totalClaimed) ?? selected.solAmount}
+                </span>
+                <span className={styles.modalStatLabel}>SOL</span>
+              </div>
+              {selected.type !== "creator" && (
+                <div className={styles.modalStat}>
+                  <span className={styles.modalStatValue}>{formatStars(selected.stars)}</span>
+                  <span className={styles.modalStatLabel}>Stars</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.progressBar}>
+              <div className={styles.progressFill} style={{ width: "100%" }}></div>
+            </div>
+
+            {selected.summary && (
+              <div className={styles.modalSection}>
+                <span className={styles.modalSectionLabel}>About the project</span>
+                <p className={styles.modalSummary}>{selected.summary}</p>
+              </div>
+            )}
+
+            <div className={styles.modalLinks}>
+              {selected.type !== "creator" && selected.github && (
+                <a
+                  className={styles.modalLink}
+                  href={`https://github.com/${selected.github}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                </a>
+              )}
+              {selected.repo_url && (
+                <a
+                  className={styles.modalLink}
+                  href={selected.repo_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {selected.repo ? selected.repo.split("/")[1] : "Repository"} ★ {formatStars(selected.stars)}
+                </a>
+              )}
+              {selected.website && (
+                <a
+                  className={styles.modalLink}
+                  href={selected.website.startsWith("http") ? selected.website : `https://${selected.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Website
+                </a>
+              )}
+              {selected.x && (
+                <a
+                  className={styles.modalLink}
+                  href={`https://x.com/${selected.x}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  X / Twitter
+                </a>
+              )}
+              {selected.instagram && (
+                <a
+                  className={styles.modalLink}
+                  href={`https://instagram.com/${selected.instagram}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Instagram
+                </a>
+              )}
+              {selected.tiktok && (
+                <a
+                  className={styles.modalLink}
+                  href={`https://tiktok.com/@${selected.tiktok}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  TikTok
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
