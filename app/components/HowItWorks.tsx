@@ -17,7 +17,7 @@ const steps: Step[] = [
     description:
       "Get the PumpFun app from the App Store or Google Play Store to start your decentralized donation journey.",
     icon: (
-      <img src="https://pump.fun/pump-logomark.svg" alt="PumpFun" width={32} height={32} style={{ opacity: 0.9 }} />
+      <img src="/pump-logomark.svg" alt="PumpFun" width={32} height={32} style={{ opacity: 0.9 }} />
     ),
   },
   {
