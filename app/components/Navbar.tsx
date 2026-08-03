@@ -125,8 +125,11 @@ export default function Navbar() {
           <Link href="/#how-it-works" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             How It Works
           </Link>
-          <Link href="/#stats" className={styles.navLink} onClick={() => setMobileOpen(false)}>
-            Stats
+          <Link href="/#transparency" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+            Transparency
+          </Link>
+          <Link href="/#faq" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+            FAQ
           </Link>
           <button
             className={`btn-primary ${styles.mobileCta}`}
