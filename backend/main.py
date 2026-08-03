@@ -70,8 +70,10 @@ class DeveloperIn(BaseModel):
     instagram: str = ""
     tiktok: str = ""
     x: str = ""  # Twitter/X handle
+    website: str = ""  # personal/project website URL
     name: Optional[str] = None
     bio: Optional[str] = None
+    summary: Optional[str] = None  # short description of what they built
     avatar_url: Optional[str] = None
 
 
@@ -85,10 +87,12 @@ class DeveloperOut(BaseModel):
     instagram: str = ""
     tiktok: str = ""
     x: str = ""
+    website: str = ""
     # Live GitHub fields (developers only)
     name: Optional[str] = None
     avatar_url: Optional[str] = None
     bio: Optional[str] = None
+    summary: Optional[str] = None
     public_repos: int = 0
     followers: int = 0
     stars: int = 0
@@ -296,7 +300,8 @@ async def update_developer(identifier: str, updates: dict):
 
     allowed_fields = {
         "github", "repo", "type", "tags", "totalClaimed", "solAmount",
-        "instagram", "tiktok", "x", "name", "bio", "avatar_url",
+        "instagram", "tiktok", "x", "website", "name", "bio", "summary",
+        "avatar_url",
     }
     for key, value in updates.items():
         if key in allowed_fields:
