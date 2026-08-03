@@ -9,22 +9,22 @@ interface Pillar {
 
 const pillars: Pillar[] = [
   {
-    title: "Direct Wallet-to-Wallet",
+    title: "We Launch It For You",
     description:
-      "Donations move straight from the supporter's wallet to the developer's PumpFun address. PumpBoard never holds, routes, or touches funds at any point.",
+      "PumpBoard launches a token for you on PumpFun and sets up an official community around it. Token creation, fee routing, and all on-chain setup are handled — tied to your GitHub.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 1l4 4-4 4" />
-        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-        <path d="M7 23l-4-4 4-4" />
-        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+        <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+        <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
       </svg>
     ),
   },
   {
-    title: "100% Goes to Developers",
+    title: "100% of Fees. Always Yours.",
     description:
-      "PumpBoard takes no cut of donations. Developers keep everything supporters send — the only cost is the Solana network fee, a fraction of a cent.",
+      "Every trading fee your token generates is redirected to you. PumpBoard doesn't skim a percentage — what the token earns is what you claim.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -37,7 +37,7 @@ const pillars: Pillar[] = [
   {
     title: "Fully On-Chain & Auditable",
     description:
-      "Every donation and claim is a public transaction on Solana. Anyone can independently verify any amount on a block explorer like Solscan — no trust required.",
+      "Fee routing and every claim are public transactions on Solana. Anyone can independently verify any amount on a block explorer like Solscan — no trust required.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" />
@@ -59,6 +59,24 @@ const pillars: Pillar[] = [
   },
 ];
 
+const yourPart = [
+  {
+    step: "01",
+    title: "Join your community",
+    description: "We create an official community for your token when it launches — join it and meet your supporters.",
+  },
+  {
+    step: "02",
+    title: "Post about what you built",
+    description: "Share your work with the community. Show supporters exactly what they're backing.",
+  },
+  {
+    step: "03",
+    title: "Claim your fees",
+    description: "100% of the trading fees are yours — claim them to any Solana wallet, whenever you want.",
+  },
+];
+
 export default function Transparency() {
   return (
     <section className={`section ${styles.transparency}`} id="transparency">
@@ -73,11 +91,12 @@ export default function Transparency() {
             Transparency
           </span>
           <h2 className="section-title">
-            100% of Donations. Straight to Developers.
+            We Launch Your Token. You Keep 100% of the Fees.
           </h2>
           <p className="section-subtitle">
-            No middlemen, no hidden fees, no custody. Every SOL moves
-            wallet-to-wallet on Solana — in public, where anyone can check.
+            No hidden fees, no fine print. We launch a token for your work,
+            redirect every trading fee it generates to you, and put it all on
+            Solana — in public, where anyone can check.
           </p>
         </div>
 
@@ -89,6 +108,23 @@ export default function Transparency() {
               <p className={styles.pillarDescription}>{pillar.description}</p>
             </div>
           ))}
+        </div>
+
+        <div className={styles.yourPart}>
+          <h3 className={styles.yourPartTitle}>Your part is simple</h3>
+          <div className={styles.yourPartGrid}>
+            {yourPart.map((item) => (
+              <div key={item.step} className={styles.yourPartItem}>
+                <span className={styles.yourPartStep}>{item.step}</span>
+                <div className={styles.yourPartInfo}>
+                  <span className={styles.yourPartLabel}>{item.title}</span>
+                  <span className={styles.yourPartDescription}>
+                    {item.description}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className={styles.verifyStrip}>

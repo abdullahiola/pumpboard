@@ -62,6 +62,65 @@
   color: var(--pb-text-secondary);
 }
 
+/* Your Part */
+.yourPart {
+  margin-bottom: 40px;
+}
+
+.yourPartTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--pb-text-primary);
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.yourPartGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.yourPartItem {
+  display: flex;
+  gap: 14px;
+  padding: 20px 22px;
+  border-radius: var(--pb-radius-lg);
+  background: var(--pb-gradient-card);
+  border: 1px solid var(--pb-border);
+  transition: border-color var(--pb-transition);
+}
+
+.yourPartItem:hover {
+  border-color: var(--pb-border-hover);
+}
+
+.yourPartStep {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--pb-accent);
+  flex-shrink: 0;
+}
+
+.yourPartInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.yourPartLabel {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--pb-text-primary);
+}
+
+.yourPartDescription {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--pb-text-secondary);
+}
+
 /* Verify Strip */
 .verifyStrip {
   display: flex;
@@ -106,6 +165,10 @@
 @media (max-width: 968px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .yourPartGrid {
+    grid-template-columns: 1fr;
   }
 }
 

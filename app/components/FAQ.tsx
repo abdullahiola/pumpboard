@@ -10,44 +10,49 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
-    question: "How do donations actually reach a developer?",
+    question: "How does a developer earn on PumpBoard?",
     answer:
-      "Supporters send SOL directly to the developer's PumpFun donation address — a normal Solana wallet transfer. The funds never pass through PumpBoard: there is no escrow, no pooled account, and no manual payout step. The developer can then claim to any Solana wallet they control.",
+      "We launch a token for your work on PumpFun and redirect 100% of the trading fees it generates to you, tied to your GitHub identity. Every time your token trades, fees accumulate for you to claim — your earnings come from real trading activity, not from a pool we control.",
   },
   {
-    question: "Does PumpBoard take a cut of donations?",
+    question: "What does the developer actually have to do?",
     answer:
-      "No. Because donations move wallet-to-wallet, there is no point in the flow where PumpBoard could take a percentage. Developers keep 100% of what supporters send, minus only the Solana network fee (a fraction of a cent per transaction).",
+      "Three things. Join the official community we create for your token, make a post about what you built so supporters know exactly what they're backing, and claim your fees. Token creation, launch, and fee routing are all handled by PumpBoard — you focus on building.",
+  },
+  {
+    question: "Does PumpBoard take a cut of the fees?",
+    answer:
+      "No. 100% of the trading fees your token generates are redirected to you. What the token earns is what you can claim — there is no percentage skimmed along the way.",
   },
   {
     question: "How are the leaderboard numbers calculated?",
     answer:
-      "Each developer profile records their total claimed rewards, and the leaderboard ranks profiles by that amount. The platform-wide stats shown on this site (total donated, developer count, transactions) are computed automatically from those same profiles — they are the sum of what you can see, not separate marketing figures.",
+      "Each developer profile records their total claimed fees, and the leaderboard ranks profiles by that amount. The platform-wide stats shown on this site (total donated, developer count, transactions) are computed automatically from those same profiles — they are the sum of what you can see, not separate marketing figures.",
   },
   {
     question: "Can I verify the numbers myself?",
     answer:
-      "Yes. Every donation and claim is a public transaction on the Solana blockchain. You can look up any wallet or transaction on an explorer like Solscan and confirm amounts independently — you don't have to take our word for anything.",
+      "Yes. Fee routing and every claim are public transactions on the Solana blockchain. You can look up any wallet or transaction on an explorer like Solscan and confirm amounts independently — you don't have to take our word for anything.",
   },
   {
-    question: "Do I need crypto experience to get onboarded?",
+    question: "Do I need crypto experience?",
     answer:
-      "No. You download the PumpFun app, connect your GitHub account to verify your identity, and PumpBoard creates your profile with a donation address. Receiving SOL and claiming it to a wallet is handled inside PumpFun — no smart-contract knowledge needed.",
+      "No. We handle token creation, fee routing, and all the on-chain setup. You download the PumpFun app, connect your GitHub account to verify your identity, and we take it from there — no smart-contract knowledge needed.",
   },
   {
     question: "What is PumpFun?",
     answer:
-      "PumpFun is one of the most widely used apps on Solana, and it powers the donation rails behind PumpBoard. It gives every onboarded developer a donation address and handles the on-chain plumbing for receiving and claiming SOL.",
+      "PumpFun is the leading token launchpad on Solana, with hundreds of millions in daily trading volume. It powers the rails behind PumpBoard: your token is launched there, and its trading fees are what you claim.",
   },
   {
     question: "How do I get listed on PumpBoard?",
     answer:
-      "Follow the steps in How It Works: get the PumpFun app, connect your GitHub, and complete onboarding. Profiles are reviewed before listing so the directory stays limited to real open-source contributors — your repos and contribution history are what get you in.",
+      "Follow the steps in How It Works: get the PumpFun app, connect your GitHub, and complete onboarding. Profiles are reviewed before a token is launched so the directory stays limited to real open-source contributors — your repos and contribution history are what get you in.",
   },
   {
     question: "How much can a developer earn?",
     answer:
-      "It depends entirely on community support — there are no guaranteed amounts. The leaderboard shows real claimed totals for every listed developer, so the best answer is to look at what people are actually earning rather than projections.",
+      "It depends on your token's trading volume and how much attention your work attracts — there are no guaranteed amounts. The leaderboard shows real claimed totals for every listed developer, so the best answer is to look at what people are actually earning rather than projections.",
   },
 ];
 
