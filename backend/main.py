@@ -319,21 +319,30 @@ async def update_developer(identifier: str, updates: dict):
 
 # --- Stats endpoints ---
 
+def compute_stats() -> dict:
+    """Derive stats from profiles; only transactions is stored manually."""
+    stats = load_stats()
+    devs = load_developers()
+    stats["totalDonated"] = round(sum(d.get("totalClaimed", 0) or 0 for d in devs), 2)
+    stats["developers"] = len(devs)
+    stats["activeProjects"] = len([d for d in devs if d.get("repo")])
+    return stats
+
+
 @app.get("/api/stats")
 async def get_stats():
-    """Get platform stats (public)."""
-    return load_stats()
+    """Get platform stats (public). Auto-computed from profiles except transactions."""
+    return compute_stats()
 
 
 @app.put("/api/stats", dependencies=[Depends(require_admin)])
 async def update_stats(stats: dict):
-    """Update platform stats. Requires X-API-Key header."""
+    """Update manual stats (transactions only — the rest are auto-computed). Requires X-API-Key header."""
     current = load_stats()
-    for key in DEFAULT_STATS:
-        if key in stats:
-            current[key] = stats[key]
+    if "transactions" in stats:
+        current["transactions"] = stats["transactions"]
     save_stats(current)
-    return current
+    return compute_stats()
 
 
 # --- Image Upload ---
