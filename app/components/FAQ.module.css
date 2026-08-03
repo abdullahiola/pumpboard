@@ -87,6 +87,17 @@
   margin: 0;
 }
 
+.answerLink {
+  color: var(--pb-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.answerLink:hover {
+  color: var(--pb-text-accent);
+}
+
 .itemOpen .answer {
   padding-bottom: 20px;
 }

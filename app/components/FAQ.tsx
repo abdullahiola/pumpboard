@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
+import Link from "next/link";
 import styles from "./FAQ.module.css";
 
 interface FAQItem {
   question: string;
-  answer: string;
+  answer: ReactNode;
 }
 
 const faqs: FAQItem[] = [
@@ -51,8 +53,16 @@ const faqs: FAQItem[] = [
   },
   {
     question: "How do I get listed on PumpBoard?",
-    answer:
-      "Follow the steps in How It Works: get the PumpFun app, connect your GitHub, and complete onboarding. Profiles are reviewed before a token is launched so the directory stays limited to real open-source contributors — your repos and contribution history are what get you in.",
+    answer: (
+      <>
+        Our team actively scouts open-source developers and will reach out to
+        you directly. Prefer not to wait?{" "}
+        <Link href="/contact#apply" className={styles.answerLink}>
+          Fill out the application form
+        </Link>{" "}
+        and we&apos;ll get back to you.
+      </>
+    ),
   },
 ];
 
