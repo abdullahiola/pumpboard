@@ -221,7 +221,12 @@ async def enrich_developer(dev: dict) -> dict:
     if dev.get("type") == "creator" or not dev.get("github"):
         return dev
     github_data = await fetch_github_profile(dev["github"], dev.get("repo", ""))
-    return {**dev, **github_data}
+    merged = {**dev, **github_data}
+    # Admin-set fields take priority over live GitHub data
+    for field in ("name", "bio", "avatar_url"):
+        if dev.get(field):
+            merged[field] = dev[field]
+    return merged
 
 
 # --- Endpoints ---

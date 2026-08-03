@@ -329,6 +329,32 @@
       border: 1px solid rgba(255,255,255,0.1);
     }
     .btn-cancel:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+    /* Avatar upload field */
+    .avatar-field {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .avatar-preview {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: none;
+      flex-shrink: 0;
+    }
+    .upload-btn {
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -365,6 +391,17 @@
             <label>Tags (comma-separated)</label>
             <input type="text" id="dev_tags" placeholder="e.g. Rust, Solana, DeFi" />
           </div>
+          <div class="form-group full">
+            <label>Avatar (overrides GitHub photo)</label>
+            <div class="avatar-field">
+              <img id="dev_avatar_preview" class="avatar-preview" alt="" />
+              <input type="text" id="dev_avatar" placeholder="https://... or upload" style="flex:1" oninput="setAvatarPreview(this.id, this.value)" />
+              <label class="btn btn-cancel upload-btn">
+                📁 Upload
+                <input type="file" accept="image/*" onchange="uploadAvatar(this,'dev_avatar')" style="display:none" />
+              </label>
+            </div>
+          </div>
           <div class="form-group">
             <label>Total Claimed (USD)</label>
             <input type="number" id="dev_claimed" placeholder="0" step="0.01" />
@@ -389,9 +426,10 @@
           </div>
           <div class="form-group">
             <label>Avatar</label>
-            <div style="display:flex;gap:8px">
-              <input type="text" id="cr_avatar" placeholder="https://... or upload" style="flex:1" />
-              <label class="btn btn-cancel" style="cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;padding:8px 12px;margin:0">
+            <div class="avatar-field">
+              <img id="cr_avatar_preview" class="avatar-preview" alt="" />
+              <input type="text" id="cr_avatar" placeholder="https://... or upload" style="flex:1" oninput="setAvatarPreview(this.id, this.value)" />
+              <label class="btn btn-cancel upload-btn">
                 📁 Upload
                 <input type="file" accept="image/*" onchange="uploadAvatar(this,'cr_avatar')" style="display:none" />
               </label>
@@ -531,9 +569,10 @@
           </div>
           <div class="form-group">
             <label>Avatar URL</label>
-            <div style="display:flex;gap:8px">
-              <input type="text" id="edit_avatar_url" style="flex:1" />
-              <label class="btn btn-cancel" style="cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;padding:8px 12px;margin:0">
+            <div class="avatar-field">
+              <img id="edit_avatar_url_preview" class="avatar-preview" alt="" />
+              <input type="text" id="edit_avatar_url" style="flex:1" oninput="setAvatarPreview(this.id, this.value)" />
+              <label class="btn btn-cancel upload-btn">
                 📁 Upload
                 <input type="file" accept="image/*" onchange="uploadAvatar(this,'edit_avatar_url')" style="display:none" />
               </label>
@@ -628,6 +667,7 @@
       document.getElementById('edit_tiktok').value = dev.tiktok || '';
       document.getElementById('edit_x').value = dev.x || '';
       document.getElementById('edit_avatar_url').value = dev.avatar_url || '';
+      setAvatarPreview('edit_avatar_url', dev.avatar_url || '');
       document.getElementById('edit_bio').value = dev.bio || '';
       document.getElementById('edit_tags').value = (dev.tags || []).join(', ');
       document.getElementById('editModal').classList.add('active');
@@ -720,6 +760,7 @@
         github: document.getElementById('dev_github').value.trim(),
         repo: document.getElementById('dev_repo').value.trim(),
         x: document.getElementById('dev_x').value.trim(),
+        avatar_url: document.getElementById('dev_avatar').value.trim(),
         type: 'developer',
         tags: document.getElementById('dev_tags').value.split(',').map(t => t.trim()).filter(Boolean),
         totalClaimed: parseFloat(document.getElementById('dev_claimed').value) || 0,
@@ -798,7 +839,7 @@
       try {
         const res = await fetch(`${API}/api/upload`, {
           method: 'POST',
-          headers: { 'X-API-Key': KEY },
+          headers: { 'X-API-Key': ADMIN_KEY },
           body: formData,
         });
 
@@ -810,6 +851,7 @@
 
         const data = await res.json();
         document.getElementById(targetId).value = data.url;
+        setAvatarPreview(targetId, data.url);
         showToast('Image uploaded!');
       } catch {
         showToast('Upload failed', 'error');
@@ -817,6 +859,21 @@
 
       fileInput.value = '';
     }
+
+    function setAvatarPreview(targetId, url) {
+      const img = document.getElementById(targetId + '_preview');
+      if (!img) return;
+      if (url) {
+        img.src = url;
+        img.style.display = 'block';
+      } else {
+        img.removeAttribute('src');
+        img.style.display = 'none';
+      }
+    }
+
+    document.getElementById('devForm').addEventListener('reset', () => setAvatarPreview('dev_avatar', ''));
+    document.getElementById('creatorForm').addEventListener('reset', () => setAvatarPreview('cr_avatar', ''));
 
     loadProfiles();
     loadStats();

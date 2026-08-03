@@ -8,6 +8,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import styles from "./leaderboard.module.css";
 import type { Developer } from "../types";
+import { resolveImageUrl } from "../utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -222,7 +223,7 @@ export default function LeaderboardPage() {
                           <div className={styles.podiumAvatar}>
                             {dev.avatar_url ? (
                               <Image
-                                src={dev.avatar_url}
+                                src={resolveImageUrl(dev.avatar_url)}
                                 alt={dev.name || dev.github}
                                 width={rank === 1 ? 80 : 56}
                                 height={rank === 1 ? 80 : 56}
@@ -382,7 +383,7 @@ export default function LeaderboardPage() {
                                   >
                                     {dev.avatar_url ? (
                                       <Image
-                                        src={dev.avatar_url}
+                                        src={resolveImageUrl(dev.avatar_url)}
                                         alt={dev.name || dev.github}
                                         width={32}
                                         height={32}

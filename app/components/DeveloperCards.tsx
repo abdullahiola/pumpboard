@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./DeveloperCards.module.css";
 import type { Developer } from "../types";
+import { resolveImageUrl } from "../utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -147,7 +148,7 @@ export default function DeveloperCards() {
                 <div className={styles.leaderAvatar}>
                   {dev.avatar_url ? (
                     <Image
-                      src={dev.avatar_url}
+                      src={resolveImageUrl(dev.avatar_url)}
                       alt={dev.name || dev.github}
                       width={32}
                       height={32}
@@ -185,7 +186,7 @@ export default function DeveloperCards() {
                     <div className={styles.avatar}>
                       {dev.avatar_url ? (
                         <Image
-                          src={dev.avatar_url}
+                          src={resolveImageUrl(dev.avatar_url)}
                           alt={dev.name || dev.github}
                           width={48}
                           height={48}

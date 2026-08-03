@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./Leaderboard.module.css";
 import type { Developer } from "../types";
+import { resolveImageUrl } from "../utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -92,7 +93,7 @@ export default function Leaderboard() {
                   <div className={styles.podiumAvatar}>
                     {dev.avatar_url ? (
                       <Image
-                        src={dev.avatar_url}
+                        src={resolveImageUrl(dev.avatar_url)}
                         alt={dev.name || dev.github}
                         width={rank === 1 ? 64 : 48}
                         height={rank === 1 ? 64 : 48}
@@ -151,7 +152,7 @@ export default function Leaderboard() {
                     <div className={styles.profileCell}>
                       {dev.avatar_url ? (
                         <Image
-                          src={dev.avatar_url}
+                          src={resolveImageUrl(dev.avatar_url)}
                           alt={dev.name || dev.github}
                           width={28}
                           height={28}
