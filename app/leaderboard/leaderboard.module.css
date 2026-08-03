@@ -294,21 +294,21 @@
 }
 
 .podiumName {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--pb-text-primary);
   text-align: center;
 }
 
 .podiumHandle {
-  font-size: 0.72rem;
-  color: var(--pb-text-muted);
+  font-size: 0.8rem;
+  color: var(--pb-text-secondary);
   margin-bottom: 4px;
 }
 
 .podiumType {
-  font-size: 0.65rem;
-  color: var(--pb-text-muted);
+  font-size: 0.7rem;
+  color: var(--pb-text-secondary);
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -323,18 +323,18 @@
 
 .podiumAmount {
   font-family: var(--font-heading);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--pb-accent);
 }
 
 .podium1 .podiumAmount {
-  font-size: 1.5rem;
+  font-size: 1.65rem;
 }
 
 .podiumSol {
-  font-size: 0.72rem;
-  color: var(--pb-text-muted);
+  font-size: 0.8rem;
+  color: var(--pb-text-secondary);
 }
 
 /* ===== Controls ===== */
@@ -435,12 +435,12 @@
 
 .table th {
   padding: 14px 18px;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--pb-text-muted);
+  color: var(--pb-text-secondary);
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   user-select: none;
 }
 
@@ -461,20 +461,24 @@
 
 .sortIcon {
   margin-left: 4px;
-  opacity: 0.4;
-  font-size: 0.7rem;
+  opacity: 0.6;
+  font-size: 0.75rem;
 }
 
 .sortIconActive {
   margin-left: 4px;
   color: var(--pb-accent);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .table td {
-  padding: 14px 18px;
-  font-size: 0.88rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 16px 18px;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--pb-border);
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .table tbody tr {
@@ -503,12 +507,12 @@
 }
 
 .medalCell {
-  font-size: 1.2rem;
+  font-size: 1.35rem;
 }
 
 .rankNum {
-  font-size: 0.82rem;
-  color: var(--pb-text-muted);
+  font-size: 0.95rem;
+  color: var(--pb-text-secondary);
   font-weight: 700;
   font-family: var(--font-heading);
 }
@@ -540,16 +544,16 @@
 }
 
 .tableAvatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
 }
 
 .tableInitials {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--pb-accent), #4ecdc4);
   display: flex;
@@ -569,20 +573,20 @@
 .profileName {
   font-weight: 600;
   color: var(--pb-text-primary);
-  font-size: 0.88rem;
+  font-size: 0.95rem;
 }
 
 .profileHandle {
-  font-size: 0.72rem;
-  color: var(--pb-text-muted);
+  font-size: 0.8rem;
+  color: var(--pb-text-secondary);
 }
 
 /* Type Pill */
 .typePill {
   display: inline-block;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 12px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
 }
@@ -602,14 +606,14 @@
   text-align: right;
   font-weight: 700;
   color: var(--pb-accent);
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-family: var(--font-heading);
 }
 
 .solCell {
   text-align: right;
-  color: var(--pb-text-muted);
-  font-size: 0.82rem;
+  color: var(--pb-text-secondary);
+  font-size: 0.9rem;
 }
 
 /* Empty */
@@ -628,8 +632,8 @@
 }
 
 .resultCount {
-  font-size: 0.75rem;
-  color: var(--pb-text-muted);
+  font-size: 0.82rem;
+  color: var(--pb-text-secondary);
 }
 
 /* ===== Animations ===== */

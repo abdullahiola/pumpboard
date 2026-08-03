@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./Hero.module.css";
 import type { PlatformStats } from "../types";
 
@@ -57,14 +58,14 @@ export default function Hero() {
           </p>
 
           <div className={`${styles.heroButtons} animate-fade-in-up delay-4`}>
-            <a href="#developers" className="btn-primary">
+            <Link href="/leaderboard" className="btn-primary">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="16" />
                 <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
               Explore Developers
-            </a>
+            </Link>
             <a href="#how-it-works" className="btn-secondary">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
