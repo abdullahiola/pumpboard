@@ -3,17 +3,18 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./Hero.module.css";
+import type { PlatformStats } from "../types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-function formatShort(num) {
+function formatShort(num: number): string {
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + "M";
   if (num >= 1_000) return (num / 1_000).toFixed(num % 1000 === 0 ? 0 : 1) + "K";
   return num.toString();
 }
 
 export default function Hero() {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/stats`)

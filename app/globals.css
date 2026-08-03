@@ -173,6 +173,22 @@ button {
   outline: none;
 }
 
+/* ===== Keyboard focus ===== */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--pb-accent);
+  outline-offset: 2px;
+  border-radius: var(--pb-radius-sm);
+}
+
+/* Only show the ring for keyboard users, not mouse clicks */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
   width: 6px;
@@ -446,6 +462,18 @@ button {
   background-size: 60px 60px;
   pointer-events: none;
   z-index: 0;
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ===== Responsive ===== */

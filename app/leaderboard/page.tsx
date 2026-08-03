@@ -1,14 +1,21 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import type { ElementType } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import styles from "./leaderboard.module.css";
+import type { Developer } from "../types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-function formatUSD(amount) {
+type FilterKey = "all" | "developer" | "creator";
+type SortKey = "totalClaimed" | "solAmount";
+type SortDir = "asc" | "desc";
+
+function formatUSD(amount: number): string {
   if (!amount) return "$0";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -17,21 +24,39 @@ function formatUSD(amount) {
   }).format(amount);
 }
 
-const medalEmoji = { 1: "🥇", 2: "🥈", 3: "🥉" };
+const medalEmoji: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+
+function SortIcon({
+  column,
+  sortKey,
+  sortDir,
+}: {
+  column: SortKey;
+  sortKey: SortKey;
+  sortDir: SortDir;
+}) {
+  if (sortKey !== column) return <span className={styles.sortIcon}>⇅</span>;
+  return (
+    <span className={styles.sortIconActive}>
+      {sortDir === "desc" ? "↓" : "↑"}
+    </span>
+  );
+}
 
 export default function LeaderboardPage() {
-  const [developers, setDevelopers] = useState([]);
+  const [developers, setDevelopers] = useState<Developer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState("totalClaimed");
-  const [sortDir, setSortDir] = useState("desc");
+  const [sortKey, setSortKey] = useState<SortKey>("totalClaimed");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [solPrice, setSolPrice] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await fetch(`${API_URL}/api/developers`);
-        const data = await res.json();
+        const data: Developer[] = await res.json();
         setDevelopers(data.filter((d) => d.totalClaimed > 0));
       } catch {
         setDevelopers([]);
@@ -41,6 +66,19 @@ export default function LeaderboardPage() {
     }
     fetchData();
   }, []);
+
+  // Fetch live SOL price
+  useEffect(() => {
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd")
+      .then((r) => r.json())
+      .then((data) => setSolPrice(data.solana?.usd || null))
+      .catch(() => {});
+  }, []);
+
+  function usdToSol(usd: number): string | null {
+    if (!solPrice || !usd) return null;
+    return (usd / solPrice).toFixed(2);
+  }
 
   const sorted = useMemo(() => {
     let list = [...developers];
@@ -59,8 +97,8 @@ export default function LeaderboardPage() {
     }
 
     list.sort((a, b) => {
-      const aVal = parseFloat(a[sortKey]) || 0;
-      const bVal = parseFloat(b[sortKey]) || 0;
+      const aVal = Number(a[sortKey]) || 0;
+      const bVal = Number(b[sortKey]) || 0;
       return sortDir === "desc" ? bVal - aVal : aVal - bVal;
     });
 
@@ -78,12 +116,14 @@ export default function LeaderboardPage() {
     [developers]
   );
 
-  const totalSol = useMemo(
-    () => developers.reduce((s, d) => s + (parseFloat(d.solAmount) || 0), 0),
-    [developers]
-  );
+  const totalSol = useMemo(() => {
+    if (solPrice) {
+      return developers.reduce((s, d) => s + (d.totalClaimed || 0), 0) / solPrice;
+    }
+    return developers.reduce((s, d) => s + (Number(d.solAmount) || 0), 0);
+  }, [developers, solPrice]);
 
-  function handleSort(key) {
+  function handleSort(key: SortKey) {
     if (sortKey === key) {
       setSortDir((d) => (d === "desc" ? "asc" : "desc"));
     } else {
@@ -91,15 +131,6 @@ export default function LeaderboardPage() {
       setSortDir("desc");
     }
   }
-
-  const SortIcon = ({ column }) => {
-    if (sortKey !== column) return <span className={styles.sortIcon}>⇅</span>;
-    return (
-      <span className={styles.sortIconActive}>
-        {sortDir === "desc" ? "↓" : "↑"}
-      </span>
-    );
-  };
 
   return (
     <>
@@ -112,12 +143,12 @@ export default function LeaderboardPage() {
         <div className={styles.container}>
           {/* Page header */}
           <header className={styles.pageHeader}>
-            <a href="/" className={styles.backLink}>
+            <Link href="/" className={styles.backLink}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
               Back to Home
-            </a>
+            </Link>
             <div className={styles.headerContent}>
               <h1 className={styles.pageTitle}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -223,7 +254,9 @@ export default function LeaderboardPage() {
                               {formatUSD(dev.totalClaimed)}
                             </span>
                             <span className={styles.podiumSol}>
-                              {dev.solAmount} SOL
+                              {usdToSol(dev.totalClaimed)
+                                ? `${usdToSol(dev.totalClaimed)} SOL`
+                                : `${dev.solAmount} SOL`}
                             </span>
                           </div>
                         </div>
@@ -236,11 +269,13 @@ export default function LeaderboardPage() {
               {/* Controls */}
               <section className={styles.controlsSection}>
                 <div className={styles.filterTabs}>
-                  {[
-                    { key: "all", label: "All" },
-                    { key: "developer", label: "Developers" },
-                    { key: "creator", label: "Creators" },
-                  ].map((tab) => (
+                  {(
+                    [
+                      { key: "all", label: "All" },
+                      { key: "developer", label: "Developers" },
+                      { key: "creator", label: "Creators" },
+                    ] as const
+                  ).map((tab) => (
                     <button
                       key={tab.key}
                       className={`${styles.filterBtn} ${filter === tab.key ? styles.filterActive : ""}`}
@@ -288,13 +323,13 @@ export default function LeaderboardPage() {
                           className={styles.thSortable}
                           onClick={() => handleSort("totalClaimed")}
                         >
-                          Claimed <SortIcon column="totalClaimed" />
+                          Claimed <SortIcon column="totalClaimed" sortKey={sortKey} sortDir={sortDir} />
                         </th>
                         <th
                           className={styles.thSortable}
                           onClick={() => handleSort("solAmount")}
                         >
-                          SOL <SortIcon column="solAmount" />
+                          SOL <SortIcon column="solAmount" sortKey={sortKey} sortDir={sortDir} />
                         </th>
                       </tr>
                     </thead>
@@ -322,33 +357,57 @@ export default function LeaderboardPage() {
                               )}
                             </td>
                             <td>
-                              <div className={styles.profileCell}>
-                                {dev.avatar_url ? (
-                                  <Image
-                                    src={dev.avatar_url}
-                                    alt={dev.name || dev.github}
-                                    width={32}
-                                    height={32}
-                                    className={styles.tableAvatar}
-                                  />
-                                ) : (
-                                  <div className={styles.tableInitials}>
-                                    {(dev.name || dev.github || "??")
-                                      .substring(0, 2)
-                                      .toUpperCase()}
-                                  </div>
-                                )}
-                                <div className={styles.profileInfo}>
-                                  <span className={styles.profileName}>
-                                    {dev.name || dev.github}
-                                  </span>
-                                  {dev.github && (
-                                    <span className={styles.profileHandle}>
-                                      @{dev.github}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
+                              {(() => {
+                                const profileUrl = dev.github
+                                  ? `https://github.com/${dev.github}`
+                                  : dev.website
+                                    ? dev.website.startsWith("http")
+                                      ? dev.website
+                                      : `https://${dev.website}`
+                                    : dev.x
+                                      ? `https://x.com/${dev.x}`
+                                      : null;
+                                const Wrapper: ElementType = profileUrl ? "a" : "div";
+                                const linkProps = profileUrl
+                                  ? {
+                                      href: profileUrl,
+                                      target: "_blank",
+                                      rel: "noopener noreferrer",
+                                    }
+                                  : {};
+                                return (
+                                  <Wrapper
+                                    className={`${styles.profileCell} ${profileUrl ? styles.profileCellLink : ""}`}
+                                    {...linkProps}
+                                  >
+                                    {dev.avatar_url ? (
+                                      <Image
+                                        src={dev.avatar_url}
+                                        alt={dev.name || dev.github}
+                                        width={32}
+                                        height={32}
+                                        className={styles.tableAvatar}
+                                      />
+                                    ) : (
+                                      <div className={styles.tableInitials}>
+                                        {(dev.name || dev.github || "??")
+                                          .substring(0, 2)
+                                          .toUpperCase()}
+                                      </div>
+                                    )}
+                                    <div className={styles.profileInfo}>
+                                      <span className={styles.profileName}>
+                                        {dev.name || dev.github}
+                                      </span>
+                                      {dev.github && (
+                                        <span className={styles.profileHandle}>
+                                          @{dev.github}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </Wrapper>
+                                );
+                              })()}
                             </td>
                             <td>
                               <span
@@ -361,7 +420,7 @@ export default function LeaderboardPage() {
                               {formatUSD(dev.totalClaimed)}
                             </td>
                             <td className={styles.solCell}>
-                              {dev.solAmount}
+                              {usdToSol(dev.totalClaimed) || dev.solAmount}
                             </td>
                           </tr>
                         );

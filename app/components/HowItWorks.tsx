@@ -1,8 +1,16 @@
 "use client";
 
+import type { ReactNode } from "react";
 import styles from "./HowItWorks.module.css";
 
-const steps = [
+interface Step {
+  step: string;
+  title: string;
+  description: string;
+  icon: ReactNode;
+}
+
+const steps: Step[] = [
   {
     step: "01",
     title: "Download PumpFun",
@@ -78,7 +86,7 @@ export default function HowItWorks() {
           </span>
           <h2 className="section-title">How It Works</h2>
           <p className="section-subtitle">
-            Four simple steps to start receiving decentralized donations for your
+            Five simple steps to start receiving decentralized donations for your
             open-source work.
           </p>
         </div>

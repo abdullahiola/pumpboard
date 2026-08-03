@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import styles from "./Stats.module.css";
+import type { PlatformStats } from "../types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-const statConfig = [
+interface StatConfig {
+  key: keyof PlatformStats;
+  prefix: string;
+  suffix: string;
+  label: string;
+  description: string;
+  icon: ReactNode;
+}
+
+const statConfig: StatConfig[] = [
   {
     key: "totalDonated",
     prefix: "$",
@@ -60,7 +71,7 @@ const statConfig = [
   },
 ];
 
-function formatNumber(num) {
+function formatNumber(num: number): string {
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1) + "M";
   }
@@ -70,16 +81,16 @@ function formatNumber(num) {
   return num.toString();
 }
 
-function useCountUp(target, duration = 2000, shouldStart = false) {
+function useCountUp(target: number, duration = 2000, shouldStart = false): number {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!shouldStart || !target) return;
 
-    let startTime = null;
-    let animationFrame;
+    let startTime: number | null = null;
+    let animationFrame: number;
 
-    const animate = (timestamp) => {
+    const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
@@ -97,7 +108,14 @@ function useCountUp(target, duration = 2000, shouldStart = false) {
   return count;
 }
 
-function StatCard({ config, value, index, isVisible }) {
+interface StatCardProps {
+  config: StatConfig;
+  value: number;
+  index: number;
+  isVisible: boolean;
+}
+
+function StatCard({ config, value, index, isVisible }: StatCardProps) {
   const count = useCountUp(value, 2000 + index * 300, isVisible);
 
   return (
@@ -117,8 +135,8 @@ function StatCard({ config, value, index, isVisible }) {
 
 export default function Stats() {
   const [isVisible, setIsVisible] = useState(false);
-  const [stats, setStats] = useState(null);
-  const sectionRef = useRef(null);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/stats`)

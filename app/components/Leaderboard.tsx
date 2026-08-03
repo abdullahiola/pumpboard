@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./Leaderboard.module.css";
+import type { Developer } from "../types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-function formatUSD(amount) {
+function formatUSD(amount: number): string {
   if (!amount) return "$0";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -15,23 +16,17 @@ function formatUSD(amount) {
   }).format(amount);
 }
 
-function formatStars(count) {
-  if (!count) return "0";
-  if (count >= 1000) return (count / 1000).toFixed(2) + "k";
-  return count.toString();
-}
-
-const medalEmoji = { 1: "🥇", 2: "🥈", 3: "🥉" };
+const medalEmoji: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 export default function Leaderboard() {
-  const [developers, setDevelopers] = useState([]);
+  const [developers, setDevelopers] = useState<Developer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await fetch(`${API_URL}/api/developers`);
-        const data = await res.json();
+        const data: Developer[] = await res.json();
         const sorted = data
           .filter((d) => d.totalClaimed > 0)
           .sort((a, b) => b.totalClaimed - a.totalClaimed);

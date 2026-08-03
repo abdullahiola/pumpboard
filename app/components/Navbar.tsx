@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./Navbar.module.css";
 
 const STORE_LINKS = {
@@ -10,7 +11,7 @@ const STORE_LINKS = {
   fallback: "https://pump.fun",
 };
 
-function getPumpFunUrl() {
+function getPumpFunUrl(): string | null {
   if (typeof navigator === "undefined") return null;
   const ua = navigator.userAgent || "";
   if (/iPhone|iPad|iPod/i.test(ua)) return STORE_LINKS.ios;
@@ -18,13 +19,35 @@ function getPumpFunUrl() {
   return null;
 }
 
+type Theme = "dark" | "light";
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState<Theme>("dark");
   const [showStoreMenu, setShowStoreMenu] = useState(false);
+  const downloadRef = useRef<HTMLDivElement | null>(null);
 
-  const handleDownload = useCallback((e) => {
+  // Close the store dropdown on outside click or Escape
+  useEffect(() => {
+    if (!showStoreMenu) return;
+    const handlePointer = (e: MouseEvent) => {
+      if (downloadRef.current && !downloadRef.current.contains(e.target as Node)) {
+        setShowStoreMenu(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowStoreMenu(false);
+    };
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [showStoreMenu]);
+
+  const handleDownload = useCallback((e: React.MouseEvent) => {
     const url = getPumpFunUrl();
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
@@ -42,14 +65,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    const saved = localStorage.getItem("pb-theme") || "dark";
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    const saved: Theme = localStorage.getItem("pb-theme") === "light" ? "light" : "dark";
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe theme init: reading localStorage in a lazy initializer would cause a hydration mismatch
     setTheme(saved);
     document.documentElement.setAttribute("data-theme", saved);
   }, []);
 
   const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
+    const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("pb-theme", next);
@@ -69,27 +103,36 @@ export default function Navbar() {
           <span className={styles.logoText}>PumpBoard</span>
         </a>
 
+        {/* Backdrop — closes menu on tap */}
+        {mobileOpen && (
+          <div
+            className={styles.backdrop}
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         <div className={`${styles.navLinks} ${mobileOpen ? styles.open : ""}`}>
-          <a href="/#features" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          <Link href="/#features" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Features
-          </a>
-          <a href="/#developers" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          </Link>
+          <Link href="/#developers" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Developers
-          </a>
-          <a href="/leaderboard" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          </Link>
+          <Link href="/leaderboard" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Leaderboard
-          </a>
-          <a href="/#how-it-works" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          </Link>
+          <Link href="/#how-it-works" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             How It Works
-          </a>
-          <a href="/#stats" className={styles.navLink} onClick={() => setMobileOpen(false)}>
+          </Link>
+          <Link href="/#stats" className={styles.navLink} onClick={() => setMobileOpen(false)}>
             Stats
-          </a>
+          </Link>
           <button
             className={`btn-primary ${styles.mobileCta}`}
             onClick={(e) => { setMobileOpen(false); handleDownload(e); }}
           >
-            <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
+            <img src="/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
             Download PumpFun
           </button>
         </div>
@@ -123,12 +166,12 @@ export default function Navbar() {
             )}
           </button>
 
-          <div className={styles.downloadWrap}>
+          <div className={styles.downloadWrap} ref={downloadRef}>
             <button
               className="btn-primary btn-sm"
               onClick={handleDownload}
             >
-              <img src="https://pump.fun/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
+              <img src="/pump-logomark.svg" alt="" width={18} height={18} className={styles.downloadIcon} />
               Download PumpFun
             </button>
             {showStoreMenu && (

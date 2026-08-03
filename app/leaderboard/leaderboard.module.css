@@ -520,6 +520,25 @@
   gap: 12px;
 }
 
+.profileCellLink {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.profileCellLink:hover .profileName {
+  color: var(--pb-accent);
+}
+
+.profileCellLink:hover .tableAvatar,
+.profileCellLink:hover .tableInitials {
+  transform: scale(1.06);
+}
+
+.profileCellLink .tableAvatar,
+.profileCellLink .tableInitials {
+  transition: transform 0.15s ease;
+}
+
 .tableAvatar {
   width: 32px;
   height: 32px;

@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./DeveloperCards.module.css";
+import type { Developer } from "../types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-function formatUSD(amount) {
+type FilterKey = "all" | "developer" | "creator";
+
+function formatUSD(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -14,24 +17,24 @@ function formatUSD(amount) {
   }).format(amount);
 }
 
-function formatStars(count) {
+function formatStars(count?: number): string {
   if (!count) return "0";
   if (count >= 1000) return (count / 1000).toFixed(2) + "k";
   return count.toString();
 }
 
-const rankColors = {
+const rankColors: Record<number, { bg: string; text: string }> = {
   1: { bg: "linear-gradient(135deg, #FFD700, #FFA500)", text: "#000" },
   2: { bg: "linear-gradient(135deg, #C0C0C0, #A0A0A0)", text: "#000" },
   3: { bg: "linear-gradient(135deg, #CD7F32, #A0522D)", text: "#fff" },
 };
 
 export default function DeveloperCards() {
-  const [filter, setFilter] = useState("developer");
-  const [developers, setDevelopers] = useState([]);
+  const [filter, setFilter] = useState<FilterKey>("developer");
+  const [developers, setDevelopers] = useState<Developer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [solPrice, setSolPrice] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [solPrice, setSolPrice] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchDevelopers() {
@@ -39,10 +42,10 @@ export default function DeveloperCards() {
         setLoading(true);
         const res = await fetch(`${API_URL}/api/developers`);
         if (!res.ok) throw new Error("Failed to fetch developers");
-        const data = await res.json();
+        const data: Developer[] = await res.json();
         setDevelopers(data);
       } catch (err) {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : "Failed to fetch developers");
       } finally {
         setLoading(false);
       }
@@ -57,7 +60,7 @@ export default function DeveloperCards() {
       .catch(() => {});
   }, []);
 
-  function usdToSol(usd) {
+  function usdToSol(usd: number): string | null {
     if (!solPrice || !usd) return null;
     return (usd / solPrice).toFixed(2);
   }
@@ -67,6 +70,12 @@ export default function DeveloperCards() {
   const filteredDevs = sortedDevs.filter(
     (dev) => filter === "all" || dev.type === filter
   );
+
+  const visibleDevs = filteredDevs.slice(0, 5);
+
+  // Scale each card's progress bar relative to the top earner shown,
+  // so a $0-claimed dev no longer renders a full bar.
+  const maxClaimed = Math.max(...visibleDevs.map((d) => d.totalClaimed || 0), 1);
 
   return (
     <section className={`section ${styles.developers}`} id="developers">
@@ -92,11 +101,13 @@ export default function DeveloperCards() {
 
         {/* Filter Tabs */}
         <div className={styles.filterBar}>
-          {[
-            { key: "all", label: "All" },
-            { key: "developer", label: "Developers" },
-            { key: "creator", label: "Creators" },
-          ].map((tab) => (
+          {(
+            [
+              { key: "all", label: "All" },
+              { key: "developer", label: "Developers" },
+              { key: "creator", label: "Creators" },
+            ] as const
+          ).map((tab) => (
             <button
               key={tab.key}
               className={`${styles.filterBtn} ${filter === tab.key ? styles.filterActive : ""}`}
@@ -163,7 +174,7 @@ export default function DeveloperCards() {
         {/* Developer Cards Grid */}
         {!loading && !error && (
           <div className={styles.grid}>
-            {filteredDevs.slice(0, 5).map((dev, index) => (
+            {visibleDevs.map((dev, index) => (
               <div
                 key={dev.github || dev.name}
                 className={`glass-card ${styles.devCard}`}
@@ -190,6 +201,21 @@ export default function DeveloperCards() {
                     <h3 className={styles.devName}>{dev.name || dev.github}</h3>
                     {dev.type === "creator" ? (
                       <div className={styles.socialLinks}>
+                        {dev.website && (
+                          <a
+                            className={styles.socialLink}
+                            href={dev.website.startsWith("http") ? dev.website : `https://${dev.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Website"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="2" y1="12" x2="22" y2="12" />
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          </a>
+                        )}
                         {dev.instagram && (
                           <a
                             className={styles.socialLink}
@@ -232,6 +258,21 @@ export default function DeveloperCards() {
                       </div>
                     ) : (
                       <div className={styles.socialLinks}>
+                        {dev.website && (
+                          <a
+                            className={styles.socialLink}
+                            href={dev.website.startsWith("http") ? dev.website : `https://${dev.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Website"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="2" y1="12" x2="22" y2="12" />
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          </a>
+                        )}
                         <a
                           className={styles.githubLink}
                           href={`https://github.com/${dev.github}`}
@@ -273,7 +314,7 @@ export default function DeveloperCards() {
 
                 {/* Tags — use languages from GitHub, fall back to stored tags */}
                 <div className={styles.tags}>
-                  {(dev.languages?.length > 0 ? dev.languages : dev.tags).map((tag) => (
+                  {(dev.languages?.length ? dev.languages : dev.tags ?? []).map((tag) => (
                     <span key={tag} className={styles.tag}>
                       {tag}
                     </span>
@@ -319,14 +360,37 @@ export default function DeveloperCards() {
                   <div className={styles.progressBar}>
                     <div
                       className={styles.progressFill}
-                      style={{ width: "100%" }}
+                      style={{
+                        width:
+                          dev.totalClaimed > 0
+                            ? `${Math.max((dev.totalClaimed / maxClaimed) * 100, 6)}%`
+                            : "0%",
+                      }}
                     ></div>
                   </div>
                 </div>
 
+                {/* Info/Summary Section */}
+                {dev.summary && (
+                  <div className={styles.infoSection}>
+                    <p className={styles.infoText}>{dev.summary}</p>
+                  </div>
+                )}
+
               </div>
             ))}
           </div>
+        )}
+
+        {/* Swipe hint — mobile only, cards scroll horizontally */}
+        {!loading && !error && visibleDevs.length > 1 && (
+          <p className={styles.swipeHint}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+            Swipe to explore
+          </p>
         )}
 
       </div>

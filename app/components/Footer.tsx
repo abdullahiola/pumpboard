@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./Footer.module.css";
 
-const footerLinks = {
+const footerLinks: Record<string, { label: string; href: string }[]> = {
   Platform: [
     { label: "Features", href: "#features" },
     { label: "Developers", href: "#developers" },
@@ -75,9 +76,9 @@ export default function Footer() {
             © {new Date().getFullYear()} PumpBoard. Built on Solana. Powered by PumpFun.
           </p>
           <div className={styles.bottomLinks}>
-            <a href="/privacy" className={styles.bottomLink}>Privacy</a>
-            <a href="/terms" className={styles.bottomLink}>Terms</a>
-            <a href="/contact" className={styles.bottomLink}>Contact</a>
+            <Link href="/privacy" className={styles.bottomLink}>Privacy</Link>
+            <Link href="/terms" className={styles.bottomLink}>Terms</Link>
+            <Link href="/contact" className={styles.bottomLink}>Contact</Link>
           </div>
         </div>
       </div>

@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import styles from "../components/LegalPage.module.css";
 
 export default function Contact() {
   return (
     <div className={styles.legalPage}>
       <div className="container">
-        <a href="/" className={styles.backLink}>← Back to Home</a>
+        <Link href="/" className={styles.backLink}>← Back to Home</Link>
         <h1 className={styles.title}>Contact Us</h1>
         <p className={styles.updated}>We&apos;d love to hear from you</p>
 

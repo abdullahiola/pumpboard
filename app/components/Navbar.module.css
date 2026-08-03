@@ -109,6 +109,8 @@
   border-radius: var(--pb-radius-sm);
   cursor: pointer;
   transition: all var(--pb-transition);
+  z-index: 15;
+  position: relative;
 }
 
 .burger span {
@@ -141,6 +143,15 @@
 }
 
 @media (max-width: 768px) {
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
   .navLinks {
     position: fixed;
     top: 0;
@@ -157,6 +168,8 @@
     transform: translateX(100%);
     transition: transform var(--pb-transition);
     z-index: 5;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .navLinks.open {
@@ -215,7 +228,7 @@
 }
 
 .storeLink:hover {
-  background: var(--pb-bg-hover);
+  background: var(--pb-accent-dim);
 }
 
 .storeLink svg {
