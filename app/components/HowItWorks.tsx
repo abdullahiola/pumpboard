@@ -33,9 +33,9 @@ const steps: Step[] = [
   },
   {
     step: "03",
-    title: "Get Onboarded",
+    title: "We Launch Your Token",
     description:
-      "Your profile is created on PumpBoard with your repos, contributions, and a unique donation address powered by PumpFun.",
+      "Your profile goes live on PumpBoard and we launch a token for your work on PumpFun, with an official community created around it.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -47,9 +47,9 @@ const steps: Step[] = [
   },
   {
     step: "04",
-    title: "Receive Donations",
+    title: "Join & Post",
     description:
-      "Supporters donate SOL directly to your PumpFun wallet. Every transaction is recorded on the Solana blockchain.",
+      "Join your community and post about what you built. As your token trades, 100% of the fees are redirected to you — every transaction recorded on Solana.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -58,9 +58,9 @@ const steps: Step[] = [
   },
   {
     step: "05",
-    title: "Claim & Build",
+    title: "Claim Your Fees",
     description:
-      "Claim your donations instantly to any Solana wallet. Keep building, keep earning — the cycle of open-source funding.",
+      "Claim your accumulated trading fees to any Solana wallet, anytime. Keep building, keep earning — the cycle of open-source funding.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="13 17 18 12 13 7" />
