@@ -104,8 +104,9 @@ export default function Hero() {
           <Image
             src="/banner.png"
             alt="PumpBoard Banner"
-            width={600}
-            height={400}
+            width={857}
+            height={366}
+            sizes="(max-width: 968px) 220px, 340px"
             className={styles.bannerImage}
             priority
           />
