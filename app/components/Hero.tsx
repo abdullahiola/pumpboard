@@ -102,11 +102,19 @@ export default function Hero() {
         <div className={`${styles.heroBanner} animate-slide-right delay-3`}>
           <div className={styles.bannerGlow}></div>
           <Image
+            src="/banner-dark.png"
+            alt="PumpBoard Banner"
+            width={600}
+            height={400}
+            className={`${styles.bannerImage} ${styles.bannerImageDark}`}
+            priority
+          />
+          <Image
             src="/banner.png"
             alt="PumpBoard Banner"
             width={600}
             height={400}
-            className={styles.bannerImage}
+            className={`${styles.bannerImage} ${styles.bannerImageLight}`}
             priority
           />
           <div className={styles.orbitRing}>
