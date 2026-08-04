@@ -183,6 +183,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
 }
 
 .bannerGlow {
@@ -197,7 +201,7 @@
 .bannerImage {
   position: relative;
   z-index: 2;
-  width: 100%;
+  width: 62%;
   height: auto;
   filter: drop-shadow(0 20px 60px rgba(13, 147, 115, 0.2));
   animation: float 6s ease-in-out infinite;
@@ -219,8 +223,8 @@
 
 .orbitRing {
   position: absolute;
-  width: 320px;
-  height: 320px;
+  width: 74%;
+  aspect-ratio: 1 / 1;
   border: 1px dashed var(--pb-orbit-border);
   border-radius: 50%;
   z-index: 1;
@@ -229,8 +233,8 @@
 
 .orbitRingOuter {
   position: absolute;
-  width: 420px;
-  height: 420px;
+  width: 96%;
+  aspect-ratio: 1 / 1;
   border: 1px solid var(--pb-orbit-border-outer);
   border-radius: 50%;
   z-index: 1;
@@ -342,7 +346,8 @@
   }
 
   .heroBanner {
-    max-width: 340px;
+    max-width: 380px;
+    aspect-ratio: 4 / 3;
     margin: 0 auto;
     background: var(--pb-gradient-card);
     backdrop-filter: blur(20px);
@@ -350,18 +355,16 @@
     border: 1px solid var(--pb-border);
     border-radius: var(--pb-radius-lg);
     box-shadow: var(--pb-shadow-card);
-    padding: 32px;
+    padding: 24px;
     overflow: hidden;
   }
 
-  .orbitRing {
-    width: 240px;
-    height: 240px;
+  .bannerImage {
+    width: 68%;
   }
 
-  .orbitRingOuter {
-    width: 300px;
-    height: 300px;
+  .orbitRing {
+    width: 78%;
   }
 
   .bannerGlow {
@@ -402,17 +405,7 @@
   }
 
   .heroBanner {
-    max-width: 100%;
-    padding: 24px;
-  }
-
-  .orbitRing {
-    width: 200px;
-    height: 200px;
-  }
-
-  .orbitRingOuter {
-    width: 260px;
-    height: 260px;
+    max-width: 320px;
+    padding: 20px;
   }
 }

@@ -104,16 +104,18 @@ export default function Hero() {
           <Image
             src="/banner-dark.png"
             alt="PumpBoard Banner"
-            width={600}
-            height={400}
+            width={857}
+            height={366}
+            sizes="(max-width: 968px) 220px, 340px"
             className={`${styles.bannerImage} ${styles.bannerImageDark}`}
             priority
           />
           <Image
             src="/banner.png"
             alt="PumpBoard Banner"
-            width={600}
-            height={400}
+            width={857}
+            height={366}
+            sizes="(max-width: 968px) 220px, 340px"
             className={`${styles.bannerImage} ${styles.bannerImageLight}`}
             priority
           />
