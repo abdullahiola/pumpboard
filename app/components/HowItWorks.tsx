@@ -49,7 +49,7 @@ const steps: Step[] = [
     step: "04",
     title: "Join & Post",
     description:
-      "Join your community and post about what you built. As your token trades, 100% of the fees are redirected to you — every transaction recorded on Solana.",
+      "Join your community and post about what you built. As your token trades, 100% of the fees are redirected to you, with every transaction recorded on Solana.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -60,7 +60,7 @@ const steps: Step[] = [
     step: "05",
     title: "Claim Your Fees",
     description:
-      "Claim your accumulated trading fees to any Solana wallet, anytime. Keep building, keep earning — the cycle of open-source funding.",
+      "Claim your accumulated trading fees to any Solana wallet, anytime. Keep building, keep earning. That's the cycle of open-source funding.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="13 17 18 12 13 7" />

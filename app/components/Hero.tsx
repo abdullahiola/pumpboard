@@ -54,7 +54,7 @@ export default function Hero() {
           <p className={`${styles.heroDescription} animate-fade-in-up delay-3`}>
             PumpBoard connects open-source developers with supporters through
             PumpFun&apos;s decentralized donation protocol. Onboard, build, and get
-            funded — all on-chain.
+            funded, all on-chain.
           </p>
 
           <div className={`${styles.heroButtons} animate-fade-in-up delay-4`}>

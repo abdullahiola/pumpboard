@@ -20,7 +20,7 @@ const features: Feature[] = [
     ),
     title: "GitHub Integration",
     description:
-      "Link your GitHub profile to automatically verify your contributions. Pull requests, commits, and repos — all tracked on-chain.",
+      "Link your GitHub profile to automatically verify your contributions. Pull requests, commits, and repos, all tracked on-chain.",
     tag: "Verification",
   },
   {

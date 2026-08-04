@@ -53,7 +53,7 @@ export default function Contact() {
           <h2>Apply to Get Listed</h2>
           <p>
             Our team actively scouts open-source developers and reaches out
-            directly — but you can also apply here. Tell us who you are and
+            directly, but you can also apply here. Tell us who you are and
             what you build, and we&apos;ll get back to you.
           </p>
           <form className={formStyles.form} onSubmit={handleSubmit}>
