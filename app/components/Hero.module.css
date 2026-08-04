@@ -207,6 +207,20 @@
   animation: float 6s ease-in-out infinite;
 }
 
+/* banner-dark.png has light strokes for the dark theme; banner.png keeps the
+   original dark strokes for the light theme */
+.bannerImageLight {
+  display: none;
+}
+
+:global([data-theme="light"]) .bannerImageDark {
+  display: none;
+}
+
+:global([data-theme="light"]) .bannerImageLight {
+  display: block;
+}
+
 .orbitRing {
   position: absolute;
   width: 74%;

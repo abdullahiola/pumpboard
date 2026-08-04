@@ -54,7 +54,7 @@ export default function Hero() {
           <p className={`${styles.heroDescription} animate-fade-in-up delay-3`}>
             PumpBoard connects open-source developers with supporters through
             PumpFun&apos;s decentralized donation protocol. Onboard, build, and get
-            funded — all on-chain.
+            funded, all on-chain.
           </p>
 
           <div className={`${styles.heroButtons} animate-fade-in-up delay-4`}>
@@ -102,12 +102,21 @@ export default function Hero() {
         <div className={`${styles.heroBanner} animate-slide-right delay-3`}>
           <div className={styles.bannerGlow}></div>
           <Image
+            src="/banner-dark.png"
+            alt="PumpBoard Banner"
+            width={857}
+            height={366}
+            sizes="(max-width: 968px) 220px, 340px"
+            className={`${styles.bannerImage} ${styles.bannerImageDark}`}
+            priority
+          />
+          <Image
             src="/banner.png"
             alt="PumpBoard Banner"
             width={857}
             height={366}
             sizes="(max-width: 968px) 220px, 340px"
-            className={styles.bannerImage}
+            className={`${styles.bannerImage} ${styles.bannerImageLight}`}
             priority
           />
           <div className={styles.orbitRing}>

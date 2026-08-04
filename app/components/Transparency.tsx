@@ -11,7 +11,7 @@ const pillars: Pillar[] = [
   {
     title: "We Launch It For You",
     description:
-      "PumpBoard launches a token for you on PumpFun and sets up an official community around it. Token creation, fee routing, and all on-chain setup are handled — tied to your GitHub.",
+      "PumpBoard launches a token for you on PumpFun and sets up an official community around it. Token creation, fee routing, and all on-chain setup are handled for you, tied to your GitHub.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
@@ -24,7 +24,7 @@ const pillars: Pillar[] = [
   {
     title: "100% of Fees. Always Yours.",
     description:
-      "Every trading fee your token generates is redirected to you. PumpBoard doesn't skim a percentage — what the token earns is what you claim.",
+      "Every trading fee your token generates is redirected to you. PumpBoard doesn't skim a percentage. What the token earns is what you claim.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -37,7 +37,7 @@ const pillars: Pillar[] = [
   {
     title: "Fully On-Chain & Auditable",
     description:
-      "Fee routing and every claim are public transactions on Solana. Anyone can independently verify any amount on a block explorer like Solscan — no trust required.",
+      "Fee routing and every claim are public transactions on Solana. Anyone can independently verify any amount on a block explorer like Solscan, no trust required.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" />
@@ -49,7 +49,7 @@ const pillars: Pillar[] = [
   {
     title: "Public By Default",
     description:
-      "Every developer's claimed total is published on the leaderboard, and our platform stats are computed directly from those same profiles — not marketing numbers.",
+      "Every developer's claimed total is published on the leaderboard, and our platform stats are computed directly from those same profiles, not marketing numbers.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -63,7 +63,7 @@ const yourPart = [
   {
     step: "01",
     title: "Join your community",
-    description: "We create an official community for your token when it launches — join it and meet your supporters.",
+    description: "We create an official community for your token when it launches. Join it and meet your supporters.",
   },
   {
     step: "02",
@@ -73,7 +73,7 @@ const yourPart = [
   {
     step: "03",
     title: "Claim your fees",
-    description: "100% of the trading fees are yours — claim them to any Solana wallet, whenever you want.",
+    description: "100% of the trading fees are yours. Claim them to any Solana wallet, whenever you want.",
   },
 ];
 
@@ -96,7 +96,7 @@ export default function Transparency() {
           <p className="section-subtitle">
             No hidden fees, no fine print. We launch a token for your work,
             redirect every trading fee it generates to you, and put it all on
-            Solana — in public, where anyone can check.
+            Solana, in public, where anyone can check.
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export default function Transparency() {
 
         <div className={styles.verifyStrip}>
           <div className={styles.verifyText}>
-            <span className={styles.verifyTitle}>Don&apos;t trust — verify.</span>
+            <span className={styles.verifyTitle}>Don&apos;t trust, verify.</span>
             <span className={styles.verifyDescription}>
               Pick any developer on the leaderboard and check their claimed
               rewards yourself on a Solana explorer.

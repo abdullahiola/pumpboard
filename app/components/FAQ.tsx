@@ -14,17 +14,17 @@ const faqs: FAQItem[] = [
   {
     question: "How does a developer earn on PumpBoard?",
     answer:
-      "We launch a token for your work on PumpFun and redirect 100% of the trading fees it generates to you, tied to your GitHub identity. Every time your token trades, fees accumulate for you to claim — your earnings come from real trading activity, not from a pool we control.",
+      "We launch a token for your work on PumpFun and redirect 100% of the trading fees it generates to you, tied to your GitHub identity. Every time your token trades, fees accumulate for you to claim. Your earnings come from real trading activity, not from a pool we control.",
   },
   {
     question: "Do I need to actively manage anything?",
     answer:
-      "No. Join the community we create for your token, make one post about what you built, and claim your fees — from that point forward, fees flow to you automatically on every trade, permanently.",
+      "No. Join the community we create for your token, make one post about what you built, and claim your fees. From that point forward, fees flow to you automatically on every trade, permanently.",
   },
   {
     question: "Do I need to know anything about crypto?",
     answer:
-      "No. We handle token creation, fee routing, and all on-chain setup. You just connect your GitHub and share a wallet address — or we'll help you set one up.",
+      "No. We handle token creation, fee routing, and all on-chain setup. You just connect your GitHub and share a wallet address, or we'll help you set one up.",
   },
   {
     question: "How much will I earn?",
@@ -34,22 +34,22 @@ const faqs: FAQItem[] = [
   {
     question: "What is pump.fun?",
     answer:
-      "The leading token launchpad on Solana — run by attention, hundreds of millions in daily trading volume. Creator fees are paid automatically on every trade.",
+      "The leading token launchpad on Solana, run by attention, with hundreds of millions in daily trading volume. Creator fees are paid automatically on every trade.",
   },
   {
     question: "What does PumpBoard get out of helping developers claim what they're owed?",
     answer:
-      "We launch the coin and buy supply, which covers listing costs — we generally make around 15–20% of how much the developer makes in fees. Your trading fees are never touched: 100% of them go to you.",
+      "We launch the coin and buy supply, which covers listing costs. We generally make around 15–20% of how much the developer makes in fees. Your trading fees are never touched: 100% of them go to you.",
   },
   {
     question: "How are the leaderboard numbers calculated?",
     answer:
-      "Each developer profile records their total claimed fees, and the leaderboard ranks profiles by that amount. The platform-wide stats shown on this site (total donated, developer count, transactions) are computed automatically from those same profiles — they are the sum of what you can see, not separate marketing figures.",
+      "Each developer profile records their total claimed fees, and the leaderboard ranks profiles by that amount. The platform-wide stats shown on this site (total donated, developer count, transactions) are computed automatically from those same profiles. They are the sum of what you can see, not separate marketing figures.",
   },
   {
     question: "Can I verify the numbers myself?",
     answer:
-      "Yes. Fee routing and every claim are public transactions on the Solana blockchain. You can look up any wallet or transaction on an explorer like Solscan and confirm amounts independently — you don't have to take our word for anything.",
+      "Yes. Fee routing and every claim are public transactions on the Solana blockchain. You can look up any wallet or transaction on an explorer like Solscan and confirm amounts independently. You don't have to take our word for anything.",
   },
   {
     question: "How do I get listed on PumpBoard?",
