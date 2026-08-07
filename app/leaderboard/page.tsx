@@ -8,9 +8,9 @@ export const metadata: Metadata = {
     "Top developers and creators ranked by total claimed rewards on PumpBoard.",
 };
 
-// Regenerate at most once an hour; rankings are baked into the HTML
-// so crawlers and AI fetchers see real content without running JS.
-export const revalidate = 3600;
+// Render at request time so the HTML always carries real data for crawlers
+// and AI fetchers (build-time prerender can't reach the backend, see /).
+export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
   const developers = await getDevelopers();

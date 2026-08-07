@@ -10,9 +10,11 @@ import CTA from "./components/CTA";
 import Footer from "./components/Footer";
 import { getDevelopers, getStats } from "./lib/api";
 
-// Regenerate the page at most once an hour; data is baked into the HTML
-// so crawlers and AI fetchers see real content without running JS.
-export const revalidate = 3600;
+// Render at request time so the HTML always carries real data for crawlers
+// and AI fetchers. Prerendering at build time bakes in an empty page because
+// the backend isn't reachable during docker build. The API responses are
+// still cached for an hour by the fetch calls in lib/api.ts.
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [stats, developers] = await Promise.all([getStats(), getDevelopers()]);
