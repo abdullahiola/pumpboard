@@ -31,10 +31,14 @@ const rankColors: Record<number, { bg: string; text: string }> = {
   3: { bg: "linear-gradient(135deg, #CD7F32, #A0522D)", text: "#fff" },
 };
 
-export default function DeveloperCards() {
+export default function DeveloperCards({
+  initialDevelopers = null,
+}: {
+  initialDevelopers?: Developer[] | null;
+}) {
   const [filter, setFilter] = useState<FilterKey>("developer");
-  const [developers, setDevelopers] = useState<Developer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [developers, setDevelopers] = useState<Developer[]>(initialDevelopers ?? []);
+  const [loading, setLoading] = useState(initialDevelopers === null);
   const [error, setError] = useState<string | null>(null);
   const [solPrice, setSolPrice] = useState<number | null>(null);
   const [selected, setSelected] = useState<Developer | null>(null);
@@ -51,7 +55,9 @@ export default function DeveloperCards() {
     };
   }, [selected]);
 
+  // Fallback: only fetch in the browser when the server render had no data
   useEffect(() => {
+    if (initialDevelopers !== null) return;
     async function fetchDevelopers() {
       try {
         setLoading(true);
@@ -66,7 +72,7 @@ export default function DeveloperCards() {
       }
     }
     fetchDevelopers();
-  }, []);
+  }, [initialDevelopers]);
 
   useEffect(() => {
     fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd")
@@ -107,7 +113,7 @@ export default function DeveloperCards() {
           <p className="section-subtitle">
             Meet the builders who have been onboarded to PumpBoard. See their
             contributions and how much they&apos;ve claimed through decentralized
-            donations.
+            sponsorship.
           </p>
         </div>
 

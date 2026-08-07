@@ -21,7 +21,7 @@ const statConfig: StatConfig[] = [
     key: "totalDonated",
     prefix: "$",
     suffix: "+",
-    label: "Total Donated",
+    label: "Total Sponsored",
     description: "Through PumpFun protocol",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -133,17 +133,23 @@ function StatCard({ config, value, index, isVisible }: StatCardProps) {
   );
 }
 
-export default function Stats() {
+export default function Stats({
+  initialStats = null,
+}: {
+  initialStats?: PlatformStats | null;
+}) {
   const [isVisible, setIsVisible] = useState(false);
-  const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [stats, setStats] = useState<PlatformStats | null>(initialStats);
   const sectionRef = useRef<HTMLElement | null>(null);
 
+  // Fallback: only fetch in the browser when the server render had no data
   useEffect(() => {
+    if (initialStats) return;
     fetch(`${API_URL}/api/stats`)
       .then((r) => r.json())
       .then(setStats)
       .catch(() => {});
-  }, []);
+  }, [initialStats]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

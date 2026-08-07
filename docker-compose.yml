@@ -30,6 +30,9 @@ services:
         NEXT_PUBLIC_API_URL: ""
     container_name: pumpboard-web
     restart: unless-stopped
+    environment:
+      # Server-side rendering fetches the API through the docker network
+      API_URL_INTERNAL: http://backend:8000
     depends_on:
       backend:
         condition: service_healthy

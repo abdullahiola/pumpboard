@@ -14,15 +14,21 @@ function formatShort(num: number): string {
   return num.toString();
 }
 
-export default function Hero() {
-  const [stats, setStats] = useState<PlatformStats | null>(null);
+export default function Hero({
+  initialStats = null,
+}: {
+  initialStats?: PlatformStats | null;
+}) {
+  const [stats, setStats] = useState<PlatformStats | null>(initialStats);
 
+  // Fallback: only fetch in the browser when the server render had no data
   useEffect(() => {
+    if (initialStats) return;
     fetch(`${API_URL}/api/stats`)
       .then((r) => r.json())
       .then(setStats)
       .catch(() => {});
-  }, []);
+  }, [initialStats]);
 
   return (
     <section className={styles.hero} id="hero">
@@ -46,14 +52,14 @@ export default function Hero() {
           <h1 className={`${styles.heroTitle} animate-fade-in-up delay-2`}>
             Decentralized
             <br />
-            <span className={styles.gradientText}>GitHub Donations</span>
+            <span className={styles.gradientText}>GitHub Sponsorship</span>
             <br />
             for Developers
           </h1>
 
           <p className={`${styles.heroDescription} animate-fade-in-up delay-3`}>
             PumpBoard connects open-source developers with supporters through
-            PumpFun&apos;s decentralized donation protocol. Onboard, build, and get
+            PumpFun&apos;s decentralized sponsorship protocol. Onboard, build, and get
             funded, all on-chain.
           </p>
 
@@ -80,7 +86,7 @@ export default function Hero() {
               <span className={styles.statValue}>
                 ${stats ? formatShort(stats.totalDonated) : "—"}+
               </span>
-              <span className={styles.statLabel}>Total Donated</span>
+              <span className={styles.statLabel}>Total Sponsored</span>
             </div>
             <div className={styles.statDivider}></div>
             <div className={styles.statItem}>

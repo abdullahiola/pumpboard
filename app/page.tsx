@@ -8,18 +8,25 @@ import Stats from "./components/Stats";
 import FAQ from "./components/FAQ";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
+import { getDevelopers, getStats } from "./lib/api";
 
-export default function Home() {
+// Regenerate the page at most once an hour; data is baked into the HTML
+// so crawlers and AI fetchers see real content without running JS.
+export const revalidate = 3600;
+
+export default async function Home() {
+  const [stats, developers] = await Promise.all([getStats(), getDevelopers()]);
+
   return (
     <>
       <Navbar />
       <main>
-        <Hero />
+        <Hero initialStats={stats} />
         <Features />
-        <DeveloperCards />
+        <DeveloperCards initialDevelopers={developers} />
         <HowItWorks />
         <Transparency />
-        <Stats />
+        <Stats initialStats={stats} />
         <FAQ />
         <CTA />
       </main>

@@ -44,16 +44,24 @@ function SortIcon({
   );
 }
 
-export default function LeaderboardPage() {
-  const [developers, setDevelopers] = useState<Developer[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function LeaderboardClient({
+  initialDevelopers = null,
+}: {
+  initialDevelopers?: Developer[] | null;
+}) {
+  const [developers, setDevelopers] = useState<Developer[]>(
+    initialDevelopers ? initialDevelopers.filter((d) => d.totalClaimed > 0) : []
+  );
+  const [loading, setLoading] = useState(initialDevelopers === null);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("totalClaimed");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [solPrice, setSolPrice] = useState<number | null>(null);
 
+  // Fallback: only fetch in the browser when the server render had no data
   useEffect(() => {
+    if (initialDevelopers !== null) return;
     async function fetchData() {
       try {
         const res = await fetch(`${API_URL}/api/developers`);
@@ -66,7 +74,7 @@ export default function LeaderboardPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [initialDevelopers]);
 
   // Fetch live SOL price
   useEffect(() => {
