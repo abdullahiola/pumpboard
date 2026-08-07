@@ -65,3 +65,4 @@ backend/.env
 
 # backend derived cache
 backend/data/github_cache.json
+backend/data/telegram_chat.json

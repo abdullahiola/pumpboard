@@ -62,7 +62,9 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Telegram visitor alerts
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")  # optional: auto-discovered if empty
+TELEGRAM_CHAT_FILE = Path(__file__).parent / "data" / "telegram_chat.json"
+_resolved_chat_id: str = ""
 VISIT_SECRET = os.getenv("VISIT_SECRET", "")  # optional shared secret with the frontend
 VISIT_COOLDOWN = 3600  # at most one alert per visitor per hour
 _visit_notified: dict = {}  # visitor key -> last alert timestamp
@@ -328,9 +330,50 @@ def _looks_like_bot(user_agent: str) -> bool:
     return not ua or any(marker in ua for marker in BOT_UA_MARKERS)
 
 
+async def _get_chat_id(client: httpx.AsyncClient) -> str:
+    """Return the alert chat ID, discovering it from the bot's messages when
+    TELEGRAM_CHAT_ID isn't set. Requires the owner to have messaged the bot
+    once (e.g. /start); the discovered ID is persisted for later restarts."""
+    global _resolved_chat_id
+    if TELEGRAM_CHAT_ID:
+        return TELEGRAM_CHAT_ID
+    if _resolved_chat_id:
+        return _resolved_chat_id
+
+    if TELEGRAM_CHAT_FILE.exists():
+        try:
+            with open(TELEGRAM_CHAT_FILE, "r") as f:
+                _resolved_chat_id = str(json.load(f).get("chat_id", ""))
+            if _resolved_chat_id:
+                return _resolved_chat_id
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    try:
+        resp = await client.get(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
+        )
+        updates = resp.json().get("result", [])
+    except (httpx.RequestError, ValueError):
+        return ""
+
+    for update in reversed(updates):
+        chat = (update.get("message") or {}).get("chat") or {}
+        if chat.get("id"):
+            _resolved_chat_id = str(chat["id"])
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            with open(TELEGRAM_CHAT_FILE, "w") as f:
+                json.dump({"chat_id": _resolved_chat_id}, f)
+            return _resolved_chat_id
+    return ""
+
+
 async def _send_visit_alert(v: VisitIn):
     location = ""
     async with httpx.AsyncClient(timeout=5) as client:
+        chat_id = await _get_chat_id(client)
+        if not chat_id:
+            return
         # Best-effort geo lookup, free tier, no key needed
         if v.ip:
             try:
@@ -358,7 +401,7 @@ async def _send_visit_alert(v: VisitIn):
         try:
             await client.post(
                 f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-                json={"chat_id": TELEGRAM_CHAT_ID, "text": "\n".join(lines)},
+                json={"chat_id": chat_id, "text": "\n".join(lines)},
             )
         except httpx.RequestError:
             pass
@@ -367,7 +410,7 @@ async def _send_visit_alert(v: VisitIn):
 @app.post("/api/visit", status_code=204)
 async def track_visit(v: VisitIn, x_visit_secret: str = Header(default="")):
     """Called by the Next.js server on page views; alerts via Telegram."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+    if not TELEGRAM_BOT_TOKEN:
         return
     if VISIT_SECRET and x_visit_secret != VISIT_SECRET:
         raise HTTPException(status_code=401, detail="Invalid visit secret")
