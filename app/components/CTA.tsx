@@ -22,7 +22,7 @@ export default function CTA() {
           </h2>
           <p className={styles.ctaDescription}>
             Join PumpBoard today and start supporting the developers who build the
-            tools you rely on. Every donation is on-chain, transparent, and instant.
+            tools you rely on. Every sponsorship is on-chain, transparent, and instant.
           </p>
         </div>
 
@@ -32,17 +32,17 @@ export default function CTA() {
               <span className={styles.codeDot} style={{ background: "#ff5f57" }}></span>
               <span className={styles.codeDot} style={{ background: "#febc2e" }}></span>
               <span className={styles.codeDot} style={{ background: "#28c840" }}></span>
-              <span className={styles.codeTitle}>donate.sol</span>
+              <span className={styles.codeTitle}>sponsor.sol</span>
             </div>
             <div className={styles.codeBody}>
               <code>
-                <span className={styles.codeComment}>{"// PumpBoard Donation"}</span>
+                <span className={styles.codeComment}>{"// PumpBoard Sponsorship"}</span>
                 <br />
                 <span className={styles.codeKeyword}>const</span>{" "}
-                <span className={styles.codeVar}>donation</span> ={" "}
+                <span className={styles.codeVar}>sponsorship</span> ={" "}
                 <span className={styles.codeKeyword}>await</span>{" "}
                 <span className={styles.codeFunc}>pumpfun</span>
-                <span className={styles.codePunc}>.donate({"{"}</span>
+                <span className={styles.codePunc}>.sponsor({"{"}</span>
                 <br />
                 {"  "}
                 <span className={styles.codeProp}>developer</span>:{" "}

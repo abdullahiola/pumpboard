@@ -25,7 +25,7 @@ export default function Privacy() {
           <p>We may collect the following types of information:</p>
           <ul>
             <li><strong>GitHub Profile Data:</strong> Public profile information including username, avatar, repositories, and contribution history when you connect your GitHub account.</li>
-            <li><strong>Wallet Information:</strong> Solana wallet addresses used for donations and claims.</li>
+            <li><strong>Wallet Information:</strong> Solana wallet addresses used for sponsorships and claims.</li>
             <li><strong>Usage Data:</strong> Anonymous analytics about how you interact with our platform.</li>
           </ul>
         </section>
@@ -33,7 +33,7 @@ export default function Privacy() {
         <section className={styles.section}>
           <h2>3. Blockchain Transactions</h2>
           <p>
-            All donations and claims are processed on the Solana blockchain. Blockchain transactions 
+            All sponsorships and claims are processed on the Solana blockchain. Blockchain transactions
             are public and immutable by nature. We do not control or store private keys.
           </p>
         </section>

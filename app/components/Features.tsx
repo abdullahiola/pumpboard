@@ -29,7 +29,7 @@ const features: Feature[] = [
     ),
     title: "PumpFun Protocol",
     description:
-      "Built on PumpFun's decentralized donation infrastructure on Solana. Every donation is transparent, instant, and trustless.",
+      "Built on PumpFun's decentralized sponsorship infrastructure on Solana. Every sponsorship is transparent, instant, and trustless.",
     tag: "Solana",
     link: "https://pump.fun",
   },
@@ -41,7 +41,7 @@ const features: Feature[] = [
     ),
     title: "Instant Claims",
     description:
-      "Developers can claim their donations instantly to any Solana wallet. No middlemen, no delays, no fees beyond gas.",
+      "Developers can claim their sponsorships instantly to any Solana wallet. No middlemen, no delays, no fees beyond gas.",
     tag: "Fast",
   },
   {
@@ -74,7 +74,7 @@ const features: Feature[] = [
     ),
     title: "Live Analytics",
     description:
-      "Track donations in real-time. See how your contributions are distributed and monitor the impact of your support.",
+      "Track sponsorships in real-time. See how your contributions are distributed and monitor the impact of your support.",
     tag: "Data",
   },
 ];

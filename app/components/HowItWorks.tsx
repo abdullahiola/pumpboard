@@ -15,7 +15,7 @@ const steps: Step[] = [
     step: "01",
     title: "Download PumpFun",
     description:
-      "Get the PumpFun app from the App Store or Google Play Store to start your decentralized donation journey.",
+      "Get the PumpFun app from the App Store or Google Play Store to start your decentralized sponsorship journey.",
     icon: (
       <img src="/pump-logomark.svg" alt="PumpFun" width={32} height={32} style={{ opacity: 0.9 }} />
     ),
@@ -86,7 +86,7 @@ export default function HowItWorks() {
           </span>
           <h2 className="section-title">How It Works</h2>
           <p className="section-subtitle">
-            Five simple steps to start receiving decentralized donations for your
+            Five simple steps to start receiving decentralized sponsorship for your
             open-source work.
           </p>
         </div>

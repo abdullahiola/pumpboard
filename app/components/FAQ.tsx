@@ -44,7 +44,7 @@ const faqs: FAQItem[] = [
   {
     question: "How are the leaderboard numbers calculated?",
     answer:
-      "Each developer profile records their total claimed fees, and the leaderboard ranks profiles by that amount. The platform-wide stats shown on this site (total donated, developer count, transactions) are computed automatically from those same profiles. They are the sum of what you can see, not separate marketing figures.",
+      "Each developer profile records their total claimed fees, and the leaderboard ranks profiles by that amount. The platform-wide stats shown on this site (total sponsored, developer count, transactions) are computed automatically from those same profiles. They are the sum of what you can see, not separate marketing figures.",
   },
   {
     question: "Can I verify the numbers myself?",

@@ -31,7 +31,7 @@ export default function Footer() {
               <span className={styles.logoText}>PumpBoard</span>
             </a>
             <p className={styles.footerDesc}>
-              Decentralized GitHub donations powered by PumpFun on Solana. 
+              Decentralized GitHub sponsorship powered by PumpFun on Solana.
               Supporting open-source developers worldwide.
             </p>
             {/* Social links — uncomment when real URLs are available
