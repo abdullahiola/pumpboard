@@ -14,5 +14,38 @@ export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
   const developers = await getDevelopers();
-  return <LeaderboardClient initialDevelopers={developers} />;
+
+  const ranked = (developers ?? [])
+    .filter((d) => d.totalClaimed > 0)
+    .sort((a, b) => b.totalClaimed - a.totalClaimed);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "PumpBoard Leaderboard",
+    description:
+      "Developers and creators ranked by total claimed sponsorship rewards on PumpBoard.",
+    numberOfItems: ranked.length,
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    itemListElement: ranked.map((dev, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Person",
+        name: dev.name || dev.github,
+        ...(dev.github && { url: `https://github.com/${dev.github}` }),
+        description: `Claimed $${dev.totalClaimed.toLocaleString("en-US")} in sponsorship on PumpBoard`,
+      },
+    })),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <LeaderboardClient initialDevelopers={developers} />
+    </>
+  );
 }

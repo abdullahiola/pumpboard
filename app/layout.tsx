@@ -15,7 +15,30 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["400", "500", "600", "700"],
 });
 
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://pumpboard.dev/#org",
+      name: "PumpBoard",
+      url: "https://pumpboard.dev",
+      logo: "https://pumpboard.dev/logo-icon.png",
+      description:
+        "Decentralized sponsorship for open-source developers, powered by PumpFun on Solana.",
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://pumpboard.dev/#website",
+      name: "PumpBoard",
+      url: "https://pumpboard.dev",
+      publisher: { "@id": "https://pumpboard.dev/#org" },
+    },
+  ],
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://pumpboard.dev"),
   title: "PumpBoard — Decentralized Sponsorship for Open-Source Developers",
   description:
     "Onboard developers from GitHub and sponsor them through PumpFun decentralized sponsorship. Support open-source builders on Solana.",
@@ -39,7 +62,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body>{children}</body>
+      <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
