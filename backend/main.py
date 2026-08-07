@@ -60,6 +60,13 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 # Serve uploaded files at /uploads/*
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
+# Telegram visitor alerts
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+VISIT_SECRET = os.getenv("VISIT_SECRET", "")  # optional shared secret with the frontend
+VISIT_COOLDOWN = 3600  # at most one alert per visitor per hour
+_visit_notified: dict = {}  # visitor key -> last alert timestamp
+
 # GitHub config
 GITHUB_API = "https://api.github.com"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
@@ -298,6 +305,86 @@ async def enrich_developer(dev: dict) -> dict:
         if dev.get(field):
             merged[field] = dev[field]
     return merged
+
+
+# --- Visitor alerts ---
+
+class VisitIn(BaseModel):
+    path: str = ""
+    ip: str = ""
+    userAgent: str = ""
+    referrer: str = ""
+
+
+BOT_UA_MARKERS = (
+    "bot", "crawler", "spider", "crawl", "slurp", "curl", "wget",
+    "python-requests", "httpx", "go-http-client", "claude", "gpt",
+    "anthropic", "openai", "perplexity", "headless",
+)
+
+
+def _looks_like_bot(user_agent: str) -> bool:
+    ua = user_agent.lower()
+    return not ua or any(marker in ua for marker in BOT_UA_MARKERS)
+
+
+async def _send_visit_alert(v: VisitIn):
+    location = ""
+    async with httpx.AsyncClient(timeout=5) as client:
+        # Best-effort geo lookup, free tier, no key needed
+        if v.ip:
+            try:
+                resp = await client.get(
+                    f"http://ip-api.com/json/{v.ip}",
+                    params={"fields": "status,country,city"},
+                )
+                geo = resp.json()
+                if geo.get("status") == "success":
+                    location = ", ".join(filter(None, [geo.get("city"), geo.get("country")]))
+            except (httpx.RequestError, ValueError):
+                pass
+
+        label = "🤖 Bot/crawler" if _looks_like_bot(v.userAgent) else "👀 Visitor"
+        lines = [f"{label} on pumpboard.dev", f"Page: {v.path or '/'}"]
+        if v.ip:
+            lines.append(f"IP: {v.ip}")
+        if location:
+            lines.append(f"Location: {location}")
+        if v.userAgent:
+            lines.append(f"Agent: {v.userAgent[:200]}")
+        if v.referrer:
+            lines.append(f"From: {v.referrer}")
+
+        try:
+            await client.post(
+                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                json={"chat_id": TELEGRAM_CHAT_ID, "text": "\n".join(lines)},
+            )
+        except httpx.RequestError:
+            pass
+
+
+@app.post("/api/visit", status_code=204)
+async def track_visit(v: VisitIn, x_visit_secret: str = Header(default="")):
+    """Called by the Next.js server on page views; alerts via Telegram."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return
+    if VISIT_SECRET and x_visit_secret != VISIT_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid visit secret")
+
+    now = time.time()
+    key = v.ip or v.userAgent or "unknown"
+    if now - _visit_notified.get(key, 0) < VISIT_COOLDOWN:
+        return
+    _visit_notified[key] = now
+
+    # Keep the dedupe map from growing forever
+    if len(_visit_notified) > 10000:
+        cutoff = now - VISIT_COOLDOWN
+        for k in [k for k, ts in _visit_notified.items() if ts < cutoff]:
+            _visit_notified.pop(k, None)
+
+    asyncio.create_task(_send_visit_alert(v))
 
 
 # --- Endpoints ---
