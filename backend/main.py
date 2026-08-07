@@ -21,9 +21,12 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     _cache.update(load_github_cache())
+    _visit_stats.update(load_visit_stats())
     refresher = asyncio.create_task(github_refresher())
+    poller = asyncio.create_task(telegram_poller())
     yield
     refresher.cancel()
+    poller.cancel()
 
 
 app = FastAPI(title="PumpBoard API", version="1.0.0", lifespan=lifespan)
@@ -68,6 +71,11 @@ _resolved_chat_id: str = ""
 VISIT_SECRET = os.getenv("VISIT_SECRET", "")  # optional shared secret with the frontend
 VISIT_COOLDOWN = 3600  # at most one alert per visitor per hour
 _visit_notified: dict = {}  # visitor key -> last alert timestamp
+
+# Aggregate visit stats, persisted to data/visits.json
+VISITS_FILE = DATA_DIR / "visits.json"
+_visit_stats: dict = {"total": 0, "byCountry": {}, "byDevice": {}, "byPath": {}}
+_geo_cache: dict = {}  # ip -> (location string, country)
 
 # GitHub config
 GITHUB_API = "https://api.github.com"
@@ -330,69 +338,127 @@ def _looks_like_bot(user_agent: str) -> bool:
     return not ua or any(marker in ua for marker in BOT_UA_MARKERS)
 
 
-async def _get_chat_id(client: httpx.AsyncClient) -> str:
-    """Return the alert chat ID, discovering it from the bot's messages when
-    TELEGRAM_CHAT_ID isn't set. Requires the owner to have messaged the bot
-    once (e.g. /start); the discovered ID is persisted for later restarts."""
+def _classify_device(user_agent: str) -> str:
+    if _looks_like_bot(user_agent):
+        return "Bot"
+    ua = user_agent.lower()
+    if "ipad" in ua or "tablet" in ua:
+        return "Tablet"
+    if "iphone" in ua or "android" in ua or "mobi" in ua:
+        return "Mobile"
+    return "Desktop"
+
+
+def load_visit_stats() -> dict:
+    if not VISITS_FILE.exists():
+        return {}
+    try:
+        with open(VISITS_FILE, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_visit_stats():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(VISITS_FILE, "w") as f:
+        json.dump(_visit_stats, f, indent=2)
+
+
+async def _lookup_location(client: httpx.AsyncClient, ip: str) -> tuple[str, str]:
+    """Best-effort geo lookup (free tier, no key). Returns (location, country)."""
+    if not ip:
+        return "", ""
+    if ip in _geo_cache:
+        return _geo_cache[ip]
+    try:
+        resp = await client.get(
+            f"http://ip-api.com/json/{ip}",
+            params={"fields": "status,country,city"},
+        )
+        geo = resp.json()
+        if geo.get("status") == "success":
+            country = geo.get("country") or ""
+            location = ", ".join(filter(None, [geo.get("city"), country]))
+            if len(_geo_cache) > 5000:
+                _geo_cache.clear()
+            _geo_cache[ip] = (location, country)
+            return location, country
+    except (httpx.RequestError, ValueError):
+        pass
+    return "", ""
+
+
+def _owner_chat_id() -> str:
+    """The chat that receives alerts: env override, else the persisted owner."""
     global _resolved_chat_id
     if TELEGRAM_CHAT_ID:
         return TELEGRAM_CHAT_ID
     if _resolved_chat_id:
         return _resolved_chat_id
-
     if TELEGRAM_CHAT_FILE.exists():
         try:
             with open(TELEGRAM_CHAT_FILE, "r") as f:
                 _resolved_chat_id = str(json.load(f).get("chat_id", ""))
-            if _resolved_chat_id:
-                return _resolved_chat_id
         except (json.JSONDecodeError, OSError):
             pass
-
-    try:
-        resp = await client.get(
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
-        )
-        updates = resp.json().get("result", [])
-    except (httpx.RequestError, ValueError):
-        return ""
-
-    for update in reversed(updates):
-        chat = (update.get("message") or {}).get("chat") or {}
-        if chat.get("id"):
-            _resolved_chat_id = str(chat["id"])
-            DATA_DIR.mkdir(parents=True, exist_ok=True)
-            with open(TELEGRAM_CHAT_FILE, "w") as f:
-                json.dump({"chat_id": _resolved_chat_id}, f)
-            return _resolved_chat_id
-    return ""
+    return _resolved_chat_id
 
 
-async def _send_visit_alert(v: VisitIn):
-    location = ""
+def _claim_owner(chat_id: str):
+    global _resolved_chat_id
+    _resolved_chat_id = chat_id
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(TELEGRAM_CHAT_FILE, "w") as f:
+        json.dump({"chat_id": chat_id}, f)
+
+
+def _stats_message() -> str:
+    def top(bucket: dict, n: int = 5):
+        return sorted(bucket.items(), key=lambda kv: kv[1], reverse=True)[:n]
+
+    s = _visit_stats
+    lines = ["📊 PumpBoard visit stats", f"Total page views: {s.get('total', 0)}"]
+    if s.get("byCountry"):
+        lines += ["", "Top locations:"]
+        lines += [f"• {name}: {n}" for name, n in top(s["byCountry"])]
+    if s.get("byDevice"):
+        lines += ["", "Devices:"]
+        lines += [f"• {name}: {n}" for name, n in top(s["byDevice"], 10)]
+    if s.get("byPath"):
+        lines += ["", "Top pages:"]
+        lines += [f"• {name}: {n}" for name, n in top(s["byPath"])]
+    return "\n".join(lines)
+
+
+async def _process_visit(v: VisitIn, notify: bool):
+    """Record the visit in the stats and, when allowed, alert via Telegram."""
     async with httpx.AsyncClient(timeout=5) as client:
-        chat_id = await _get_chat_id(client)
-        if not chat_id:
-            return
-        # Best-effort geo lookup, free tier, no key needed
-        if v.ip:
-            try:
-                resp = await client.get(
-                    f"http://ip-api.com/json/{v.ip}",
-                    params={"fields": "status,country,city"},
-                )
-                geo = resp.json()
-                if geo.get("status") == "success":
-                    location = ", ".join(filter(None, [geo.get("city"), geo.get("country")]))
-            except (httpx.RequestError, ValueError):
-                pass
+        location, country = await _lookup_location(client, v.ip)
+        device = _classify_device(v.userAgent)
 
-        label = "🤖 Bot/crawler" if _looks_like_bot(v.userAgent) else "👀 Visitor"
+        _visit_stats["total"] = _visit_stats.get("total", 0) + 1
+        for field, key in (
+            ("byCountry", country or "Unknown"),
+            ("byDevice", device),
+            ("byPath", v.path or "/"),
+        ):
+            bucket = _visit_stats.setdefault(field, {})
+            bucket[key] = bucket.get(key, 0) + 1
+        save_visit_stats()
+
+        chat_id = _owner_chat_id()
+        if not (notify and chat_id and TELEGRAM_BOT_TOKEN):
+            return
+
+        label = "🤖 Bot/crawler" if device == "Bot" else "👀 Visitor"
         lines = [f"{label} on pumpboard.dev", f"Page: {v.path or '/'}"]
         if v.ip:
             lines.append(f"IP: {v.ip}")
         if location:
             lines.append(f"Location: {location}")
+        if device != "Bot":
+            lines.append(f"Device: {device}")
         if v.userAgent:
             lines.append(f"Agent: {v.userAgent[:200]}")
         if v.referrer:
@@ -409,25 +475,67 @@ async def _send_visit_alert(v: VisitIn):
 
 @app.post("/api/visit", status_code=204)
 async def track_visit(v: VisitIn, x_visit_secret: str = Header(default="")):
-    """Called by the Next.js server on page views; alerts via Telegram."""
-    if not TELEGRAM_BOT_TOKEN:
-        return
+    """Called by the Next.js server on page views; records stats and alerts."""
     if VISIT_SECRET and x_visit_secret != VISIT_SECRET:
         raise HTTPException(status_code=401, detail="Invalid visit secret")
 
     now = time.time()
     key = v.ip or v.userAgent or "unknown"
-    if now - _visit_notified.get(key, 0) < VISIT_COOLDOWN:
+    notify = now - _visit_notified.get(key, 0) >= VISIT_COOLDOWN
+    if notify:
+        _visit_notified[key] = now
+        # Keep the dedupe map from growing forever
+        if len(_visit_notified) > 10000:
+            cutoff = now - VISIT_COOLDOWN
+            for k in [k for k, ts in _visit_notified.items() if ts < cutoff]:
+                _visit_notified.pop(k, None)
+
+    asyncio.create_task(_process_visit(v, notify))
+
+
+async def telegram_poller():
+    """Long-poll Telegram for incoming messages. The first chat to message the
+    bot is claimed as the owner; /start and /stats from the owner reply with
+    the visit stats. Messages from any other chat are ignored."""
+    if not TELEGRAM_BOT_TOKEN:
         return
-    _visit_notified[key] = now
+    api = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
+    offset = 0
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=40) as client:
+                resp = await client.get(
+                    f"{api}/getUpdates", params={"offset": offset, "timeout": 25}
+                )
+                for update in resp.json().get("result", []):
+                    offset = update["update_id"] + 1
+                    msg = update.get("message") or {}
+                    chat_id = str((msg.get("chat") or {}).get("id") or "")
+                    if not chat_id:
+                        continue
 
-    # Keep the dedupe map from growing forever
-    if len(_visit_notified) > 10000:
-        cutoff = now - VISIT_COOLDOWN
-        for k in [k for k, ts in _visit_notified.items() if ts < cutoff]:
-            _visit_notified.pop(k, None)
+                    owner = _owner_chat_id()
+                    if not owner:
+                        _claim_owner(chat_id)
+                        owner = chat_id
+                    if chat_id != owner:
+                        continue
 
-    asyncio.create_task(_send_visit_alert(v))
+                    text = (msg.get("text") or "").strip().lower()
+                    if text.startswith("/start") or text.startswith("/stats"):
+                        reply = _stats_message()
+                        if text.startswith("/start"):
+                            reply = (
+                                "✅ Connected. You'll get an alert when someone "
+                                "visits pumpboard.dev. Send /stats anytime for "
+                                "a summary.\n\n" + reply
+                            )
+                        await client.post(
+                            f"{api}/sendMessage",
+                            json={"chat_id": chat_id, "text": reply},
+                        )
+        except Exception:
+            await asyncio.sleep(5)  # network hiccup or Telegram error; retry
 
 
 # --- Endpoints ---
