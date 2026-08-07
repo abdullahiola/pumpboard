@@ -45,17 +45,17 @@
       "AI",
       "Tools"
     ],
-    "totalClaimed": 0,
+    "totalClaimed": 2100,
     "solAmount": 0,
-    "name": "",
+    "name": "V\u0169 \u0110\u1ed7",
     "instagram": "",
     "tiktok": "",
-    "avatar_url": "/uploads/f0008e22fa624f3c962d6fe6135e6e52.png",
-    "bio": ""
+    "avatar_url": "https://avatars.githubusercontent.com/u/116963762?v=4",
+    "bio": "CA: Gjpatn3d24dCRhUng7F37K6xJba4R8SDBC18xs1Apump"
   },
   {
     "github": "Ashutoshx7",
-    "repo": "Ashutoshx7/VengenceUI",
+    "repo": "Ashutoshx7/VengeanceUI",
     "type": "developer",
     "x": "Ashutosh_7x7",
     "tags": [
@@ -63,8 +63,13 @@
       "React",
       "Design"
     ],
-    "totalClaimed": 0,
-    "solAmount": 0
+    "totalClaimed": 5500,
+    "solAmount": 0,
+    "name": "Ashutoshx7",
+    "instagram": "",
+    "tiktok": "",
+    "avatar_url": "https://avatars.githubusercontent.com/u/181958559?v=4",
+    "bio": "20 \u00b7 Artist / Engineer / Whatever it takes"
   },
   {
     "github": "hacktivist123",
@@ -76,7 +81,156 @@
       "Agents",
       "Python"
     ],
-    "totalClaimed": 0,
-    "solAmount": 0
+    "totalClaimed": 800,
+    "solAmount": 0,
+    "name": "Shedrack akintayo",
+    "instagram": "",
+    "tiktok": "",
+    "avatar_url": "https://avatars.githubusercontent.com/u/26572907?v=4",
+    "bio": "Cloud Native & DevOps Engineer"
+  },
+  {
+    "github": "",
+    "repo": "",
+    "type": "creator",
+    "tags": [
+      "creator"
+    ],
+    "totalClaimed": 17536,
+    "solAmount": 0,
+    "instagram": "squirrel_dad_12",
+    "tiktok": "",
+    "x": "@Squirrel_Dad12",
+    "name": "Mark Longo",
+    "bio": "",
+    "avatar_url": "/uploads/db9de8aa88fa4ba4abff7cada3300e62.png"
+  },
+  {
+    "github": "",
+    "repo": "",
+    "type": "creator",
+    "tags": [],
+    "totalClaimed": 1100,
+    "solAmount": 0,
+    "instagram": "yannickvaldais",
+    "tiktok": "",
+    "x": "",
+    "name": "Yannick Valdais",
+    "bio": "",
+    "avatar_url": "/uploads/d92125b0dcec49909b0bf2bbbe61455b.png"
+  },
+  {
+    "github": "siddsachar",
+    "repo": "siddsachar/row-bot",
+    "type": "developer",
+    "tags": [],
+    "totalClaimed": 1056,
+    "solAmount": 0,
+    "instagram": "",
+    "tiktok": "",
+    "x": "sydsachar",
+    "name": "Siddharth Sachar",
+    "bio": "",
+    "avatar_url": "https://avatars.githubusercontent.com/u/50956096?v=4"
+  },
+  {
+    "github": "kanavtwtgg",
+    "repo": "kanavtwtgg/birds.cafe",
+    "type": "developer",
+    "tags": [],
+    "totalClaimed": 2329.0,
+    "solAmount": 0.0,
+    "instagram": "",
+    "tiktok": "",
+    "x": "kanavtwt",
+    "name": null,
+    "bio": null,
+    "avatar_url": null
+  },
+  {
+    "github": "",
+    "repo": "",
+    "type": "creator",
+    "tags": [
+      "Article/Content Writer"
+    ],
+    "totalClaimed": 2000,
+    "solAmount": 0,
+    "instagram": "",
+    "tiktok": "",
+    "x": "zodchiii",
+    "name": "Zodchi",
+    "bio": "AI & Finanace Entrepreneur. @zscdao member",
+    "avatar_url": "https://pbs.twimg.com/profile_images/1999509933302124544/ABxY9N7S_400x400.jpg"
+  },
+  {
+    "github": "boredmage",
+    "repo": "boredmage/mezo-lite",
+    "type": "developer",
+    "tags": [],
+    "totalClaimed": 4500.0,
+    "solAmount": 0.0,
+    "instagram": "",
+    "tiktok": "",
+    "x": "qudusayo",
+    "name": null,
+    "bio": null,
+    "avatar_url": null
+  },
+  {
+    "github": "",
+    "repo": "",
+    "type": "creator",
+    "tags": [],
+    "totalClaimed": 14368,
+    "solAmount": 0,
+    "instagram": "seal_2028",
+    "tiktok": "@seal2028com",
+    "x": "",
+    "name": "Ruiji",
+    "bio": "",
+    "avatar_url": "/uploads/1f136444e37e4286b5280d3bc16b0311.png"
+  },
+  {
+    "github": "Abhijit-Jha",
+    "repo": "itshover/itshover",
+    "type": "developer",
+    "tags": [],
+    "totalClaimed": 6000.0,
+    "solAmount": 0.0,
+    "instagram": "",
+    "tiktok": "",
+    "x": "abhijitwt",
+    "name": null,
+    "bio": null,
+    "avatar_url": null
+  },
+  {
+    "github": "AdnanHodzic",
+    "repo": "AdnanHodzic/auto-cpufreq",
+    "type": "developer",
+    "tags": [],
+    "totalClaimed": 1200.0,
+    "solAmount": 0.0,
+    "instagram": "",
+    "tiktok": "",
+    "x": "fooctrl",
+    "name": null,
+    "bio": null,
+    "avatar_url": null
+  },
+  {
+    "github": "zquestz",
+    "repo": "zquestz/s",
+    "type": "developer",
+    "tags": [],
+    "totalClaimed": 11100,
+    "solAmount": 0,
+    "instagram": "",
+    "tiktok": "",
+    "x": "@zquestz",
+    "name": "Josh Ellithorpe",
+    "bio": "I like terminal prompts.\n\nNostr: npub16gzvn22vmeh3sx0ntdt8u7aa9ryre7ucj3rz2wutrzz8cc9wylgq4dgl64",
+    "avatar_url": "https://avatars.githubusercontent.com/u/83898?v=4"
   }
 ]
