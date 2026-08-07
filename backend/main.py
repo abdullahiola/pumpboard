@@ -324,6 +324,7 @@ class VisitIn(BaseModel):
     ip: str = ""
     userAgent: str = ""
     referrer: str = ""
+    language: str = ""
 
 
 BOT_UA_MARKERS = (
@@ -365,28 +366,77 @@ def save_visit_stats():
         json.dump(_visit_stats, f, indent=2)
 
 
-async def _lookup_location(client: httpx.AsyncClient, ip: str) -> tuple[str, str]:
-    """Best-effort geo lookup (free tier, no key). Returns (location, country)."""
+async def _lookup_geo(client: httpx.AsyncClient, ip: str) -> dict:
+    """Best-effort geo/ISP lookup (free tier, no key needed)."""
     if not ip:
-        return "", ""
+        return {}
     if ip in _geo_cache:
         return _geo_cache[ip]
     try:
         resp = await client.get(
             f"http://ip-api.com/json/{ip}",
-            params={"fields": "status,country,city"},
+            params={"fields": "status,country,regionName,city,isp,timezone,proxy,mobile"},
         )
         geo = resp.json()
         if geo.get("status") == "success":
-            country = geo.get("country") or ""
-            location = ", ".join(filter(None, [geo.get("city"), country]))
+            info = {
+                "location": ", ".join(
+                    filter(None, [geo.get("city"), geo.get("regionName"), geo.get("country")])
+                ),
+                "country": geo.get("country") or "",
+                "isp": geo.get("isp") or "",
+                "timezone": geo.get("timezone") or "",
+                "proxy": bool(geo.get("proxy")),
+                "cellular": bool(geo.get("mobile")),
+            }
             if len(_geo_cache) > 5000:
                 _geo_cache.clear()
-            _geo_cache[ip] = (location, country)
-            return location, country
+            _geo_cache[ip] = info
+            return info
     except (httpx.RequestError, ValueError):
         pass
-    return "", ""
+    return {}
+
+
+def _parse_ua(user_agent: str) -> tuple[str, str]:
+    """Best-effort (OS, browser) from a user agent string."""
+    ua = user_agent.lower()
+    if "iphone" in ua or "ipad" in ua:
+        os_name = "iOS"
+    elif "android" in ua:
+        os_name = "Android"
+    elif "windows" in ua:
+        os_name = "Windows"
+    elif "mac os" in ua or "macintosh" in ua:
+        os_name = "macOS"
+    elif "linux" in ua:
+        os_name = "Linux"
+    else:
+        os_name = ""
+
+    if "edg/" in ua or "edge/" in ua:
+        browser = "Edge"
+    elif "opr/" in ua or "opera" in ua:
+        browser = "Opera"
+    elif "samsungbrowser" in ua:
+        browser = "Samsung Browser"
+    elif "firefox/" in ua or "fxios/" in ua:
+        browser = "Firefox"
+    elif "chrome/" in ua or "crios/" in ua:
+        browser = "Chrome"
+    elif "safari/" in ua:
+        browser = "Safari"
+    else:
+        browser = ""
+    return os_name, browser
+
+
+def _referrer_domain(referrer: str) -> str:
+    """The site a visitor came from; empty for internal navigation."""
+    if not referrer:
+        return ""
+    domain = referrer.split("//")[-1].split("/")[0]
+    return "" if "pumpboard.dev" in domain else domain
 
 
 def _owner_chat_id() -> str:
@@ -428,21 +478,65 @@ def _stats_message() -> str:
     if s.get("byPath"):
         lines += ["", "Top pages:"]
         lines += [f"• {name}: {n}" for name, n in top(s["byPath"])]
+    if s.get("byReferrer"):
+        lines += ["", "Top referrers:"]
+        lines += [f"• {name}: {n}" for name, n in top(s["byReferrer"])]
+    return "\n".join(lines)
+
+
+def _visit_alert_text(v: VisitIn, geo: dict, device: str) -> str:
+    os_name, browser = _parse_ua(v.userAgent)
+    ref_domain = _referrer_domain(v.referrer)
+
+    if device == "Bot":
+        lines = ["🤖 Bot visit · pumpboard.dev", ""]
+        lines.append(f"📄 Page: {v.path or '/'}")
+        if v.userAgent:
+            lines.append(f"🆔 {v.userAgent[:150]}")
+    else:
+        icon = "📱" if device in ("Mobile", "Tablet") else "💻"
+        lines = ["👀 New visitor · pumpboard.dev", ""]
+        lines.append(f"📄 Page: {v.path or '/'}")
+        device_desc = " · ".join(filter(None, [device, os_name, browser]))
+        if device_desc:
+            lines.append(f"{icon} {device_desc}")
+        if v.language:
+            lines.append(f"🗣 Language: {v.language}")
+
+    if geo.get("location"):
+        lines.append(f"📍 {geo['location']}")
+    if geo.get("isp"):
+        isp_line = f"📡 {geo['isp']}"
+        if geo.get("cellular"):
+            isp_line += " (cellular)"
+        if geo.get("proxy"):
+            isp_line += " ⚠️ VPN/proxy"
+        lines.append(isp_line)
+    if ref_domain:
+        lines.append(f"🔗 From: {ref_domain}")
+    if geo.get("timezone"):
+        lines.append(f"🕒 {geo['timezone']}")
+    if v.ip:
+        lines.append(f"🌐 {v.ip}")
     return "\n".join(lines)
 
 
 async def _process_visit(v: VisitIn, notify: bool):
     """Record the visit in the stats and, when allowed, alert via Telegram."""
     async with httpx.AsyncClient(timeout=5) as client:
-        location, country = await _lookup_location(client, v.ip)
+        geo = await _lookup_geo(client, v.ip)
         device = _classify_device(v.userAgent)
+        ref_domain = _referrer_domain(v.referrer)
 
         _visit_stats["total"] = _visit_stats.get("total", 0) + 1
-        for field, key in (
-            ("byCountry", country or "Unknown"),
+        counted = [
+            ("byCountry", geo.get("country") or "Unknown"),
             ("byDevice", device),
             ("byPath", v.path or "/"),
-        ):
+        ]
+        if ref_domain:
+            counted.append(("byReferrer", ref_domain))
+        for field, key in counted:
             bucket = _visit_stats.setdefault(field, {})
             bucket[key] = bucket.get(key, 0) + 1
         save_visit_stats()
@@ -451,23 +545,10 @@ async def _process_visit(v: VisitIn, notify: bool):
         if not (notify and chat_id and TELEGRAM_BOT_TOKEN):
             return
 
-        label = "🤖 Bot/crawler" if device == "Bot" else "👀 Visitor"
-        lines = [f"{label} on pumpboard.dev", f"Page: {v.path or '/'}"]
-        if v.ip:
-            lines.append(f"IP: {v.ip}")
-        if location:
-            lines.append(f"Location: {location}")
-        if device != "Bot":
-            lines.append(f"Device: {device}")
-        if v.userAgent:
-            lines.append(f"Agent: {v.userAgent[:200]}")
-        if v.referrer:
-            lines.append(f"From: {v.referrer}")
-
         try:
             await client.post(
                 f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-                json={"chat_id": chat_id, "text": "\n".join(lines)},
+                json={"chat_id": chat_id, "text": _visit_alert_text(v, geo, device)},
             )
         except httpx.RequestError:
             pass
@@ -507,35 +588,47 @@ async def telegram_poller():
                 resp = await client.get(
                     f"{api}/getUpdates", params={"offset": offset, "timeout": 25}
                 )
-                for update in resp.json().get("result", []):
+                data = resp.json()
+                if not data.get("ok"):
+                    print(f"telegram getUpdates error: {data}", flush=True)
+                    await asyncio.sleep(5)
+                    continue
+                for update in data.get("result", []):
                     offset = update["update_id"] + 1
-                    msg = update.get("message") or {}
-                    chat_id = str((msg.get("chat") or {}).get("id") or "")
-                    if not chat_id:
-                        continue
+                    try:
+                        await _handle_telegram_update(client, api, update)
+                    except Exception as e:
+                        print(f"telegram update error: {e!r}", flush=True)
+        except Exception as e:
+            print(f"telegram poller error: {e!r}", flush=True)
+            await asyncio.sleep(5)  # network hiccup or Telegram outage; retry
 
-                    owner = _owner_chat_id()
-                    if not owner:
-                        _claim_owner(chat_id)
-                        owner = chat_id
-                    if chat_id != owner:
-                        continue
 
-                    text = (msg.get("text") or "").strip().lower()
-                    if text.startswith("/start") or text.startswith("/stats"):
-                        reply = _stats_message()
-                        if text.startswith("/start"):
-                            reply = (
-                                "✅ Connected. You'll get an alert when someone "
-                                "visits pumpboard.dev. Send /stats anytime for "
-                                "a summary.\n\n" + reply
-                            )
-                        await client.post(
-                            f"{api}/sendMessage",
-                            json={"chat_id": chat_id, "text": reply},
-                        )
-        except Exception:
-            await asyncio.sleep(5)  # network hiccup or Telegram error; retry
+async def _handle_telegram_update(client: httpx.AsyncClient, api: str, update: dict):
+    msg = update.get("message") or {}
+    chat_id = str((msg.get("chat") or {}).get("id") or "")
+    if not chat_id:
+        return
+
+    owner = _owner_chat_id()
+    if not owner:
+        _claim_owner(chat_id)
+        owner = chat_id
+    if chat_id != owner:
+        return
+
+    text = (msg.get("text") or "").strip().lower()
+    if text.startswith("/start") or text.startswith("/stats"):
+        reply = _stats_message()
+        if text.startswith("/start"):
+            reply = (
+                "✅ Connected. You'll get an alert when someone visits "
+                "pumpboard.dev. Send /stats anytime for a summary.\n\n" + reply
+            )
+        await client.post(
+            f"{api}/sendMessage",
+            json={"chat_id": chat_id, "text": reply},
+        )
 
 
 # --- Endpoints ---

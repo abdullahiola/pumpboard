@@ -26,6 +26,7 @@ export function proxy(req: NextRequest, event: NextFetchEvent) {
           ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "",
           userAgent: req.headers.get("user-agent") || "",
           referrer: req.headers.get("referer") || "",
+          language: req.headers.get("accept-language")?.split(",")[0] || "",
         }),
       }).catch(() => {})
     );
