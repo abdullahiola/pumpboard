@@ -62,3 +62,6 @@ __pycache__/
 *.pyc
 backend/venv/
 backend/.env
+
+# backend derived cache
+backend/data/github_cache.json

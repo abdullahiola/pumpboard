@@ -1,7 +1,9 @@
+import asyncio
 import json
 import os
 import time
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -15,7 +17,16 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-app = FastAPI(title="PumpBoard API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _cache.update(load_github_cache())
+    refresher = asyncio.create_task(github_refresher())
+    yield
+    refresher.cancel()
+
+
+app = FastAPI(title="PumpBoard API", version="1.0.0", lifespan=lifespan)
 
 # Admin auth
 ADMIN_KEY = os.getenv("ADMIN_KEY", "")
@@ -52,10 +63,31 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 # GitHub config
 GITHUB_API = "https://api.github.com"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
-CACHE_TTL = 1800  # 30 minutes — GitHub data changes slowly; keeps API usage low
+GITHUB_CACHE_FILE = DATA_DIR / "github_cache.json"
+REFRESH_INTERVAL = 3.5 * 24 * 3600  # refresh each profile roughly twice a week
+REFRESH_CHECK_EVERY = 6 * 3600  # background task wakes up every 6 hours
 
-# In-memory cache: { github_username: { data: {...}, expires: timestamp } }
+# Cache: { "username:repo": { data: {...}, fetched_at: timestamp } }
+# Persisted to GITHUB_CACHE_FILE so it survives restarts. Requests are always
+# served from this cache; only the background refresher talks to GitHub
+# (except the very first fetch for a profile not cached yet).
 _cache: dict = {}
+
+
+def load_github_cache() -> dict:
+    if not GITHUB_CACHE_FILE.exists():
+        return {}
+    try:
+        with open(GITHUB_CACHE_FILE, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_github_cache():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(GITHUB_CACHE_FILE, "w") as f:
+        json.dump(_cache, f, indent=2)
 
 
 # --- Models ---
@@ -145,12 +177,16 @@ def _github_headers() -> dict:
     return headers
 
 
-async def fetch_github_profile(username: str, repo: str = "") -> dict:
-    """Fetch user profile, repo stars, and top languages from GitHub."""
+async def fetch_github_profile(username: str, repo: str = "", force: bool = False) -> dict:
+    """Fetch user profile, repo stars, and top languages from GitHub.
+
+    Serves from the persistent cache regardless of age — freshness is the
+    background refresher's job. Pass force=True to hit GitHub directly.
+    """
     cache_key = f"{username}:{repo}"
     now = time.time()
 
-    if cache_key in _cache and _cache[cache_key]["expires"] > now:
+    if cache_key in _cache and not force:
         return _cache[cache_key]["data"]
 
     headers = _github_headers()
@@ -215,12 +251,40 @@ async def fetch_github_profile(username: str, repo: str = "") -> dict:
                 pass
 
     if fetch_ok:
-        _cache[cache_key] = {"data": result, "expires": now + CACHE_TTL}
+        _cache[cache_key] = {"data": result, "fetched_at": now}
+        save_github_cache()
     elif cache_key in _cache:
         # GitHub unavailable (rate limit/outage): serve the last good data
         return _cache[cache_key]["data"]
 
     return result
+
+
+async def github_refresher():
+    """Background task: re-fetch each developer's GitHub data when the cached
+    copy is older than REFRESH_INTERVAL (about twice a week)."""
+    while True:
+        try:
+            now = time.time()
+            for dev in load_developers():
+                if dev.get("type") == "creator" or not dev.get("github"):
+                    continue
+                cache_key = f"{dev['github']}:{dev.get('repo', '')}"
+                entry = _cache.get(cache_key)
+                if not entry or now - entry.get("fetched_at", 0) > REFRESH_INTERVAL:
+                    await fetch_github_profile(dev["github"], dev.get("repo", ""), force=True)
+        except Exception:
+            pass  # never let a bad cycle kill the refresher
+        await asyncio.sleep(REFRESH_CHECK_EVERY)
+
+
+def evict_cached_github(username: str):
+    """Drop all cached entries for a GitHub username (any repo)."""
+    stale = [k for k in _cache if k.split(":", 1)[0] == username]
+    for k in stale:
+        _cache.pop(k, None)
+    if stale:
+        save_github_cache()
 
 
 async def enrich_developer(dev: dict) -> dict:
@@ -294,7 +358,7 @@ async def remove_developer(identifier: str):
         raise HTTPException(status_code=404, detail="Profile not found")
 
     save_developers(filtered)
-    _cache.pop(identifier, None)
+    evict_cached_github(identifier)
 
 
 @app.put("/api/developers/{identifier}", response_model=DeveloperOut, dependencies=[Depends(require_admin)])
@@ -320,7 +384,7 @@ async def update_developer(identifier: str, updates: dict):
             target[key] = value
 
     save_developers(devs)
-    _cache.pop(identifier, None)
+    evict_cached_github(identifier)
     return await enrich_developer(target)
 
 
