@@ -123,7 +123,9 @@ function StatCard({ config, value, index, isVisible }: StatCardProps) {
       <div className={styles.cardIcon}>{config.icon}</div>
       <div className={styles.cardValue}>
         <span className={styles.prefix}>{config.prefix}</span>
-        <span className={styles.number}>{formatNumber(count)}</span>
+        {/* Show the real value until the count-up starts, so server-rendered
+            HTML carries actual numbers for crawlers instead of zeros */}
+        <span className={styles.number}>{formatNumber(isVisible ? count : value)}</span>
         <span className={styles.suffix}>{config.suffix}</span>
       </div>
       <span className={styles.cardLabel}>{config.label}</span>
