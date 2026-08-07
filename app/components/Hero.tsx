@@ -52,9 +52,9 @@ export default function Hero({
           <h1 className={`${styles.heroTitle} animate-fade-in-up delay-2`}>
             Decentralized
             <br />
-            <span className={styles.gradientText}>GitHub Sponsorship</span>
+            <span className={styles.gradientText}>Sponsorship</span>
             <br />
-            for Developers
+            for Open-Source Developers
           </h1>
 
           <p className={`${styles.heroDescription} animate-fade-in-up delay-3`}>

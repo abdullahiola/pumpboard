@@ -16,9 +16,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "PumpBoard — Decentralized GitHub Sponsorship via PumpFun",
+  title: "PumpBoard — Decentralized Sponsorship for Open-Source Developers",
   description:
-    "Onboard developers and sponsor them through PumpFun decentralized GitHub sponsorship. Support open-source builders on Solana.",
+    "Onboard developers from GitHub and sponsor them through PumpFun decentralized sponsorship. Support open-source builders on Solana.",
   keywords: [
     "PumpFun",
     "Solana",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     "open-source",
   ],
   openGraph: {
-    title: "PumpBoard — Decentralized GitHub Sponsorship via PumpFun",
+    title: "PumpBoard — Decentralized Sponsorship for Open-Source Developers",
     description:
       "Support open-source developers through decentralized sponsorship powered by PumpFun on Solana.",
     type: "website",
