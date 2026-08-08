@@ -20,6 +20,8 @@ way the database is shared, so duplicates are caught everywhere.
 """
 
 import asyncio
+import csv
+import io
 import json
 import os
 import re
@@ -99,7 +101,8 @@ HELP_TEXT = (
     "/release <username> · give the contact back\n"
     "/list · your active reservations\n"
     "/list all · recent team activity\n"
-    "/find 500..2000 python · discover repos by star range"
+    "/find 500..2000 python · discover repos by star range\n"
+    "/export 500..2000 python · full results + contact info as CSV"
 )
 
 
@@ -233,49 +236,177 @@ async def cmd_find(stars_arg: str, language: str) -> str:
     if language:
         query += f" language:{language}"
 
+    async with httpx.AsyncClient(timeout=15) as client:
+        total, repos, rate_limited = await _search_repos(client, query, pages=1)
+    if rate_limited:
+        return "🐢 GitHub search rate limit hit. Try again in a minute."
+    if not repos:
+        return f"No repos found for {query}."
+
+    owners = _unique_user_owners(repos)
+    if not owners:
+        return (
+            f"Found repos for {query}, but the top results are all orgs, "
+            "not individual users. Try a narrower range."
+        )
+
+    lines = [f"🔎 {query} · {total} repos, top owners:"]
+    for login, repo in list(owners.items())[:10]:
+        lines.append(
+            f"• {login} · {repo.get('name')} ⭐{repo.get('stargazers_count', 0):,}"
+            f" · {_owner_status(login)}\n  {repo.get('html_url', '')}"
+        )
+    lines.append(
+        "\nGrab one with /reserve <username>, "
+        "or /export for the full list as a spreadsheet"
+    )
+    return "\n".join(lines)
+
+
+def _gh_headers() -> dict:
     headers = {"Accept": "application/vnd.github+json"}
     if GITHUB_TOKEN:
         headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-    async with httpx.AsyncClient(timeout=15) as client:
+    return headers
+
+
+async def _search_repos(client, query: str, pages: int):
+    """Fetch up to `pages` x 100 repos sorted by stars. Returns
+    (total_count, repos, rate_limited)."""
+    repos, total = [], 0
+    for page in range(1, pages + 1):
         resp = await client.get(
             "https://api.github.com/search/repositories",
-            params={"q": query, "sort": "stars", "order": "desc", "per_page": 30},
-            headers=headers,
+            params={
+                "q": query, "sort": "stars", "order": "desc",
+                "per_page": 100, "page": page,
+            },
+            headers=_gh_headers(),
         )
-    if resp.status_code == 403:
-        return "🐢 GitHub search rate limit hit. Try again in a minute."
-    data = resp.json()
-    items = data.get("items") or []
-    if not items:
-        return f"No repos found for {query}."
-
-    # One line per unique owner; orgs can't be messaged, so keep users only.
-    lines = [f"🔎 {query} · {data.get('total_count', 0)} repos, top owners:"]
-    seen_owners = set()
-    for repo in items:
-        owner = (repo.get("owner") or {}).get("login", "")
-        if not owner or owner.lower() in seen_owners:
-            continue
-        if (repo.get("owner") or {}).get("type") != "User":
-            continue
-        seen_owners.add(owner.lower())
-        rec = _contacts.get(owner.lower())
-        if rec and rec.get("status") == "done":
-            status = f"✉️ contacted by {rec.get('reservedBy')}"
-        elif rec:
-            status = f"🔒 reserved by {rec.get('reservedBy')}"
-        else:
-            status = "🟢 free"
-        lines.append(
-            f"• {owner} · {repo.get('name')} ⭐{repo.get('stargazers_count', 0):,}"
-            f" · {status}"
-        )
-        if len(seen_owners) >= 10:
+        if resp.status_code == 403:
+            return total, repos, True
+        data = resp.json()
+        total = data.get("total_count", total)
+        items = data.get("items") or []
+        repos.extend(items)
+        if len(items) < 100:
             break
-    if len(lines) == 1:
-        return f"Found repos for {query}, but the top results are all orgs, not individual users. Try a narrower range."
-    lines.append("\nGrab one with /reserve <username>")
-    return "\n".join(lines)
+    return total, repos, False
+
+
+def _unique_user_owners(repos: list) -> dict:
+    """login -> their highest-starred repo, individual users only (orgs
+    can't be direct-messaged). Preserves stars-descending order."""
+    owners: dict = {}
+    for repo in repos:
+        owner = repo.get("owner") or {}
+        login = owner.get("login", "")
+        if login and owner.get("type") == "User" and login.lower() not in owners:
+            owners[login.lower()] = repo
+    return owners
+
+
+def _owner_status(login: str) -> str:
+    rec = _contacts.get(login.lower())
+    if rec and rec.get("status") == "done":
+        return f"✉️ contacted by {rec.get('reservedBy')}"
+    if rec:
+        return f"🔒 reserved by {rec.get('reservedBy')}"
+    return "🟢 free"
+
+
+async def build_prospects_csv(stars_arg: str, language: str):
+    """Search a star range, enrich each owner with their public profile,
+    and return (filename, csv_bytes, caption). Returns an error string
+    on bad input or rate limiting."""
+    m = STARS_RE.match(stars_arg)
+    if not m:
+        return (
+            "Usage: /export <stars> [language]\n"
+            "Example: /export 500..2000 python\n"
+            "Sends a CSV of repo owners in that range with their public "
+            "contact info."
+        )
+    stars = stars_arg if m.group(2) else f">={stars_arg}"
+    query = f"stars:{stars}"
+    if language:
+        query += f" language:{language}"
+
+    # Each owner costs one profile request. Anonymous core API allows only
+    # 60/hour, so stay well under it; a token allows 5000/hour.
+    owner_cap = 200 if GITHUB_TOKEN else 25
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        total, repos, rate_limited = await _search_repos(client, query, pages=3)
+        if rate_limited and not repos:
+            return "🐢 GitHub search rate limit hit. Try again in a minute."
+        owners = _unique_user_owners(repos)
+        if not owners:
+            return f"No individual repo owners found for {query}."
+        capped = list(owners.items())[:owner_cap]
+
+        sem = asyncio.Semaphore(10)
+
+        async def fetch_profile(login: str):
+            async with sem:
+                try:
+                    r = await client.get(
+                        f"https://api.github.com/users/{login}",
+                        headers=_gh_headers(),
+                    )
+                    if r.status_code == 200:
+                        return r.json()
+                except httpx.RequestError:
+                    pass
+                return {}
+
+        profiles = await asyncio.gather(
+            *(fetch_profile(repo["owner"]["login"]) for _, repo in capped)
+        )
+
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow([
+        "username", "name", "email", "blog", "twitter", "company",
+        "location", "followers", "top_repo", "repo_url", "repo_stars",
+        "profile_url", "status", "status_by",
+    ])
+    emails = 0
+    for (login, repo), prof in zip(capped, profiles):
+        if prof.get("email"):
+            emails += 1
+        rec = _contacts.get(login) or {}
+        w.writerow([
+            repo["owner"]["login"],
+            prof.get("name") or "",
+            prof.get("email") or "",
+            prof.get("blog") or "",
+            prof.get("twitter_username") or "",
+            prof.get("company") or "",
+            prof.get("location") or "",
+            prof.get("followers", ""),
+            repo.get("name", ""),
+            repo.get("html_url", ""),
+            repo.get("stargazers_count", ""),
+            f"https://github.com/{repo['owner']['login']}",
+            rec.get("status") or "free",
+            rec.get("reservedBy") or "",
+        ])
+
+    safe_range = stars_arg.replace("..", "-")
+    filename = f"prospects_{safe_range}{'_' + language if language else ''}.csv"
+    caption = (
+        f"📊 {len(capped)} owners for {query} ({total} repos matched). "
+        f"{emails} have a public email; blog/twitter columns are fallbacks."
+    )
+    if not GITHUB_TOKEN:
+        caption += (
+            "\n⚠️ Capped at 25 without a GITHUB_TOKEN; add one to "
+            "outreach-bot/.env for up to 200."
+        )
+    elif len(owners) > owner_cap:
+        caption += f"\nCapped at {owner_cap}; narrow the range for full coverage."
+    return filename, buf.getvalue().encode(), caption
 
 
 async def handle_command(text: str, sender: dict) -> str | None:
@@ -325,6 +456,7 @@ BOT_COMMANDS = [
     {"command": "release", "description": "Give a contact back"},
     {"command": "list", "description": "Your reservations (or: /list all)"},
     {"command": "find", "description": "Discover repos by stars: /find 500..2000 python"},
+    {"command": "export", "description": "Full results as CSV: /export 500..2000 python"},
     {"command": "help", "description": "Show all commands"},
 ]
 
@@ -383,6 +515,29 @@ async def handle_update(client: httpx.AsyncClient, api: str, update: dict):
     text = msg.get("text") or ""
     if not chat_id or not text:
         return
+    parts = text.strip().split(maxsplit=2)
+    cmd = parts[0].lower().split("@")[0] if parts else ""
+    if cmd == "/export":
+        arg = parts[1] if len(parts) > 1 else ""
+        rest = parts[2] if len(parts) > 2 else ""
+        await client.post(
+            f"{api}/sendChatAction",
+            json={"chat_id": chat_id, "action": "upload_document"},
+        )
+        result = await build_prospects_csv(arg, rest.strip())
+        if isinstance(result, str):  # usage or error message
+            await client.post(
+                f"{api}/sendMessage", json={"chat_id": chat_id, "text": result}
+            )
+            return
+        filename, csv_bytes, caption = result
+        await client.post(
+            f"{api}/sendDocument",
+            data={"chat_id": str(chat_id), "caption": caption},
+            files={"document": (filename, csv_bytes, "text/csv")},
+        )
+        return
+
     reply = await handle_command(text, sender)
     if reply:
         await client.post(
