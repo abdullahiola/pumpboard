@@ -5,14 +5,15 @@ one shared database, so a second reservation attempt is rejected and the
 team never double-messages the same person.
 
 Commands:
-  /reserve <github user or URL>   lock a contact to you
-  /check <github user>            see who (if anyone) has them
+  /add <repo, user, or link>      add a contact as yours
+  /check <github user>            see if they're added, and by whom
   /done <github user> [note]      mark your outreach as sent
-  /release <github user>          give up your reservation
-  /list                           your active reservations
+  /release <github user>          give the contact back
+  /list                           your contacts
   /list all                       recent activity across the team
   /find <stars> [language]        discover repos by star range, e.g.
                                   /find 500..2000 python
+  /export <stars> [language]      full results + contacts as CSV
   /help                           this summary
 
 Add the bot to your team group chat, or let each teammate DM it. Either
@@ -61,13 +62,15 @@ def save_contacts():
 GITHUB_URL_RE = re.compile(
     r"(?:https?://)?(?:www\.)?github\.com/([A-Za-z0-9-]+)", re.IGNORECASE
 )
+OWNER_REPO_RE = re.compile(r"^([A-Za-z0-9-]+)/[\w.-]+$")
 USERNAME_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$")
 
 
 def normalize_username(raw: str) -> str | None:
-    """Accept a bare username, @username, or a github.com profile/repo URL."""
+    """Accept a bare username, @username, owner/repo shorthand, or a
+    github.com profile/repo URL. Always resolves to the owner."""
     raw = raw.strip().lstrip("@")
-    m = GITHUB_URL_RE.match(raw)
+    m = GITHUB_URL_RE.match(raw) or OWNER_REPO_RE.match(raw)
     if m:
         raw = m.group(1)
     return raw.lower() if USERNAME_RE.match(raw) else None
@@ -93,13 +96,13 @@ def profile_url(username: str) -> str:
 
 HELP_TEXT = (
     "🤝 Outreach bot. One shared list, no double-messaging.\n\n"
-    "Before you contact a developer, reserve them:\n"
-    "/reserve <github username or URL>\n\n"
+    "Before you contact a developer, add them:\n"
+    "/add <repo, username, or github link>\n\n"
     "Other commands:\n"
-    "/check <username> · who has this contact\n"
+    "/check <username> · see if they're already added, and by whom\n"
     "/done <username> [note] · mark your outreach as sent\n"
     "/release <username> · give the contact back\n"
-    "/list · your active reservations\n"
+    "/list · your contacts\n"
     "/list all · recent team activity\n"
     "/find 500..2000 python · discover repos by star range\n"
     "/export 500..2000 python · full results + contact info as CSV"
@@ -120,10 +123,10 @@ def cmd_reserve(username: str, sender: dict) -> str:
                 "No need to message them again."
             )
         if same_person:
-            return f"👍 You already have {username} reserved."
+            return f"👍 You already added {username}."
         when = fmt_when(rec.get("reservedAt", 0))
         return (
-            f"⛔️ {username} is reserved by {holder} since {when}.\n"
+            f"⛔️ {username} was already added by {holder} on {when}.\n"
             "Pick someone else, or ask them to /release."
         )
     _contacts[username] = {
@@ -134,7 +137,7 @@ def cmd_reserve(username: str, sender: dict) -> str:
     }
     save_contacts()
     return (
-        f"✅ {username} is reserved for you, {who}.\n"
+        f"✅ {username} added, they're yours, {who}.\n"
         f"{profile_url(username)}\n"
         f"When you've messaged them: /done {username}"
     )
@@ -143,14 +146,14 @@ def cmd_reserve(username: str, sender: dict) -> str:
 def cmd_check(username: str) -> str:
     rec = _contacts.get(username)
     if not rec:
-        return f"🟢 {username} is free. Reserve them with /reserve {username}"
+        return f"🟢 {username} isn't added yet. Grab them with /add {username}"
     holder = rec.get("reservedBy", "someone")
     if rec.get("status") == "done":
         when = fmt_when(rec.get("doneAt", rec.get("reservedAt", 0)))
         note = f'\n📝 "{rec["note"]}"' if rec.get("note") else ""
         return f"✉️ {username} was contacted by {holder} on {when}.{note}"
     when = fmt_when(rec.get("reservedAt", 0))
-    return f"🔒 {username} is reserved by {holder} since {when}."
+    return f"🔒 {username} was added by {holder} on {when}."
 
 
 def cmd_done(username: str, note: str, sender: dict) -> str:
@@ -173,7 +176,7 @@ def cmd_done(username: str, note: str, sender: dict) -> str:
 def cmd_release(username: str, sender: dict) -> str:
     rec = _contacts.get(username)
     if not rec:
-        return f"🟢 {username} wasn't reserved."
+        return f"🟢 {username} wasn't added."
     if str(sender.get("id")) != str(rec.get("reservedById")):
         return (
             f"🙅 Only {rec.get('reservedBy', 'the person who reserved them')} "
@@ -194,11 +197,11 @@ def cmd_list(sender: dict, show_all: bool) -> str:
             reverse=True,
         )[:20]
         if not items:
-            return "Nothing yet. Reserve your first contact with /reserve <username>"
+            return "Nothing yet. Add your first contact with /add <username>"
         lines = ["📋 Recent team activity:"]
         for username, rec in items:
             icon = "✉️" if rec.get("status") == "done" else "🔒"
-            verb = "contacted" if rec.get("status") == "done" else "reserved"
+            verb = "contacted" if rec.get("status") == "done" else "added"
             when = fmt_when(rec.get("doneAt") or rec.get("reservedAt", 0))
             lines.append(f"{icon} {username} · {verb} by {rec.get('reservedBy')} · {when}")
         return "\n".join(lines)
@@ -210,11 +213,11 @@ def cmd_list(sender: dict, show_all: bool) -> str:
         and r.get("status") != "done"
     ]
     if not mine:
-        return "You have no active reservations. Grab one with /reserve <username>"
+        return "You have no contacts yet. Grab one with /add <username>"
     mine.sort(key=lambda kv: kv[1].get("reservedAt", 0), reverse=True)
-    lines = ["📋 Your reservations:"]
+    lines = ["📋 Your contacts:"]
     for username, rec in mine:
-        lines.append(f"🔒 {username} · since {fmt_when(rec.get('reservedAt', 0))}")
+        lines.append(f"🔒 {username} · added {fmt_when(rec.get('reservedAt', 0))}")
     lines.append("\nMark one as sent with /done <username>")
     return "\n".join(lines)
 
@@ -257,7 +260,7 @@ async def cmd_find(stars_arg: str, language: str) -> str:
             f" · {_owner_status(login)}\n  {repo.get('html_url', '')}"
         )
     lines.append(
-        "\nGrab one with /reserve <username>, "
+        "\nGrab one with /add <username>, "
         "or /export for the full list as a spreadsheet"
     )
     return "\n".join(lines)
@@ -311,7 +314,7 @@ def _owner_status(login: str) -> str:
     if rec and rec.get("status") == "done":
         return f"✉️ contacted by {rec.get('reservedBy')}"
     if rec:
-        return f"🔒 reserved by {rec.get('reservedBy')}"
+        return f"🔒 added by {rec.get('reservedBy')}"
     return "🟢 free"
 
 
@@ -426,18 +429,20 @@ async def handle_command(text: str, sender: dict) -> str | None:
     if cmd == "/find":
         return await cmd_find(arg, rest.strip())
 
-    if cmd in ("/reserve", "/check", "/done", "/release"):
+    if cmd == "/reserve":  # legacy alias
+        cmd = "/add"
+    if cmd in ("/add", "/check", "/done", "/release"):
         if not arg:
-            return f"Usage: {cmd} <github username or URL>"
-        if rest and cmd != "/done":  # e.g. "/reserve Linus Torvalds"
+            return f"Usage: {cmd} <repo, username, or github link>"
+        if rest and cmd != "/done":  # e.g. "/add Linus Torvalds"
             return (
-                f"🤔 One GitHub username or profile URL at a time, "
+                f"🤔 One GitHub username, repo, or link at a time, "
                 f"e.g. {cmd} torvalds"
             )
         username = normalize_username(arg)
         if not username:
-            return f"🤔 That doesn't look like a GitHub username or profile URL: {arg}"
-        if cmd == "/reserve":
+            return f"🤔 That doesn't look like a GitHub username, repo, or link: {arg}"
+        if cmd == "/add":
             return cmd_reserve(username, sender)
         if cmd == "/check":
             return cmd_check(username)
@@ -450,8 +455,8 @@ async def handle_command(text: str, sender: dict) -> str | None:
 
 
 BOT_COMMANDS = [
-    {"command": "reserve", "description": "Lock a contact to you: /reserve torvalds"},
-    {"command": "check", "description": "See who has a contact"},
+    {"command": "add", "description": "Add a contact as yours: /add torvalds"},
+    {"command": "check", "description": "See if a contact is already added, and by whom"},
     {"command": "done", "description": "Mark outreach as sent, optional note"},
     {"command": "release", "description": "Give a contact back"},
     {"command": "list", "description": "Your reservations (or: /list all)"},

@@ -1,25 +1,27 @@
 # Outreach Bot
 
 A Telegram bot that keeps your team from double-messaging the same GitHub
-developers. Before anyone reaches out, they reserve the contact in the bot.
-The bot keeps one shared list, so a second reservation attempt is rejected
-with the name of whoever already has it.
+developers. Before anyone reaches out, they add the contact in the bot.
+The bot keeps one shared list, so trying to add someone twice is rejected
+with the name of whoever already has them.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `/reserve <username or URL>` | Lock a contact to you. Rejected if someone already has them. |
-| `/check <username>` | See who, if anyone, has this contact. |
+| `/add <repo, username, or link>` | Add a contact as yours. Rejected if a teammate already has them. `/reserve` still works as an alias. |
+| `/check <username>` | See if a contact is already added, and by whom. |
 | `/done <username> [note]` | Mark your outreach as sent, with an optional note. |
 | `/release <username>` | Give the contact back (only you can release your own). |
-| `/list` | Your active reservations. |
+| `/list` | Your contacts. |
 | `/list all` | Recent activity across the whole team. |
 | `/find <stars> [language]` | Discover repo owners by star range, e.g. `/find 500..2000 python` or `/find 1000` (1000+). Shows each owner's reservation status so you only chase free ones. |
+| `/export <stars> [language]` | Same search, full results as a CSV file sent in the chat: owner, public email/blog/twitter, company, location, followers, repo link, and team status. Capped at 25 owners without `GITHUB_TOKEN`, 200 with one. |
 | `/help` | Command summary. |
 
-Usernames can be pasted as `torvalds`, `@torvalds`, or a full profile/repo
-URL like `https://github.com/torvalds/linux`.
+Contacts can be pasted as `torvalds`, `@torvalds`, `torvalds/linux`, or a
+full profile/repo URL like `https://github.com/torvalds/linux`. Repo forms
+always resolve to the owner.
 
 ## Setup
 
@@ -63,7 +65,7 @@ note. Back up or edit that file freely while the bot is stopped.
 
 ## Suggested team protocol
 
-1. Found someone worth contacting? `/reserve` them first, before writing
+1. Found someone worth contacting? `/add` them first, before writing
    the message.
 2. Sent the message? `/done username replied via email` so the history
    stays useful.
