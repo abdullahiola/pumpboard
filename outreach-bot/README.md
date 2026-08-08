@@ -23,6 +23,23 @@ Contacts can be pasted as `torvalds`, `@torvalds`, `torvalds/linux`, or a
 full profile/repo URL like `https://github.com/torvalds/linux`. Repo forms
 always resolve to the owner.
 
+## Paste to check
+
+You can also paste GitHub links or usernames with no command at all (one
+or many, any mix of forms) and the bot replies with each one's status:
+free, added by a teammate, or already contacted.
+
+Prefer pasting to claim rather than to check? Send `/autoadd on` (off by
+default, remembered per chat): pasted contacts that are free then get
+added to whoever pasted them, and taken ones are reported. `/autoadd off`
+returns to check-only.
+
+In a DM this works out of the box. For it to work in a group chat, the bot must be able to see
+plain messages: message @BotFather, `/setprivacy`, pick the bot, choose
+**Disable** (commands like `/add` work in groups either way). Bare
+usernames without an `@` or link are only recognized in DMs, so the bot
+doesn't mistake ordinary group chatter for a contact list.
+
 ## Setup
 
 This bot deploys as part of the pumpboard docker-compose stack.

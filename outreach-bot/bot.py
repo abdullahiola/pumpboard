@@ -16,6 +16,11 @@ Commands:
   /export <stars> [language]      full results + contacts as CSV
   /help                           this summary
 
+You can also paste GitHub links or usernames with no command at all,
+and the bot replies with each one's status (free / added / contacted).
+With /autoadd on (off by default, per chat), pasting instead adds the
+free ones to whoever pasted them.
+
 Add the bot to your team group chat, or let each teammate DM it. Either
 way the database is shared, so duplicates are caught everywhere.
 """
@@ -39,6 +44,32 @@ CONTACTS_FILE = DATA_DIR / "contacts.json"
 # github username -> record
 # record: {reservedBy, reservedById, reservedAt, status, note, doneAt}
 _contacts: dict = {}
+
+SETTINGS_FILE = DATA_DIR / "settings.json"
+# chat_id -> {"autoadd": bool}
+_settings: dict = {}
+
+
+def load_settings():
+    global _settings
+    if SETTINGS_FILE.exists():
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                _settings = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            _settings = {}
+
+
+def save_settings():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = SETTINGS_FILE.with_suffix(".json.tmp")
+    with open(tmp, "w") as f:
+        json.dump(_settings, f, indent=2)
+    tmp.replace(SETTINGS_FILE)
+
+
+def autoadd_enabled(chat_id) -> bool:
+    return bool(_settings.get(str(chat_id), {}).get("autoadd"))
 
 
 def load_contacts():
@@ -105,7 +136,10 @@ HELP_TEXT = (
     "/list · your contacts\n"
     "/list all · recent team activity\n"
     "/find 4000-5000 python · discover repos by star range\n"
-    "/export 4000-5000 python · full results + contact info as CSV"
+    "/export 4000-5000 python · full results + contact info as CSV\n\n"
+    "Or just paste GitHub links or usernames (no command) and I'll "
+    "tell you which are free and which are taken. With /autoadd on, "
+    "pasting adds the free ones to you instead."
 )
 
 
@@ -417,10 +451,121 @@ async def build_prospects_csv(stars_arg: str, language: str):
     return filename, buf.getvalue().encode(), caption
 
 
-async def handle_command(text: str, sender: dict) -> str | None:
-    parts = text.strip().split(maxsplit=2)
-    if not parts or not parts[0].startswith("/"):
+def extract_github_refs(text: str, chat_type: str) -> list[str]:
+    """Pull GitHub usernames out of free-form pasted text: profile/repo
+    URLs, @names, and owner/repo tokens. Bare words are only treated as
+    usernames in a private chat where the whole message looks like a
+    pasted list, so the bot doesn't butt into normal group conversation."""
+    refs: list[str] = []
+    seen: set[str] = set()
+
+    def add(login: str):
+        login = login.lower()
+        if login not in seen and USERNAME_RE.match(login):
+            seen.add(login)
+            refs.append(login)
+
+    for m in GITHUB_URL_RE.finditer(text):
+        add(m.group(1))
+
+    bare: list[str] = []
+    list_like = True
+    for tok in re.split(r"[\s,;]+", text):
+        tok = tok.strip(".,;:()<>*").rstrip("/")
+        if not tok or "github.com" in tok.lower():
+            continue
+        if tok.startswith("@"):
+            add(tok.lstrip("@"))
+        elif (m := OWNER_REPO_RE.match(tok)):
+            add(m.group(1))
+        elif USERNAME_RE.match(tok):
+            bare.append(tok)
+        else:
+            list_like = False
+    if chat_type == "private" and list_like:
+        for tok in bare:
+            add(tok)
+    return refs[:30]
+
+
+def check_pasted(text: str, chat_type: str) -> str | None:
+    refs = extract_github_refs(text, chat_type)
+    if not refs:
         return None
+    if len(refs) == 1:
+        return cmd_check(refs[0])
+    lines = [f"📋 Checked {len(refs)} contacts:"]
+    free = 0
+    for login in refs:
+        status = _owner_status(login)
+        free += status.startswith("🟢")
+        lines.append(f"• {login} · {status}")
+    lines.append(f"\n{free} of {len(refs)} are free. Grab one with /add <username>")
+    return "\n".join(lines)
+
+
+def autoadd_pasted(text: str, chat_type: str, sender: dict) -> str | None:
+    """With /autoadd on: pasted contacts that are free get added to the
+    paster on the spot; taken ones are reported instead."""
+    refs = extract_github_refs(text, chat_type)
+    if not refs:
+        return None
+    if len(refs) == 1 and refs[0] not in _contacts:
+        return cmd_reserve(refs[0], sender)
+    added, taken = [], []
+    for login in refs:
+        if login in _contacts:
+            taken.append(f"• {login} · {_owner_status(login)}")
+        else:
+            _contacts[login] = {
+                "reservedBy": display_name(sender),
+                "reservedById": str(sender.get("id")),
+                "reservedAt": time.time(),
+                "status": "reserved",
+            }
+            added.append(f"• {login}")
+    if added:
+        save_contacts()
+    lines = []
+    if added:
+        lines.append(f"✅ Added {len(added)} to you, {display_name(sender)}:")
+        lines += added
+    if taken:
+        if lines:
+            lines.append("")
+        lines.append("⛔️ Already taken:")
+        lines += taken
+    if added:
+        lines.append("\nMark sent with /done <username>, undo with /release")
+    return "\n".join(lines)
+
+
+def cmd_autoadd(chat_id, arg: str) -> str:
+    arg = arg.lower()
+    if arg in ("on", "off"):
+        _settings.setdefault(str(chat_id), {})["autoadd"] = arg == "on"
+        save_settings()
+        if arg == "on":
+            return (
+                "🪄 Auto-add is ON for this chat. Paste GitHub links or "
+                "usernames and free ones are added to whoever pasted them. "
+                "Turn off with /autoadd off"
+            )
+        return "👌 Auto-add is OFF. Pasting now only checks."
+    state = "on" if autoadd_enabled(chat_id) else "off"
+    return f"Auto-add is {state} for this chat. Use /autoadd on or /autoadd off."
+
+
+async def handle_command(
+    text: str, sender: dict, chat_type: str = "private", chat_id: str = ""
+) -> str | None:
+    parts = text.strip().split(maxsplit=2)
+    if not parts:
+        return None
+    if not parts[0].startswith("/"):
+        if autoadd_enabled(chat_id):
+            return autoadd_pasted(text, chat_type, sender)
+        return check_pasted(text, chat_type)
     cmd = parts[0].lower().split("@")[0]  # strip @BotName suffix in groups
     arg = parts[1] if len(parts) > 1 else ""
     rest = parts[2] if len(parts) > 2 else ""
@@ -430,6 +575,9 @@ async def handle_command(text: str, sender: dict) -> str | None:
 
     if cmd == "/list":
         return cmd_list(sender, show_all=arg.lower() == "all")
+
+    if cmd == "/autoadd":
+        return cmd_autoadd(chat_id, arg)
 
     if cmd == "/find":
         return await cmd_find(arg, rest.strip())
@@ -467,6 +615,7 @@ BOT_COMMANDS = [
     {"command": "list", "description": "Your reservations (or: /list all)"},
     {"command": "find", "description": "Discover repos by stars: /find 4000-5000 python"},
     {"command": "export", "description": "Full results as CSV: /export 4000-5000 python"},
+    {"command": "autoadd", "description": "Pasting adds instead of checks: /autoadd on|off"},
     {"command": "help", "description": "Show all commands"},
 ]
 
@@ -548,7 +697,12 @@ async def handle_update(client: httpx.AsyncClient, api: str, update: dict):
         )
         return
 
-    reply = await handle_command(text, sender)
+    reply = await handle_command(
+        text,
+        sender,
+        chat_type=(msg.get("chat") or {}).get("type", "private"),
+        chat_id=str(chat_id),
+    )
     if reply:
         await client.post(
             f"{api}/sendMessage",
@@ -558,4 +712,5 @@ async def handle_update(client: httpx.AsyncClient, api: str, update: dict):
 
 if __name__ == "__main__":
     load_contacts()
+    load_settings()
     asyncio.run(poller())
