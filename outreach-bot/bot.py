@@ -318,6 +318,27 @@ async def handle_command(text: str, sender: dict) -> str | None:
     return None  # not a command we know; stay quiet in group chats
 
 
+BOT_COMMANDS = [
+    {"command": "reserve", "description": "Lock a contact to you: /reserve torvalds"},
+    {"command": "check", "description": "See who has a contact"},
+    {"command": "done", "description": "Mark outreach as sent, optional note"},
+    {"command": "release", "description": "Give a contact back"},
+    {"command": "list", "description": "Your reservations (or: /list all)"},
+    {"command": "find", "description": "Discover repos by stars: /find 500..2000 python"},
+    {"command": "help", "description": "Show all commands"},
+]
+
+
+async def register_commands(client: httpx.AsyncClient, api: str):
+    """Populate Telegram's '/' autocomplete menu with our commands."""
+    try:
+        resp = await client.post(f"{api}/setMyCommands", json={"commands": BOT_COMMANDS})
+        if not resp.json().get("ok"):
+            print(f"setMyCommands error: {resp.text}", flush=True)
+    except httpx.RequestError as e:
+        print(f"setMyCommands failed: {e!r}", flush=True)
+
+
 async def poller():
     if not TELEGRAM_BOT_TOKEN:
         # Don't crash-loop under docker restart policies; idle until configured.
@@ -330,6 +351,8 @@ async def poller():
             await asyncio.sleep(3600)
     api = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
     offset = 0
+    async with httpx.AsyncClient(timeout=15) as client:
+        await register_commands(client, api)
     print("outreach bot: polling for messages...", flush=True)
     while True:
         try:
