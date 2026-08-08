@@ -15,7 +15,7 @@ with the name of whoever already has them.
 | `/release <username>` | Give the contact back (only you can release your own). |
 | `/list` | Your contacts. |
 | `/list all` | Recent activity across the whole team. |
-| `/find <stars> [language]` | Discover repo owners by star range, e.g. `/find 500..2000 python` or `/find 1000` (1000+). Shows each owner's reservation status so you only chase free ones. |
+| `/find <stars> [language]` | Discover repo owners by star range, e.g. `/find 4000-5000 python` or `/find 1000` (1000+). Shows each owner's status so you only chase free ones. |
 | `/export <stars> [language]` | Same search, full results as a CSV file sent in the chat: owner, public email/blog/twitter, company, location, followers, repo link, and team status. Capped at 25 owners without `GITHUB_TOKEN`, 200 with one. |
 | `/help` | Command summary. |
 

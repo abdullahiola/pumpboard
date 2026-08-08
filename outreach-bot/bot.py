@@ -12,7 +12,7 @@ Commands:
   /list                           your contacts
   /list all                       recent activity across the team
   /find <stars> [language]        discover repos by star range, e.g.
-                                  /find 500..2000 python
+                                  /find 4000-5000 python
   /export <stars> [language]      full results + contacts as CSV
   /help                           this summary
 
@@ -104,8 +104,8 @@ HELP_TEXT = (
     "/release <username> · give the contact back\n"
     "/list · your contacts\n"
     "/list all · recent team activity\n"
-    "/find 500..2000 python · discover repos by star range\n"
-    "/export 500..2000 python · full results + contact info as CSV"
+    "/find 4000-5000 python · discover repos by star range\n"
+    "/export 4000-5000 python · full results + contact info as CSV"
 )
 
 
@@ -222,7 +222,14 @@ def cmd_list(sender: dict, show_all: bool) -> str:
     return "\n".join(lines)
 
 
-STARS_RE = re.compile(r"^(\d+)(?:\.\.(\d+))?$")
+STARS_RE = re.compile(r"^(\d+)(?:(?:-|\.\.)(\d+))?$")
+
+
+def _stars_qualifier(m: re.Match) -> str:
+    """GitHub's search API wants 'stars:100..500' or 'stars:>=100'."""
+    if m.group(2):
+        return f"{m.group(1)}..{m.group(2)}"
+    return f">={m.group(1)}"
 
 
 async def cmd_find(stars_arg: str, language: str) -> str:
@@ -231,11 +238,10 @@ async def cmd_find(stars_arg: str, language: str) -> str:
         return (
             "Usage: /find <stars> [language]\n"
             "Examples:\n"
-            "/find 500..2000 · repos with 500 to 2000 stars\n"
+            "/find 4000-5000 · repos with 4000 to 5000 stars\n"
             "/find 1000 python · Python repos with 1000+ stars"
         )
-    stars = stars_arg if m.group(2) else f">={stars_arg}"
-    query = f"stars:{stars}"
+    query = f"stars:{_stars_qualifier(m)}"
     if language:
         query += f" language:{language}"
 
@@ -326,12 +332,11 @@ async def build_prospects_csv(stars_arg: str, language: str):
     if not m:
         return (
             "Usage: /export <stars> [language]\n"
-            "Example: /export 500..2000 python\n"
+            "Example: /export 4000-5000 python\n"
             "Sends a CSV of repo owners in that range with their public "
             "contact info."
         )
-    stars = stars_arg if m.group(2) else f">={stars_arg}"
-    query = f"stars:{stars}"
+    query = f"stars:{_stars_qualifier(m)}"
     if language:
         query += f" language:{language}"
 
@@ -460,8 +465,8 @@ BOT_COMMANDS = [
     {"command": "done", "description": "Mark outreach as sent, optional note"},
     {"command": "release", "description": "Give a contact back"},
     {"command": "list", "description": "Your reservations (or: /list all)"},
-    {"command": "find", "description": "Discover repos by stars: /find 500..2000 python"},
-    {"command": "export", "description": "Full results as CSV: /export 500..2000 python"},
+    {"command": "find", "description": "Discover repos by stars: /find 4000-5000 python"},
+    {"command": "export", "description": "Full results as CSV: /export 4000-5000 python"},
     {"command": "help", "description": "Show all commands"},
 ]
 
