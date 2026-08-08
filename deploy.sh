@@ -70,6 +70,18 @@ else
     echo "✓ backend/.env already exists"
 fi
 
+# ── 5b. Outreach bot env ──
+if [ ! -f outreach-bot/.env ]; then
+    echo "→ Creating outreach-bot/.env..."
+    cat > outreach-bot/.env <<EOF
+TELEGRAM_BOT_TOKEN=
+EOF
+    echo "  ⚠  Paste your bot token from @BotFather into outreach-bot/.env,"
+    echo "     then run: docker compose up -d outreach-bot"
+else
+    echo "✓ outreach-bot/.env already exists"
+fi
+
 # ── 6. Launch containers ──
 echo "→ Building and starting containers..."
 docker compose up -d --build

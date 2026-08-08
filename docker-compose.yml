@@ -44,6 +44,21 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # ── Outreach Bot (Telegram, team outreach coordination) ──
+  outreach-bot:
+    build: ./outreach-bot
+    container_name: outreach-bot
+    restart: unless-stopped
+    env_file:
+      - ./outreach-bot/.env
+    volumes:
+      - ./outreach-bot/data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # ── Caddy Reverse Proxy (auto-HTTPS) ──
   caddy:
     image: caddy:2-alpine
