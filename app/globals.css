@@ -11,30 +11,30 @@
   --pb-accent: #00d4aa;
   --pb-accent-dim: rgba(0, 212, 170, 0.15);
 
-  /* Background Colors */
-  --pb-bg-primary: #0a0f1a;
-  --pb-bg-secondary: #0f1729;
-  --pb-bg-tertiary: #141e33;
-  --pb-bg-card: rgba(15, 23, 41, 0.7);
-  --pb-bg-card-hover: rgba(20, 30, 51, 0.85);
+  /* Background Colors — deep green-tinted charcoal, harmonized with the brand */
+  --pb-bg-primary: #0a1411;
+  --pb-bg-secondary: #0d1a16;
+  --pb-bg-tertiary: #12231e;
+  --pb-bg-card: rgba(14, 28, 24, 0.72);
+  --pb-bg-card-hover: rgba(19, 37, 31, 0.88);
   --pb-bg-glass: rgba(13, 147, 115, 0.06);
-  --pb-bg-navbar: rgba(10, 15, 26, 0.85);
-  --pb-bg-mobile-nav: rgba(10, 15, 26, 0.97);
+  --pb-bg-navbar: rgba(10, 20, 17, 0.85);
+  --pb-bg-mobile-nav: rgba(10, 20, 17, 0.97);
 
   /* Text Colors */
-  --pb-text-primary: #e8f0f2;
-  --pb-text-secondary: #8fa3b0;
-  --pb-text-muted: #5a6f7e;
+  --pb-text-primary: #eaf2f0;
+  --pb-text-secondary: #94aaa4;
+  --pb-text-muted: #67807a;
   --pb-text-accent: #4ecdc4;
 
   /* Border Colors */
-  --pb-border: rgba(78, 205, 196, 0.12);
-  --pb-border-hover: rgba(78, 205, 196, 0.3);
+  --pb-border: rgba(78, 205, 196, 0.15);
+  --pb-border-hover: rgba(78, 205, 196, 0.34);
   --pb-border-active: rgba(78, 205, 196, 0.5);
 
   /* Gradients */
-  --pb-gradient-hero: linear-gradient(135deg, #0a0f1a 0%, #0f1729 40%, #0d2e26 100%);
-  --pb-gradient-card: linear-gradient(145deg, rgba(15, 23, 41, 0.8), rgba(20, 30, 51, 0.4));
+  --pb-gradient-hero: linear-gradient(135deg, #0a1411 0%, #0d1a16 45%, #0d2e26 100%);
+  --pb-gradient-card: linear-gradient(145deg, rgba(16, 31, 27, 0.85), rgba(20, 39, 33, 0.45));
   --pb-gradient-accent: linear-gradient(135deg, #0d9373, #4ecdc4);
   --pb-gradient-button: linear-gradient(135deg, #0d9373 0%, #00d4aa 100%);
   --pb-gradient-button-hover: linear-gradient(135deg, #0a6b54 0%, #0d9373 100%);
