@@ -65,9 +65,10 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Telegram visitor alerts
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")  # optional: auto-discovered if empty
-TELEGRAM_CHAT_FILE = Path(__file__).parent / "data" / "telegram_chat.json"
-_resolved_chat_id: str = ""
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")  # optional extra recipient
+TELEGRAM_CHAT_FILE = Path(__file__).parent / "data" / "telegram_chat.json"  # legacy single-owner file
+TELEGRAM_SUBS_FILE = Path(__file__).parent / "data" / "telegram_subscribers.json"
+_subscribers: set[str] | None = None
 VISIT_SECRET = os.getenv("VISIT_SECRET", "")  # optional shared secret with the frontend
 VISIT_COOLDOWN = 3600  # at most one alert per visitor per hour
 _visit_notified: dict = {}  # visitor key -> last alert timestamp
@@ -439,28 +440,57 @@ def _referrer_domain(referrer: str) -> str:
     return "" if "pumpboard.dev" in domain else domain
 
 
-def _owner_chat_id() -> str:
-    """The chat that receives alerts: env override, else the persisted owner."""
-    global _resolved_chat_id
-    if TELEGRAM_CHAT_ID:
-        return TELEGRAM_CHAT_ID
-    if _resolved_chat_id:
-        return _resolved_chat_id
+def _load_subscribers() -> set[str]:
+    """Every chat that gets alerts. Seeded from the legacy single-owner
+    file and the TELEGRAM_CHAT_ID env var so existing recipients keep
+    getting alerts after the upgrade."""
+    global _subscribers
+    if _subscribers is not None:
+        return _subscribers
+    subs: set[str] = set()
+    if TELEGRAM_SUBS_FILE.exists():
+        try:
+            with open(TELEGRAM_SUBS_FILE, "r") as f:
+                subs = {str(c) for c in json.load(f).get("chat_ids", [])}
+        except (json.JSONDecodeError, OSError):
+            pass
     if TELEGRAM_CHAT_FILE.exists():
         try:
             with open(TELEGRAM_CHAT_FILE, "r") as f:
-                _resolved_chat_id = str(json.load(f).get("chat_id", ""))
+                legacy = str(json.load(f).get("chat_id", ""))
+            if legacy:
+                subs.add(legacy)
         except (json.JSONDecodeError, OSError):
             pass
-    return _resolved_chat_id
+    if TELEGRAM_CHAT_ID:
+        subs.add(TELEGRAM_CHAT_ID)
+    _subscribers = subs
+    return subs
 
 
-def _claim_owner(chat_id: str):
-    global _resolved_chat_id
-    _resolved_chat_id = chat_id
+def _save_subscribers():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with open(TELEGRAM_CHAT_FILE, "w") as f:
-        json.dump({"chat_id": chat_id}, f)
+    with open(TELEGRAM_SUBS_FILE, "w") as f:
+        json.dump({"chat_ids": sorted(_load_subscribers())}, f)
+
+
+def _subscribe(chat_id: str) -> bool:
+    """Add a chat to the alert list. Returns False if already subscribed."""
+    subs = _load_subscribers()
+    if chat_id in subs:
+        return False
+    subs.add(chat_id)
+    _save_subscribers()
+    return True
+
+
+def _unsubscribe(chat_id: str) -> bool:
+    subs = _load_subscribers()
+    if chat_id not in subs:
+        return False
+    subs.discard(chat_id)
+    _save_subscribers()
+    return True
 
 
 def _stats_message() -> str:
@@ -541,17 +571,19 @@ async def _process_visit(v: VisitIn, notify: bool):
             bucket[key] = bucket.get(key, 0) + 1
         save_visit_stats()
 
-        chat_id = _owner_chat_id()
-        if not (notify and chat_id and TELEGRAM_BOT_TOKEN):
+        chat_ids = _load_subscribers()
+        if not (notify and chat_ids and TELEGRAM_BOT_TOKEN):
             return
 
-        try:
-            await client.post(
-                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-                json={"chat_id": chat_id, "text": _visit_alert_text(v, geo, device)},
-            )
-        except httpx.RequestError:
-            pass
+        text = _visit_alert_text(v, geo, device)
+        for chat_id in list(chat_ids):
+            try:
+                await client.post(
+                    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                    json={"chat_id": chat_id, "text": text},
+                )
+            except httpx.RequestError:
+                pass
 
 
 @app.post("/api/visit", status_code=204)
@@ -575,9 +607,9 @@ async def track_visit(v: VisitIn, x_visit_secret: str = Header(default="")):
 
 
 async def telegram_poller():
-    """Long-poll Telegram for incoming messages. The first chat to message the
-    bot is claimed as the owner; /start and /stats from the owner reply with
-    the visit stats. Messages from any other chat are ignored."""
+    """Long-poll Telegram for incoming messages. Any chat that sends /start
+    is subscribed to visitor alerts; /stats replies with the summary and
+    /stop unsubscribes."""
     if not TELEGRAM_BOT_TOKEN:
         return
     api = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
@@ -610,21 +642,24 @@ async def _handle_telegram_update(client: httpx.AsyncClient, api: str, update: d
     if not chat_id:
         return
 
-    owner = _owner_chat_id()
-    if not owner:
-        _claim_owner(chat_id)
-        owner = chat_id
-    if chat_id != owner:
-        return
-
-    text = (msg.get("text") or "").strip().lower()
-    if text.startswith("/start") or text.startswith("/stats"):
+    text = (msg.get("text") or "").strip().lower().split("@")[0]
+    reply = ""
+    if text.startswith("/start"):
+        _subscribe(chat_id)
+        reply = (
+            "✅ Connected. You'll get an alert when someone visits "
+            "pumpboard.dev. Send /stats anytime for a summary, or /stop "
+            "to stop the alerts.\n\n" + _stats_message()
+        )
+    elif text.startswith("/stats"):
+        _subscribe(chat_id)  # anyone asking for stats wants alerts too
         reply = _stats_message()
-        if text.startswith("/start"):
-            reply = (
-                "✅ Connected. You'll get an alert when someone visits "
-                "pumpboard.dev. Send /stats anytime for a summary.\n\n" + reply
-            )
+    elif text.startswith("/stop"):
+        if _unsubscribe(chat_id):
+            reply = "👌 Alerts stopped for this chat. Send /start to resume."
+        else:
+            reply = "This chat wasn't getting alerts. Send /start to subscribe."
+    if reply:
         await client.post(
             f"{api}/sendMessage",
             json={"chat_id": chat_id, "text": reply},
