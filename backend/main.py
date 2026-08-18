@@ -188,11 +188,51 @@ def save_stats(data: dict):
 
 # --- GitHub API helpers ---
 
+# GitHub reports a spent budget as 403/429 with x-ratelimit-remaining: 0.
+# Remember when it resets so we stop spending requests on a limit we know
+# is exhausted — without this, every call re-tries the full fan-out.
+_rate_limited_until: float = 0.0
+
+
 def _github_headers() -> dict:
     headers = {"Accept": "application/vnd.github+json"}
     if GITHUB_TOKEN:
         headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
     return headers
+
+
+def _github_ok(resp: httpx.Response, what: str) -> bool:
+    """True if the response carries data; otherwise say why it didn't.
+
+    A rate-limited or errored response is a perfectly normal HTTP reply, so
+    it never raises — without this it would fail the status check silently
+    and surface as a profile with no name and no avatar.
+    """
+    global _rate_limited_until
+
+    if resp.status_code == 200:
+        return True
+
+    if resp.status_code in (403, 429) and resp.headers.get("x-ratelimit-remaining") == "0":
+        try:
+            reset = float(resp.headers.get("x-ratelimit-reset", 0))
+        except ValueError:
+            reset = 0.0
+        _rate_limited_until = reset
+        minutes = max(0, int((reset - time.time()) // 60))
+        hint = (
+            "set GITHUB_TOKEN in backend/.env for 5000 req/hr"
+            if not GITHUB_TOKEN
+            else "the token's hourly budget is spent"
+        )
+        print(
+            f"github: rate limited fetching {what} — resets in ~{minutes}m ({hint})",
+            flush=True,
+        )
+    else:
+        print(f"github: {what} returned HTTP {resp.status_code}", flush=True)
+
+    return False
 
 
 async def fetch_github_profile(username: str, repo: str = "", force: bool = False) -> dict:
@@ -220,11 +260,18 @@ async def fetch_github_profile(username: str, repo: str = "", force: bool = Fals
     }
     fetch_ok = False  # only cache when GitHub actually answered
 
+    # Rate limited and not yet reset: serve what we have rather than spend
+    # requests that we already know will be refused
+    if now < _rate_limited_until:
+        if cache_key in _cache:
+            return _cache[cache_key]["data"]
+        return result
+
     async with httpx.AsyncClient(timeout=10) as client:
         # Fetch profile
         try:
             resp = await client.get(f"{GITHUB_API}/users/{username}", headers=headers)
-            if resp.status_code == 200:
+            if _github_ok(resp, f"profile {username}"):
                 data = resp.json()
                 fetch_ok = True
                 result["name"] = data.get("name") or data.get("login", username)
@@ -239,7 +286,7 @@ async def fetch_github_profile(username: str, repo: str = "", force: bool = Fals
         if repo:
             try:
                 resp = await client.get(f"{GITHUB_API}/repos/{repo}", headers=headers)
-                if resp.status_code == 200:
+                if _github_ok(resp, f"repo {repo}"):
                     repo_data = resp.json()
                     result["stars"] = repo_data.get("stargazers_count", 0)
                     result["repo_url"] = repo_data.get("html_url", f"https://github.com/{repo}")
@@ -256,7 +303,7 @@ async def fetch_github_profile(username: str, repo: str = "", force: bool = Fals
                     headers=headers,
                     params={"sort": "updated", "per_page": 20},
                 )
-                if resp.status_code == 200:
+                if _github_ok(resp, f"repos of {username}"):
                     repos = resp.json()
                     result["stars"] = sum(r.get("stargazers_count", 0) for r in repos)
                     langs = []
