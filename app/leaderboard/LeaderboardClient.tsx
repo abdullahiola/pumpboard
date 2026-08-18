@@ -9,6 +9,7 @@ import Footer from "../components/Footer";
 import styles from "./leaderboard.module.css";
 import type { Developer } from "../types";
 import { resolveImageUrl } from "../utils";
+import { useCountUp } from "../lib/useCountUp";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -120,6 +121,19 @@ export default function LeaderboardClient({
       .slice(0, 3);
   }, [developers]);
 
+  // Podium reads 2nd — 1st — 3rd left to right, so the winner stands centre
+  const podiumOrder = useMemo(
+    () =>
+      top3.length >= 3
+        ? ([
+            { dev: top3[1], rank: 2, place: "Left" },
+            { dev: top3[0], rank: 1, place: "Center" },
+            { dev: top3[2], rank: 3, place: "Right" },
+          ] as const)
+        : [],
+    [top3]
+  );
+
   const totalPool = useMemo(
     () => developers.reduce((s, d) => s + (d.totalClaimed || 0), 0),
     [developers]
@@ -131,6 +145,25 @@ export default function LeaderboardClient({
     }
     return developers.reduce((s, d) => s + (Number(d.solAmount) || 0), 0);
   }, [developers, solPrice]);
+
+  // Counters start after mount: the server render must carry real numbers
+  // for crawlers, and starting on the first client render would hydrate a 0
+  // over them. Deferring a frame also keeps the state write out of the
+  // effect body.
+  const [countUp, setCountUp] = useState(false);
+  useEffect(() => {
+    if (loading) return;
+    const frame = requestAnimationFrame(() => setCountUp(true));
+    return () => cancelAnimationFrame(frame);
+  }, [loading]);
+
+  // An avatar_url that 404s renders as alt text sprawled across the podium,
+  // so track failures and fall back to initials like a missing URL would
+  const [brokenAvatars, setBrokenAvatars] = useState<string[]>([]);
+
+  const rankedCount = useCountUp(developers.length, 1200, countUp);
+  const poolCount = useCountUp(totalPool, 1600, countUp);
+  const solCount = useCountUp(totalSol, 1600, countUp, 2);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -170,21 +203,21 @@ export default function LeaderboardClient({
             <div className={styles.summaryBar}>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryValue}>
-                  {loading ? "—" : developers.length}
+                  {loading ? "—" : countUp ? rankedCount : developers.length}
                 </span>
                 <span className={styles.summaryLabel}>Ranked</span>
               </div>
               <div className={styles.summaryDivider} />
               <div className={styles.summaryItem}>
                 <span className={styles.summaryValue}>
-                  {loading ? "—" : formatUSD(totalPool)}
+                  {loading ? "—" : formatUSD(countUp ? poolCount : totalPool)}
                 </span>
                 <span className={styles.summaryLabel}>Total Pool</span>
               </div>
               <div className={styles.summaryDivider} />
               <div className={styles.summaryItem}>
                 <span className={styles.summaryValue}>
-                  {loading ? "—" : totalSol.toFixed(2)}
+                  {loading ? "—" : (countUp ? solCount : totalSol).toFixed(2)}
                 </span>
                 <span className={styles.summaryLabel}>SOL Claimed</span>
               </div>
@@ -209,64 +242,70 @@ export default function LeaderboardClient({
 
           {!loading && (
             <>
-              {/* Top 3 Podium */}
-              {top3.length >= 3 && (
+              {/* Top 3 Podium — 3D blocks, winner centre */}
+              {podiumOrder.length === 3 && (
                 <section className={styles.podiumSection}>
-                  <h2 className={styles.sectionLabel}>Top Earners</h2>
-                  <div className={styles.podium}>
-                    {[top3[1], top3[0], top3[2]].map((dev, i) => {
-                      const rank = [2, 1, 3][i];
-                      return (
+                  <div className={styles.podiumStage}>
+                    <div className={styles.podium}>
+                      {podiumOrder.map(({ dev, rank, place }) => (
                         <div
                           key={dev.github || dev.name}
-                          className={`${styles.podiumCard} ${styles[`podium${rank}`]}`}
+                          className={`${styles.podiumBlock} ${styles[`podium${place}`]}`}
                         >
-                          <div className={styles.podiumRankBadge}>
-                            {medalEmoji[rank]}
-                          </div>
-                          <div className={styles.podiumAvatar}>
-                            {dev.avatar_url ? (
+                          <div className={styles.podiumImage}>
+                            {dev.avatar_url &&
+                            !brokenAvatars.includes(dev.github || dev.name || "") ? (
                               <Image
                                 src={resolveImageUrl(dev.avatar_url)}
                                 alt={dev.name || dev.github}
-                                width={rank === 1 ? 80 : 56}
-                                height={rank === 1 ? 80 : 56}
+                                width={112}
+                                height={112}
                                 className={styles.podiumImg}
+                                onError={() =>
+                                  setBrokenAvatars((prev) => [
+                                    ...prev,
+                                    dev.github || dev.name || "",
+                                  ])
+                                }
                               />
                             ) : (
-                              <div
-                                className={`${styles.podiumInitials} ${rank === 1 ? styles.podiumInitialsLg : ""}`}
-                              >
+                              <div className={styles.podiumInitials}>
                                 {(dev.name || dev.github || "??")
                                   .substring(0, 2)
                                   .toUpperCase()}
                               </div>
                             )}
                           </div>
-                          <span className={styles.podiumName}>
-                            {dev.name || dev.github}
-                          </span>
-                          {dev.github && (
-                            <span className={styles.podiumHandle}>
-                              @{dev.github}
-                            </span>
-                          )}
-                          <span className={styles.podiumType}>
-                            {dev.type === "creator" ? "Creator" : "Developer"}
-                          </span>
-                          <div className={styles.podiumAmountWrap}>
-                            <span className={styles.podiumAmount}>
-                              {formatUSD(dev.totalClaimed)}
-                            </span>
-                            <span className={styles.podiumSol}>
-                              {usdToSol(dev.totalClaimed)
-                                ? `${usdToSol(dev.totalClaimed)} SOL`
-                                : `${dev.solAmount} SOL`}
-                            </span>
-                          </div>
+                          <div className={styles.podiumRank}>{rank}</div>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className={styles.podiumCaptions}>
+                    {podiumOrder.map(({ dev }) => (
+                      <div
+                        key={dev.github || dev.name}
+                        className={styles.podiumCaption}
+                      >
+                        <span className={styles.podiumName}>
+                          {dev.name || dev.github}
+                        </span>
+                        {/* Rendered even when empty: a missing handle would
+                            otherwise pull that column's amount up a line */}
+                        <span className={styles.podiumHandle}>
+                          {dev.github ? `@${dev.github}` : ""}
+                        </span>
+                        <span className={styles.podiumAmount}>
+                          {formatUSD(dev.totalClaimed)}
+                        </span>
+                        <span className={styles.podiumSol}>
+                          {usdToSol(dev.totalClaimed)
+                            ? `${usdToSol(dev.totalClaimed)} SOL`
+                            : `${dev.solAmount} SOL`}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </section>
               )}

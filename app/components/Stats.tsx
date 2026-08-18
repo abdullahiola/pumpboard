@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import styles from "./Stats.module.css";
 import type { PlatformStats } from "../types";
+import { useCountUp } from "../lib/useCountUp";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -79,33 +80,6 @@ function formatNumber(num: number): string {
     return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + "K";
   }
   return num.toString();
-}
-
-function useCountUp(target: number, duration = 2000, shouldStart = false): number {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!shouldStart || !target) return;
-
-    let startTime: number | null = null;
-    let animationFrame: number;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * target));
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [target, duration, shouldStart]);
-
-  return count;
 }
 
 interface StatCardProps {

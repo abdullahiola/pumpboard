@@ -3,10 +3,11 @@ import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+// Variable font: one file covers 100–900, so the podium numerals can go
+// heavy without shipping another static weight
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 

@@ -61,35 +61,44 @@
 .summaryBar {
   display: flex;
   align-items: center;
-  gap: 28px;
-  padding: 16px 20px;
+  gap: 24px;
+  padding: 32px 24px;
   background: var(--pb-bg-card);
   border: 1px solid var(--pb-border);
   border-radius: var(--pb-radius-lg);
-  width: fit-content;
+  width: 100%;
 }
 
+/* Equal thirds so the dividers land on a predictable rhythm */
 .summaryItem {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
 }
 
 .summaryValue {
-  font-size: 1.25rem;
+  font-size: 2rem;
   font-weight: 600;
   color: var(--pb-text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  /* Fixed-width digits stop the counters juddering as they tick up */
+  font-variant-numeric: tabular-nums;
 }
 
 .summaryLabel {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: var(--pb-text-muted);
 }
 
 .summaryDivider {
   width: 1px;
-  height: 32px;
+  height: 56px;
+  flex-shrink: 0;
   background: var(--pb-border);
 }
 
@@ -135,9 +144,12 @@
   50% { opacity: 0.6; }
 }
 
-/* ===== Podium ===== */
+/* ===== Podium =====
+   3D podium adapted from https://codepen.io/smaniren/pen/qBgavpB —
+   blocks are built from one front face plus rotated ::after (top) and
+   ::before (side) pseudo-elements, tilted as a group on the X axis. */
 .podiumSection {
-  margin-bottom: 40px;
+  margin-bottom: 48px;
 }
 
 .sectionLabel {
@@ -147,127 +159,241 @@
   margin-bottom: 14px;
 }
 
+.podiumStage {
+  /* Drives every dimension below, so the whole rig scales at once */
+  --pod-size: 4px;
+  --pod-lift: calc(var(--pod-size) * -5.5);
+
+  /* Brand green ramp: 1st brightest, 3rd deepest */
+  --pod-1-face: #12a37e;
+  --pod-1-top: #0e8a6a;
+  --pod-2-face: #0f8b6b;
+  --pod-2-top: #0c7458;
+  --pod-3-face: #0c7358;
+  --pod-3-top: #095c47;
+  --pod-side: rgba(4, 44, 35, 0.55);
+  --pod-cast-shadow: rgba(3, 20, 16, 0.85);
+
+  width: min(100%, 560px);
+  margin: 0 auto;
+  padding-top: calc(var(--pod-size) * 15);
+  perspective: calc(var(--pod-size) * 50);
+}
+
 .podium {
   display: grid;
-  grid-template-columns: 1fr 1.1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
   align-items: end;
-}
-
-.podiumCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 20px;
-  border-radius: var(--pb-radius-lg);
-  background: var(--pb-bg-card);
-  border: 1px solid var(--pb-border);
-  position: relative;
-  transition: border-color var(--pb-transition);
-}
-
-.podiumCard:hover {
-  border-color: var(--pb-border-hover);
-}
-
-/* Gold — 1st place */
-.podium1 {
-  padding: 32px 20px;
-  border-color: rgba(212, 165, 55, 0.35);
-}
-
-/* Silver */
-.podium2 {
-  border-color: rgba(160, 160, 160, 0.25);
-}
-
-/* Bronze */
-.podium3 {
-  border-color: rgba(205, 127, 50, 0.25);
-}
-
-.podiumRankBadge {
-  font-size: 1.35rem;
-  margin-bottom: 10px;
-}
-
-.podium1 .podiumRankBadge {
-  font-size: 1.7rem;
-}
-
-.podiumAvatar {
-  margin-bottom: 12px;
-}
-
-.podiumImg {
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--pb-border);
-}
-
-.podium1 .podiumImg {
-  border-color: rgba(212, 165, 55, 0.3);
-}
-
-.podiumInitials {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--pb-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-.podiumInitialsLg {
-  width: 68px;
-  height: 68px;
-  font-size: 1.1rem;
-}
-
-.podiumName {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--pb-text-primary);
+  gap: 12px;
+  transform: rotateX(-40deg);
+  transform-style: preserve-3d;
   text-align: center;
 }
 
-.podiumHandle {
-  font-size: 0.82rem;
-  color: var(--pb-text-secondary);
-  margin-bottom: 4px;
+.podiumBlock {
+  position: relative;
+  padding-inline: calc(var(--pod-size) * 2);
+  padding-bottom: calc(var(--pod-size) * 3);
+  transform-style: preserve-3d;
+  transform-origin: top;
+  transition: transform 0.25s ease;
 }
 
-.podiumType {
-  font-size: 0.78rem;
-  color: var(--pb-text-muted);
-  margin-bottom: 12px;
+/* The top face: same box, hinged back 90° from the top edge */
+.podiumBlock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  transform: rotateX(-90deg);
+  transform-style: preserve-3d;
 }
 
-.podiumAmountWrap {
+/* Outer side faces — only the flanking blocks show one */
+.podiumLeft::before,
+.podiumRight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to left, var(--pod-side), transparent);
+  transform-origin: right;
+  transform: rotateY(-90deg);
+  transform-style: preserve-3d;
+}
+
+.podiumRight::before {
+  background: linear-gradient(to right, var(--pod-side), transparent);
+  transform-origin: left;
+  transform: rotateY(90deg);
+}
+
+/* Heights come from padding-top, so the winner stands tallest */
+.podiumLeft {
+  padding-top: calc(var(--pod-size) * 3);
+  background: var(--pod-2-face);
+}
+
+.podiumLeft::after {
+  background: linear-gradient(var(--pod-2-top), transparent);
+}
+
+.podiumCenter {
+  padding-top: calc(var(--pod-size) * 5);
+  background: var(--pod-1-face);
+  transform: translate3d(0, 0, 5px);
+}
+
+.podiumCenter::after {
+  background: linear-gradient(var(--pod-1-top), transparent);
+}
+
+.podiumRight {
+  padding-top: calc(var(--pod-size) * 1);
+  background: var(--pod-3-face);
+}
+
+.podiumRight::after {
+  background: linear-gradient(var(--pod-3-top), transparent);
+}
+
+.podiumRank {
+  font-size: calc(var(--pod-size) * 12);
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+
+/* Hover pushes the block toward the viewer */
+.podiumBlock:hover {
+  transform: translate3d(0, 0, 15px);
+}
+
+.podiumCenter:hover {
+  transform: translate3d(0, 0, 20px);
+}
+
+/* Avatar floats above its block, pushed back to sit over the top face */
+.podiumImage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -94%) translateZ(var(--pod-lift)) rotateY(0);
+  transform-origin: center;
+  transform-style: preserve-3d;
+}
+
+.podiumImg,
+.podiumInitials {
+  width: calc(var(--pod-size) * 10);
+  height: calc(var(--pod-size) * 10);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.podiumInitials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pb-bg-tertiary);
+  border: 1px solid var(--pb-border);
+  color: var(--pb-text-primary);
+  font-size: calc(var(--pod-size) * 2.6);
+  font-weight: 600;
+}
+
+/* Contact shadow, laid flat on the ground plane */
+.podiumImage::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(var(--pod-size) * 6);
+  border-radius: 100%;
+  background: linear-gradient(var(--pod-cast-shadow), transparent);
+  filter: blur(20px);
+  transform: rotateX(90deg);
+}
+
+.podiumBlock:hover .podiumImage {
+  animation: podiumSpin 10s linear infinite;
+}
+
+@keyframes podiumSpin {
+  to {
+    transform: translate(-50%, -94%) translateZ(var(--pod-lift)) rotateY(360deg);
+  }
+}
+
+/* Captions sit outside the tilted stage so the text stays flat */
+.podiumCaptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: min(100%, 560px);
+  margin: 20px auto 0;
+  text-align: center;
+}
+
+.podiumCaption {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  gap: 1px;
+  min-width: 0;
+}
+
+.podiumName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podiumHandle {
+  font-size: 0.8rem;
+  /* line-height must be pinned: an empty reserved row and a filled one have
+     to occupy exactly the same height or the amounts below drift apart */
+  line-height: 1.2;
+  min-height: 1.2em;
+  color: var(--pb-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .podiumAmount {
-  font-size: 1.3rem;
+  margin-top: 4px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--pb-text-primary);
-  letter-spacing: -0.01em;
-}
-
-.podium1 .podiumAmount {
-  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .podiumSol {
   font-size: 0.8rem;
   color: var(--pb-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The pen's three scale steps — every podium dimension keys off this */
+@media (min-width: 600px) {
+  .podiumStage {
+    --pod-size: 7.5px;
+  }
+}
+
+@media (min-width: 960px) {
+  .podiumStage {
+    --pod-size: 10px;
+  }
+}
+
+/* Light theme: the ground shadow has to lift off a white page */
+:global([data-theme="light"]) .podiumStage {
+  --pod-side: rgba(9, 71, 57, 0.4);
+  --pod-cast-shadow: rgba(20, 46, 38, 0.35);
 }
 
 /* ===== Controls ===== */
@@ -568,75 +694,32 @@
   .summaryBar {
     width: 100%;
     justify-content: center;
-    gap: 16px;
-    padding: 14px 16px;
+    gap: 12px;
+    padding: 24px 12px;
   }
 
   .summaryValue {
-    font-size: 1.05rem;
+    font-size: 1.5rem;
   }
 
-  .podium {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .podiumCard {
-    flex-direction: row;
-    padding: 14px 18px;
-    gap: 14px;
-  }
-
-  .podium1 {
-    padding: 16px 18px;
-  }
-
-  .podiumRankBadge {
-    font-size: 1.2rem;
-    margin-bottom: 0;
-  }
-
-  .podium1 .podiumRankBadge {
-    font-size: 1.4rem;
-  }
-
-  .podiumAvatar {
-    margin-bottom: 0;
-  }
-
-  .podiumImg {
-    width: 40px !important;
-    height: 40px !important;
-  }
-
-  .podiumInitials,
-  .podiumInitialsLg {
-    width: 40px;
-    height: 40px;
+  .summaryLabel {
     font-size: 0.8rem;
   }
 
+  .podiumHandle {
+    display: none;
+  }
+
+  /* Narrow columns truncate real names, so allow two lines — the reserved
+     height keeps the amounts on a common baseline across all three */
   .podiumName {
-    text-align: left;
-    flex: 1;
-  }
-
-  .podiumHandle,
-  .podiumType {
-    display: none;
-  }
-
-  .podiumAmountWrap {
-    align-items: flex-end;
-  }
-
-  .podiumAmount,
-  .podium1 .podiumAmount {
-    font-size: 1rem;
-  }
-
-  .podiumSol {
-    display: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    min-height: 2.4em;
   }
 
   .controlsSection {
@@ -670,6 +753,11 @@
   .summaryBar {
     flex-direction: column;
     gap: 12px;
+    align-items: center;
+  }
+
+  .summaryItem {
+    flex: none;
     align-items: center;
   }
 
