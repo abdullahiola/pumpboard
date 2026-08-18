@@ -73,7 +73,6 @@ const steps: Step[] = [
 export default function HowItWorks() {
   return (
     <section className={`section ${styles.howItWorks}`} id="how-it-works">
-      <div className={styles.bgGlow}></div>
       <div className="container">
         <div className={styles.header}>
           <span className="section-label">

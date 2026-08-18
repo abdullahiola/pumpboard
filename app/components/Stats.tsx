@@ -130,7 +130,6 @@ function StatCard({ config, value, index, isVisible }: StatCardProps) {
       </div>
       <span className={styles.cardLabel}>{config.label}</span>
       <span className={styles.cardDesc}>{config.description}</span>
-      <div className={styles.cardGlow}></div>
     </div>
   );
 }
@@ -173,8 +172,6 @@ export default function Stats({
 
   return (
     <section className={`section ${styles.stats}`} id="stats" ref={sectionRef}>
-      <div className={styles.bgGlow}></div>
-      <div className={styles.bgGrid}></div>
       <div className="container">
         <div className={styles.header}>
           <span className="section-label">

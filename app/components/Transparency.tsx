@@ -80,7 +80,6 @@ const yourPart = [
 export default function Transparency() {
   return (
     <section className={`section ${styles.transparency}`} id="transparency">
-      <div className={styles.bgGlow}></div>
       <div className="container">
         <div className={styles.header}>
           <span className="section-label">

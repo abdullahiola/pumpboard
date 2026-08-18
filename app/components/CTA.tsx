@@ -5,8 +5,6 @@ import styles from "./CTA.module.css";
 export default function CTA() {
   return (
     <section className={styles.cta}>
-      <div className={styles.bgGlow}></div>
-      <div className={styles.bgGrid}></div>
       <div className={`container ${styles.ctaInner}`}>
         <div className={styles.ctaContent}>
           <span className="section-label">
@@ -18,7 +16,7 @@ export default function CTA() {
           <h2 className={styles.ctaTitle}>
             Ready to Fund
             <br />
-            <span className={styles.gradientText}>Open Source?</span>
+            <span className={styles.accentText}>Open Source?</span>
           </h2>
           <p className={styles.ctaDescription}>
             Join PumpBoard today and start supporting the developers who build the

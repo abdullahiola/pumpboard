@@ -1,33 +1,10 @@
 .stats {
   position: relative;
-  overflow: hidden;
-}
-
-.bgGlow {
-  position: absolute;
-  bottom: -200px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 800px;
-  height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(13, 147, 115, 0.08) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-.bgGrid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(78, 205, 196, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(78, 205, 196, 0.02) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 48px;
 }
 
 .header :global(.section-subtitle) {
@@ -37,96 +14,65 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  gap: 20px;
 }
 
 .statCard {
-  padding: 32px 24px;
-  text-align: center;
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.statCard:hover .cardIcon {
-  background: var(--pb-gradient-button);
-  color: #fff;
-  transform: scale(1.1) rotate(5deg);
 }
 
 .cardIcon {
-  width: 56px;
-  height: 56px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--pb-accent-dim);
-  border: 1px solid var(--pb-border);
   border-radius: var(--pb-radius-md);
   color: var(--pb-accent);
-  margin-bottom: 20px;
-  transition: all var(--pb-transition);
+  margin-bottom: 18px;
 }
 
 .cardValue {
   display: flex;
   align-items: baseline;
   gap: 2px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .prefix {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--pb-accent);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
 }
 
 .number {
-  font-family: var(--font-heading);
-  font-size: 2.4rem;
-  font-weight: 900;
+  font-size: 2rem;
+  font-weight: 600;
   color: var(--pb-text-primary);
-  line-height: 1;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .suffix {
-  font-family: var(--font-heading);
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--pb-accent);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
 }
 
 .cardLabel {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--pb-text-primary);
   margin-bottom: 4px;
 }
 
 .cardDesc {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--pb-text-muted);
-}
-
-.cardGlow {
-  position: absolute;
-  bottom: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(13, 147, 115, 0.15) 0%, transparent 70%);
-  pointer-events: none;
-  transition: opacity var(--pb-transition);
-  opacity: 0;
-}
-
-.statCard:hover .cardGlow {
-  opacity: 1;
+  line-height: 1.55;
 }
 
 @media (max-width: 968px) {
@@ -141,6 +87,6 @@
   }
 
   .number {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 }

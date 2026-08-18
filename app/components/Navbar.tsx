@@ -143,11 +143,7 @@ export default function Navbar() {
         <div className={styles.navActions}>
           <button
             className={styles.themeToggle}
-            onClick={() => {
-              const next = theme === "dark" ? "light" : "dark";
-              setTheme(next);
-              document.documentElement.setAttribute("data-theme", next);
-            }}
+            onClick={toggleTheme}
             aria-label="Toggle theme"
           >
             {theme === "dark" ? (

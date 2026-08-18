@@ -22,7 +22,6 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
 export default function Footer() {
   return (
     <footer className={styles.footer}>
-      <div className={styles.topBorder}></div>
       <div className="container">
         <div className={styles.footerGrid}>
           <div className={styles.footerBrand}>

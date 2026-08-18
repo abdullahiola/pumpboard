@@ -32,16 +32,6 @@ export default function Hero({
 
   return (
     <section className={styles.hero} id="hero">
-      {/* Background Effects */}
-      <div className={styles.bgGrid}></div>
-      <div className={styles.glowOrb1}></div>
-      <div className={styles.glowOrb2}></div>
-      <div className={styles.floatingParticles}>
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className={`${styles.particle} ${styles[`particle${i + 1}`]}`}></div>
-        ))}
-      </div>
-
       <div className={`container ${styles.heroInner}`}>
         <div className={styles.heroContent}>
           <div className={`${styles.badge} animate-fade-in-up delay-1`}>
@@ -52,7 +42,7 @@ export default function Hero({
           <h1 className={`${styles.heroTitle} animate-fade-in-up delay-2`}>
             Decentralized
             <br />
-            <span className={styles.gradientText}>Sponsorship</span>
+            <span className={styles.accentText}>Sponsorship</span>
             <br />
             for Open-Source Developers
           </h1>
@@ -105,14 +95,13 @@ export default function Hero({
           </div>
         </div>
 
-        <div className={`${styles.heroBanner} animate-slide-right delay-3`}>
-          <div className={styles.bannerGlow}></div>
+        <div className={`${styles.heroBanner} animate-fade-in-up delay-3`}>
           <Image
             src="/banner-dark.png"
             alt="PumpBoard Banner"
             width={857}
             height={366}
-            sizes="(max-width: 968px) 220px, 340px"
+            sizes="(max-width: 968px) 280px, 380px"
             className={`${styles.bannerImage} ${styles.bannerImageDark}`}
             priority
           />
@@ -121,25 +110,11 @@ export default function Hero({
             alt="PumpBoard Banner"
             width={857}
             height={366}
-            sizes="(max-width: 968px) 220px, 340px"
+            sizes="(max-width: 968px) 280px, 380px"
             className={`${styles.bannerImage} ${styles.bannerImageLight}`}
             priority
           />
-          <div className={styles.orbitRing}>
-            <div className={styles.orbitParticle1}></div>
-            <div className={styles.orbitParticle2}></div>
-          </div>
-          <div className={styles.orbitRingOuter}>
-            <div className={styles.orbitParticle3}></div>
-          </div>
         </div>
-      </div>
-
-      <div className={styles.scrollIndicator}>
-        <div className={styles.scrollMouse}>
-          <div className={styles.scrollWheel}></div>
-        </div>
-        <span>Scroll to explore</span>
       </div>
     </section>
   );

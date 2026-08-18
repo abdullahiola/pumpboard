@@ -145,10 +145,6 @@ export default function LeaderboardClient({
     <>
       <Navbar />
       <main className={styles.page}>
-        <div className={styles.bgGrid} />
-        <div className={styles.glowOrb1} />
-        <div className={styles.glowOrb2} />
-
         <div className={styles.container}>
           {/* Page header */}
           <header className={styles.pageHeader}>

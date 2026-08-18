@@ -1,23 +1,10 @@
 .howItWorks {
   position: relative;
-  overflow: hidden;
-}
-
-.bgGlow {
-  position: absolute;
-  top: 50%;
-  left: -200px;
-  transform: translateY(-50%);
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(13, 147, 115, 0.08) 0%, transparent 60%);
-  pointer-events: none;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 48px;
 }
 
 .header :global(.section-subtitle) {
@@ -26,16 +13,15 @@
 
 /* Timeline */
 .timeline {
-  max-width: 700px;
+  max-width: 680px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0;
 }
 
 .timelineItem {
   display: flex;
-  gap: 28px;
+  gap: 20px;
 }
 
 .timelineConnector {
@@ -46,77 +32,70 @@
 }
 
 .timelineDot {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--pb-gradient-button);
+  background: var(--pb-accent-dim);
+  border: 1px solid var(--pb-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #fff;
-  box-shadow: 0 0 20px rgba(13, 147, 115, 0.3);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pb-accent);
   flex-shrink: 0;
-  z-index: 2;
 }
 
 .timelineLine {
-  width: 2px;
+  width: 1px;
   flex: 1;
-  background: linear-gradient(180deg, var(--pb-primary), rgba(13, 147, 115, 0.1));
-  min-height: 30px;
+  background: var(--pb-border);
+  min-height: 24px;
 }
 
 .stepCard {
-  padding: 28px;
+  padding: 20px 22px;
   flex: 1;
-  margin-bottom: 24px;
-}
-
-.stepCard:hover {
-  transform: translateY(-2px) translateX(4px);
-}
-
-.stepIcon {
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--pb-accent-dim);
-  border: 1px solid var(--pb-border);
-  border-radius: var(--pb-radius-md);
-  color: var(--pb-accent);
   margin-bottom: 16px;
 }
 
+.stepIcon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pb-bg-glass);
+  border-radius: var(--pb-radius-md);
+  color: var(--pb-text-secondary);
+  margin-bottom: 14px;
+}
+
 .stepTitle {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 6px;
   color: var(--pb-text-primary);
 }
 
 .stepDescription {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--pb-text-secondary);
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
 @media (max-width: 600px) {
   .timelineItem {
-    gap: 16px;
+    gap: 14px;
   }
 
   .stepCard {
-    padding: 20px;
+    padding: 18px;
   }
 
   .timelineDot {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     font-size: 0.75rem;
   }
 }

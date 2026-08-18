@@ -97,7 +97,6 @@ export default function DeveloperCards({
 
   return (
     <section className={`section ${styles.developers}`} id="developers">
-      <div className={styles.bgGlow}></div>
       <div className="container">
         <div className={styles.header}>
           <span className="section-label">

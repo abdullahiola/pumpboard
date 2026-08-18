@@ -82,7 +82,6 @@ const features: Feature[] = [
 export default function Features() {
   return (
     <section className={`section ${styles.features}`} id="features">
-      <div className={styles.bgGlow}></div>
       <div className="container">
         <div className={styles.header}>
           <span className="section-label">
@@ -114,7 +113,6 @@ export default function Features() {
                 <div className={styles.cardTag}>{feature.tag}</div>
                 <h3 className={styles.cardTitle}>{feature.title}</h3>
                 <p className={styles.cardDescription}>{feature.description}</p>
-                <div className={styles.cardShine}></div>
               </CardWrapper>
             );
           })}
