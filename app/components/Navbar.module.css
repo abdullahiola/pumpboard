@@ -201,7 +201,9 @@
   border: 1px solid var(--pb-border);
   border-radius: var(--pb-radius-lg);
   padding: 6px;
-  min-width: 180px;
+  /* .downloadWrap shrink-wraps the button, so 100% matches the trigger's
+     width; content wider than that still pushes it out from the right edge */
+  min-width: 100%;
   box-shadow: var(--pb-shadow-lg);
   z-index: 50;
   animation: fadeInUp 0.15s ease;
