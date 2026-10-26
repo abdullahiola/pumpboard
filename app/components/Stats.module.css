@@ -75,6 +75,121 @@
   line-height: 1.55;
 }
 
+.statCardButton {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Keep the card's own corners under the global button focus ring */
+.statCardButton:focus-visible {
+  border-radius: var(--pb-radius-lg);
+}
+
+.cardAction {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--pb-accent);
+}
+
+/* Projects popup: the frame comes from the profile popup in DeveloperCards */
+.popupTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.popupSubtitle {
+  font-size: 0.85rem;
+  color: var(--pb-text-muted);
+  margin: 0 0 16px;
+}
+
+.projectList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.projectRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--pb-border);
+  border-radius: var(--pb-radius-md);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--pb-transition), background-color var(--pb-transition);
+}
+
+.projectRow:hover {
+  background: var(--pb-bg-glass);
+  border-color: var(--pb-border-hover);
+}
+
+.projectRow:focus-visible {
+  border-radius: var(--pb-radius-md);
+}
+
+.projectAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pb-primary);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.projectAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.projectInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.projectName {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectOwner {
+  font-size: 0.8rem;
+  color: var(--pb-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectClaimed {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--pb-text-accent);
+  flex-shrink: 0;
+}
+
 @media (max-width: 968px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);

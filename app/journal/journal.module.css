@@ -1,0 +1,449 @@
+/* ===== Journal Pages ===== */
+.subtitle {
+  font-size: 1rem;
+  color: var(--pb-text-secondary);
+  line-height: 1.6;
+  max-width: 560px;
+  margin-bottom: 40px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Covers: every story gets one, so cards in a row share a height */
+.coverWrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--pb-radius-md);
+}
+
+.cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1200 / 630; /* the cover size the admin enforces */
+  object-fit: cover;
+}
+
+.coverFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 75% 20%, rgba(255, 255, 255, 0.18), transparent 55%),
+    linear-gradient(135deg, var(--pb-primary), var(--pb-primary-light));
+}
+
+/* A milestone without a cover shows its number instead */
+.coverStat {
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+/* Post kind: Milestone, Spotlight or Update */
+.kind {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--pb-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pb-text-accent);
+  background: var(--pb-accent-dim);
+}
+
+.kindOnCover {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: var(--pb-text-primary);
+  background: var(--pb-bg-navbar);
+  box-shadow: var(--pb-shadow-sm);
+}
+
+.coverFallback .avatar {
+  font-size: 1.25rem;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85);
+}
+
+.card .coverWrap {
+  margin-bottom: 16px;
+}
+
+/* The "Coming soon" placeholder: a card, but not a link */
+.comingSoon {
+  border-style: dashed;
+}
+
+/* No hover tint: nothing to click */
+.comingSoon:hover {
+  border-color: var(--pb-border);
+  background: var(--pb-bg-card);
+}
+
+/* White in both themes so the logo's dark outline stays crisp */
+.comingSoon .avatar {
+  background: #fff;
+}
+
+.comingSoonNote {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--pb-text-muted);
+}
+
+/* Kind filter on /journal, the same segmented look as the leaderboard's */
+.filterTabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: 24px;
+  background: var(--pb-bg-glass);
+  border: 1px solid var(--pb-border);
+  border-radius: var(--pb-radius-md);
+}
+
+.filterBtn {
+  padding: 6px 14px;
+  border-radius: var(--pb-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--pb-text-muted);
+  text-decoration: none;
+  transition: color var(--pb-transition), background-color var(--pb-transition);
+}
+
+.filterBtn:hover {
+  color: var(--pb-text-primary);
+}
+
+.filterActive {
+  background: var(--pb-bg-card);
+  color: var(--pb-text-primary);
+  box-shadow: var(--pb-shadow-sm);
+}
+
+/* Featured: newest story, cover beside the text */
+.featured {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  align-items: center;
+  padding: 22px;
+  margin-bottom: 24px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.featuredBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.featuredLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pb-accent);
+}
+
+.featuredTitle {
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--pb-text-primary);
+}
+
+.featuredExcerpt {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--pb-text-secondary);
+}
+
+.featured .cardFooter {
+  margin-top: 0;
+}
+
+.cardTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
+  line-height: 1.4;
+  margin: 16px 0 8px;
+}
+
+.cardExcerpt {
+  font-size: 0.9rem;
+  color: var(--pb-text-secondary);
+  line-height: 1.65;
+  flex: 1;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.readMore {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--pb-accent);
+}
+
+/* Reading time and views */
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--pb-text-muted);
+}
+
+.views {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Author row, shared by the cards and the story page */
+.author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pb-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.authorName {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
+}
+
+.authorMeta {
+  display: flex;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--pb-text-muted);
+}
+
+.authorMeta a {
+  color: var(--pb-text-muted);
+  text-decoration: none;
+  transition: color var(--pb-transition);
+}
+
+.authorMeta a:hover {
+  color: var(--pb-text-primary);
+}
+
+/* Story page: one centred reading column */
+.article {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.articleTitle {
+  font-size: clamp(2rem, 4.5vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--pb-text-primary);
+  margin-bottom: 16px;
+}
+
+.articleExcerpt {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--pb-text-secondary);
+  margin-bottom: 24px;
+}
+
+.storyMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  color: var(--pb-text-muted);
+  font-size: 0.9rem;
+  padding-bottom: 24px;
+  margin: 24px 0 32px;
+  border-bottom: 1px solid var(--pb-border);
+}
+
+/* Author and stats share the meta row; stats push to the right */
+.storyMeta .author {
+  flex: 1;
+  min-width: 220px;
+}
+
+.storyMeta .stats {
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+/* "View on X" sits between the meta row and the cover */
+.xLink {
+  margin: -8px 0 32px;
+}
+
+.storyCover {
+  border-radius: var(--pb-radius-lg);
+  margin-bottom: 40px;
+}
+
+/* On the post itself the cover shows whole, at its own shape */
+.storyCover .cover {
+  aspect-ratio: auto;
+}
+
+.storyBody {
+  font-size: 1.075rem;
+  line-height: 1.85;
+  color: var(--pb-text-secondary);
+}
+
+.storyBody p + p {
+  margin-top: 20px;
+}
+
+.storyBody h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--pb-text-primary);
+  margin: 40px 0 12px;
+}
+
+.storyBody h2:first-child {
+  margin-top: 0;
+}
+
+/* Images placed inside the body with ![alt](url) */
+.storyBody figure {
+  margin: 32px 0;
+}
+
+.storyBody figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--pb-radius-lg);
+}
+
+.storyBody figcaption {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--pb-text-muted);
+}
+
+/* Shown on a draft opened with its preview link */
+.previewNotice {
+  margin-bottom: 24px;
+  padding: 10px 14px;
+  border: 1px solid var(--pb-border-active);
+  border-radius: var(--pb-radius-md);
+  background: var(--pb-accent-dim);
+  color: var(--pb-text-primary);
+  font-size: 0.9rem;
+}
+
+.moreStories {
+  margin-top: 64px;
+  padding-top: 40px;
+  border-top: 1px solid var(--pb-border);
+}
+
+.moreTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--pb-text-primary);
+  margin-bottom: 20px;
+}
+
+/* Reading progress: sits above the fixed navbar (z-index 1000) */
+.progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 1001;
+  pointer-events: none;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--pb-accent);
+  transform-origin: left;
+}
+
+.empty {
+  text-align: center;
+  color: var(--pb-text-muted);
+  padding: 40px 18px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .featured {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .storyBody {
+    font-size: 1rem;
+  }
+}

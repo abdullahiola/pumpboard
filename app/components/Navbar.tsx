@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import styles from "./Navbar.module.css";
 
 const STORE_LINKS = {
@@ -21,7 +22,17 @@ function getPumpFunUrl(): string | null {
 
 type Theme = "dark" | "light";
 
+// Only the destinations people actually navigate to; the other home
+// sections are reachable by scrolling and from the footer
+const NAV_LINKS = [
+  { label: "Developers", href: "/#developers" },
+  { label: "Leaderboard", href: "/leaderboard" },
+  { label: "Journal", href: "/journal" },
+  { label: "How It Works", href: "/#how-it-works" },
+];
+
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
@@ -92,7 +103,7 @@ export default function Navbar() {
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
       <div className={`container ${styles.navInner}`}>
-        <a href="#" className={styles.logo}>
+        <Link href="/" className={styles.logo}>
           <Image
             src="/logo-icon.png"
             alt="PumpBoard Logo"
@@ -101,7 +112,7 @@ export default function Navbar() {
             className={styles.logoImage}
           />
           <span className={styles.logoText}>PumpBoard</span>
-        </a>
+        </Link>
 
         {/* Backdrop — closes menu on tap */}
         {mobileOpen && (
@@ -113,24 +124,20 @@ export default function Navbar() {
         )}
 
         <div className={`${styles.navLinks} ${mobileOpen ? styles.open : ""}`}>
-          <Link href="/#features" className={styles.navLink} onClick={() => setMobileOpen(false)}>
-            Features
-          </Link>
-          <Link href="/#developers" className={styles.navLink} onClick={() => setMobileOpen(false)}>
-            Developers
-          </Link>
-          <Link href="/leaderboard" className={styles.navLink} onClick={() => setMobileOpen(false)}>
-            Leaderboard
-          </Link>
-          <Link href="/#how-it-works" className={styles.navLink} onClick={() => setMobileOpen(false)}>
-            How It Works
-          </Link>
-          <Link href="/#transparency" className={styles.navLink} onClick={() => setMobileOpen(false)}>
-            Transparency
-          </Link>
-          <Link href="/#faq" className={styles.navLink} onClick={() => setMobileOpen(false)}>
-            FAQ
-          </Link>
+          {NAV_LINKS.map((link) => {
+            const active = !link.href.includes("#") && pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
+                aria-current={active ? "page" : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <button
             className={`btn-primary ${styles.mobileCta}`}
             onClick={(e) => { setMobileOpen(false); handleDownload(e); }}

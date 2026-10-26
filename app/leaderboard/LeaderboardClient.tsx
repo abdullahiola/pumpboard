@@ -420,36 +420,46 @@ export default function LeaderboardClient({
                                     }
                                   : {};
                                 return (
-                                  <Wrapper
-                                    className={`${styles.profileCell} ${profileUrl ? styles.profileCellLink : ""}`}
-                                    {...linkProps}
-                                  >
-                                    {dev.avatar_url ? (
-                                      <Image
-                                        src={resolveImageUrl(dev.avatar_url)}
-                                        alt={dev.name || dev.github}
-                                        width={36}
-                                        height={36}
-                                        className={styles.tableAvatar}
-                                      />
-                                    ) : (
-                                      <div className={styles.tableInitials}>
-                                        {(dev.name || dev.github || "??")
-                                          .substring(0, 2)
-                                          .toUpperCase()}
-                                      </div>
-                                    )}
-                                    <div className={styles.profileInfo}>
-                                      <span className={styles.profileName}>
-                                        {dev.name || dev.github}
-                                      </span>
-                                      {dev.github && (
-                                        <span className={styles.profileHandle}>
-                                          @{dev.github}
-                                        </span>
+                                  <div className={styles.profileRow}>
+                                    <Wrapper
+                                      className={`${styles.profileCell} ${profileUrl ? styles.profileCellLink : ""}`}
+                                      {...linkProps}
+                                    >
+                                      {dev.avatar_url ? (
+                                        <Image
+                                          src={resolveImageUrl(dev.avatar_url)}
+                                          alt={dev.name || dev.github}
+                                          width={36}
+                                          height={36}
+                                          className={styles.tableAvatar}
+                                        />
+                                      ) : (
+                                        <div className={styles.tableInitials}>
+                                          {(dev.name || dev.github || "??")
+                                            .substring(0, 2)
+                                            .toUpperCase()}
+                                        </div>
                                       )}
-                                    </div>
-                                  </Wrapper>
+                                      <div className={styles.profileInfo}>
+                                        <span className={styles.profileName}>
+                                          {dev.name || dev.github}
+                                        </span>
+                                        {dev.github && (
+                                          <span className={styles.profileHandle}>
+                                            @{dev.github}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </Wrapper>
+                                    {dev.story_slug && (
+                                      <Link
+                                        href={`/journal/${dev.story_slug}`}
+                                        className={styles.storyLink}
+                                      >
+                                        Story
+                                      </Link>
+                                    )}
+                                  </div>
                                 );
                               })()}
                             </td>

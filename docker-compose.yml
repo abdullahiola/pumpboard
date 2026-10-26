@@ -6,6 +6,9 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env
+    environment:
+      # Where the backend asks the frontend to clear cached API data
+      FRONTEND_URL_INTERNAL: http://frontend:3000
     volumes:
       - ./backend/data:/app/data
       - ./backend/uploads:/app/uploads
@@ -35,6 +38,8 @@ services:
       API_URL_INTERNAL: http://backend:8000
       # Must match VISIT_SECRET in backend/.env if set there
       VISIT_SECRET: ${VISIT_SECRET:-}
+      # Must match REVALIDATE_SECRET in backend/.env if set there
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
     depends_on:
       backend:
         condition: service_healthy

@@ -488,6 +488,11 @@ export default function DeveloperCards({
             )}
 
             <div className={styles.modalLinks}>
+              {selected.story_slug && (
+                <Link className={styles.modalLink} href={`/journal/${selected.story_slug}`}>
+                  Read their story
+                </Link>
+              )}
               {selected.type !== "creator" && selected.github && (
                 <a
                   className={styles.modalLink}
