@@ -1,19 +1,22 @@
 import asyncio
+import io
 import json
 import os
+import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from PIL import Image, UnidentifiedImageError
+from pydantic import BaseModel, Field, field_validator
 
 load_dotenv()
 
@@ -56,6 +59,9 @@ app.add_middleware(
 DATA_DIR = Path(__file__).parent / "data"
 DEVELOPERS_FILE = DATA_DIR / "developers.json"
 STATS_FILE = DATA_DIR / "stats.json"
+STORIES_FILE = DATA_DIR / "stories.json"
+# Listing applications from /contact; personal data, so kept out of git
+APPLICATIONS_FILE = DATA_DIR / "applications.json"
 STATIC_DIR = Path(__file__).parent / "static"
 UPLOADS_DIR = Path(__file__).parent / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -70,6 +76,12 @@ TELEGRAM_CHAT_FILE = Path(__file__).parent / "data" / "telegram_chat.json"  # le
 TELEGRAM_SUBS_FILE = Path(__file__).parent / "data" / "telegram_subscribers.json"
 _subscribers: set[str] | None = None
 VISIT_SECRET = os.getenv("VISIT_SECRET", "")  # optional shared secret with the frontend
+
+# Lets the backend expire the frontend's cached API data right after a story
+# changes, instead of waiting out the hour-long fetch cache
+FRONTEND_URL_INTERNAL = os.getenv("FRONTEND_URL_INTERNAL", "http://localhost:3000")
+REVALIDATE_SECRET = os.getenv("REVALIDATE_SECRET", "")
+_background_tasks: set = set()
 VISIT_COOLDOWN = 3600  # at most one alert per visitor per hour
 _visit_notified: dict = {}  # visitor key -> last alert timestamp
 
@@ -125,6 +137,12 @@ class DeveloperIn(BaseModel):
     bio: Optional[str] = None
     summary: Optional[str] = None  # short description of what they built
     avatar_url: Optional[str] = None
+    project_icon: str = ""  # the repo's logo in the Active Projects list; "" uses the repo owner's GitHub avatar
+
+    @field_validator("repo")
+    @classmethod
+    def _normalize_repo(cls, v: str) -> str:
+        return normalize_repo(v)
 
 
 class DeveloperOut(BaseModel):
@@ -148,21 +166,101 @@ class DeveloperOut(BaseModel):
     stars: int = 0
     repo_url: str = ""
     languages: list[str] = []
+    project_icon: str = ""
+    story_slug: str = ""  # newest published story about this developer, if any
+
+
+StoryKind = Literal["milestone", "spotlight", "update"]
+
+
+class StoryIn(BaseModel):
+    slug: str = Field(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$")  # used in the /journal/{slug} URL
+    kind: StoryKind = "spotlight"
+    github: str = ""  # links the post to a listed developer; required for spotlights
+    title: str = Field(min_length=1)
+    excerpt: str = ""
+    # Plain text; blank lines split paragraphs, "## " starts a subheading and
+    # a line of just ![alt](url) is an image
+    body: str = ""
+    image: str = ""  # cover image URL, usually from /api/upload
+    stat: str = ""  # milestones: the headline number, e.g. "$200K+"
+    # The post's announcement on X, shown as a "View on X" button
+    x_url: str = Field(default="", pattern=r"^(https://(www\.)?(x|twitter)\.com/\S+)?$")
+    author_name: str = ""  # the admin who wrote it; spotlights fall back to the developer
+    author_avatar: str = ""
+    published: bool = False
+    pinned: bool = False  # takes the big slot at the top of /journal; one post at a time
+    date: str = ""  # YYYY-MM-DD, defaults to today on create
+
+
+class StoryOut(BaseModel):
+    slug: str
+    kind: StoryKind = "spotlight"
+    github: str = ""
+    title: str
+    excerpt: str = ""
+    body: str = ""
+    image: str = ""
+    stat: str = ""
+    x_url: str = ""
+    author_name: str = ""
+    author_avatar: str = ""
+    published: bool = False
+    pinned: bool = False
+    date: str = ""
+    # Filled from the linked developer profile
+    name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    repo: str = ""
+    repo_url: str = ""
+    views: int = 0  # human page views of /journal/{slug}, bots excluded
+
+
+class AdminStoryOut(StoryOut):
+    preview_token: str = ""  # lets a draft be opened at /journal/{slug}?preview=...
 
 
 # --- Data helpers ---
+
+def normalize_repo(repo: str) -> str:
+    """Accept "owner/name" or a pasted github.com URL; store and query "owner/name"."""
+    repo = (repo or "").strip()
+    for prefix in ("https://github.com/", "http://github.com/", "https://www.github.com/", "github.com/"):
+        if repo.lower().startswith(prefix):
+            repo = repo[len(prefix):]
+            break
+    return repo.removesuffix(".git").strip("/")
+
 
 def load_developers() -> list[dict]:
     if not DEVELOPERS_FILE.exists():
         return []
     with open(DEVELOPERS_FILE, "r") as f:
-        return json.load(f)
+        devs = json.load(f)
+    # Older entries were saved with a full URL, which broke the GitHub lookup
+    for d in devs:
+        if d.get("repo"):
+            d["repo"] = normalize_repo(d["repo"])
+    return devs
 
 
 def save_developers(devs: list[dict]):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with open(DEVELOPERS_FILE, "w") as f:
         json.dump(devs, f, indent=2)
+
+
+def load_stories() -> list[dict]:
+    if not STORIES_FILE.exists():
+        return []
+    with open(STORIES_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_stories(stories: list[dict]):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(STORIES_FILE, "w") as f:
+        json.dump(stories, f, indent=2)
 
 
 DEFAULT_STATS = {
@@ -540,24 +638,42 @@ def _unsubscribe(chat_id: str) -> bool:
     return True
 
 
+def _short(n: int) -> str:
+    """Compact count for chat: 950, 1.2k, 100k, 1.5M."""
+    if n < 1000:
+        return str(n)
+    # Largest unit the rounded value still reaches, so 999,950 is 1M, not 1000k
+    for div, suffix in ((1_000_000_000, "B"), (1_000_000, "M"), (1_000, "k")):
+        value = round(n / div, 1)
+        if value >= 1:
+            return f"{value:.1f}".removesuffix(".0") + suffix
+    return str(n)
+
+
 def _stats_message() -> str:
     def top(bucket: dict, n: int = 5):
         return sorted(bucket.items(), key=lambda kv: kv[1], reverse=True)[:n]
 
     s = _visit_stats
-    lines = ["📊 PumpBoard visit stats", f"Total page views: {s.get('total', 0)}"]
+    lines = ["📊 PumpBoard visit stats", f"Total page views: {_short(s.get('total', 0))}"]
     if s.get("byCountry"):
         lines += ["", "Top locations:"]
-        lines += [f"• {name}: {n}" for name, n in top(s["byCountry"])]
+        lines += [f"• {name}: {_short(n)}" for name, n in top(s["byCountry"])]
     if s.get("byDevice"):
         lines += ["", "Devices:"]
-        lines += [f"• {name}: {n}" for name, n in top(s["byDevice"], 10)]
+        lines += [f"• {name}: {_short(n)}" for name, n in top(s["byDevice"], 10)]
     if s.get("byPath"):
         lines += ["", "Top pages:"]
-        lines += [f"• {name}: {n}" for name, n in top(s["byPath"])]
+        lines += [f"• {name}: {_short(n)}" for name, n in top(s["byPath"])]
     if s.get("byReferrer"):
         lines += ["", "Top referrers:"]
-        lines += [f"• {name}: {n}" for name, n in top(s["byReferrer"])]
+        lines += [f"• {name}: {_short(n)}" for name, n in top(s["byReferrer"])]
+    # Only posts still published, by title; views are human, bots excluded
+    titles = {st["slug"]: st["title"] for st in load_stories() if st.get("published")}
+    story_views = {titles[slug]: n for slug, n in s.get("storyViews", {}).items() if slug in titles}
+    if story_views:
+        lines += ["", "Top Journal posts:"]
+        lines += [f"• {title}: {_short(n)}" for title, n in top(story_views)]
     return "\n".join(lines)
 
 
@@ -613,6 +729,13 @@ async def _process_visit(v: VisitIn, notify: bool):
         ]
         if ref_domain:
             counted.append(("byReferrer", ref_domain))
+        story_slug = (v.path or "").removeprefix("/journal/").strip("/")
+        if (
+            device != "Bot"
+            and v.path.startswith("/journal/")
+            and any(s["slug"] == story_slug and s.get("published") for s in load_stories())
+        ):
+            counted.append(("storyViews", story_slug))
         for field, key in counted:
             bucket = _visit_stats.setdefault(field, {})
             bucket[key] = bucket.get(key, 0) + 1
@@ -722,9 +845,11 @@ async def list_developers(type: Optional[str] = None):
     if type:
         devs = [d for d in devs if d.get("type") == type]
 
+    slugs = story_slugs_by_github()
     enriched = []
     for dev in devs:
-        enriched.append(await enrich_developer(dev))
+        profile = await enrich_developer(dev)
+        enriched.append({**profile, "story_slug": slugs.get(dev.get("github"), "")})
     return enriched
 
 
@@ -735,7 +860,8 @@ async def get_developer(github: str):
     dev = next((d for d in devs if d["github"] == github), None)
     if not dev:
         raise HTTPException(status_code=404, detail="Developer not found")
-    return await enrich_developer(dev)
+    profile = await enrich_developer(dev)
+    return {**profile, "story_slug": story_slugs_by_github().get(github, "")}
 
 
 @app.post("/api/developers", response_model=DeveloperOut, status_code=201, dependencies=[Depends(require_admin)])
@@ -754,6 +880,7 @@ async def add_developer(dev_in: DeveloperIn):
     new_dev = dev_in.model_dump()
     devs.append(new_dev)
     save_developers(devs)
+    revalidate_frontend()
 
     return await enrich_developer(new_dev)
 
@@ -790,7 +917,7 @@ async def update_developer(identifier: str, updates: dict):
     allowed_fields = {
         "github", "repo", "type", "tags", "totalClaimed", "solAmount",
         "instagram", "tiktok", "x", "website", "name", "bio", "summary",
-        "avatar_url",
+        "avatar_url", "project_icon",
     }
     for key, value in updates.items():
         if key in allowed_fields:
@@ -798,18 +925,277 @@ async def update_developer(identifier: str, updates: dict):
 
     save_developers(devs)
     evict_cached_github(identifier)
+    revalidate_frontend()
     return await enrich_developer(target)
+
+
+# --- Stories endpoints ---
+
+async def enrich_story(story: dict, devs: list[dict]) -> dict:
+    """Attach the linked developer's name, avatar and repo to a story."""
+    views = _visit_stats.get("storyViews", {}).get(story.get("slug"), 0)
+    dev = next((d for d in devs if d.get("github") == story.get("github")), None)
+    if not dev:
+        return {**story, "views": views}
+    profile = await enrich_developer(dev)
+    return {
+        **story,
+        "views": views,
+        "name": profile.get("name"),
+        "avatar_url": profile.get("avatar_url"),
+        "repo": profile.get("repo") or "",
+        "repo_url": profile.get("repo_url") or "",
+    }
+
+
+def unpin_all(stories: list[dict]):
+    """Only one post holds the top slot; pinning another releases it."""
+    for s in stories:
+        s["pinned"] = False
+
+
+def sorted_stories(stories: list[dict]) -> list[dict]:
+    """Newest first; posts on the same day keep the later-added one on top."""
+    order = sorted(enumerate(stories), key=lambda p: (p[1].get("date", ""), p[0]), reverse=True)
+    return [s for _, s in order]
+
+
+def story_slugs_by_github() -> dict:
+    """Map each developer to their newest published story's slug."""
+    slugs: dict = {}
+    for s in sorted_stories([s for s in load_stories() if s.get("published") and s.get("github")]):
+        slugs.setdefault(s["github"], s["slug"])
+    return slugs
+
+
+async def _revalidate_frontend():
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.post(
+                f"{FRONTEND_URL_INTERNAL}/api/revalidate",
+                headers={"X-Revalidate-Secret": REVALIDATE_SECRET},
+                json={"tags": ["stories", "developers"]},
+            )
+            if resp.status_code != 200:
+                print(f"frontend revalidate returned HTTP {resp.status_code}", flush=True)
+    except httpx.RequestError as e:
+        print(f"frontend revalidate failed: {e!r}", flush=True)
+
+
+def revalidate_frontend():
+    """Fire-and-forget: a story change shows on the site on the next page load."""
+    if REVALIDATE_SECRET:
+        # Keep a reference so the task isn't garbage-collected before it runs
+        task = asyncio.create_task(_revalidate_frontend())
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
+
+
+def validate_story(story_in: StoryIn, devs: list[dict]):
+    if story_in.kind == "spotlight" and not story_in.github:
+        raise HTTPException(status_code=422, detail="A spotlight needs a developer")
+    if story_in.github and not any(d.get("github") == story_in.github for d in devs):
+        raise HTTPException(status_code=404, detail="No listed developer with that GitHub username")
+
+
+@app.get("/api/stories", response_model=list[StoryOut])
+async def list_stories():
+    """List published stories, newest first."""
+    devs = load_developers()
+    published = [s for s in load_stories() if s.get("published")]
+    return [await enrich_story(s, devs) for s in sorted_stories(published)]
+
+
+@app.get("/api/stories/{slug}", response_model=StoryOut)
+async def get_story(slug: str, preview: str = ""):
+    """Get a single published story by slug; a draft too with its preview token."""
+    story = next((s for s in load_stories() if s["slug"] == slug), None)
+    can_preview = bool(preview) and secrets.compare_digest(preview, (story or {}).get("preview_token", ""))
+    if not story or not (story.get("published") or can_preview):
+        raise HTTPException(status_code=404, detail="Story not found")
+    return await enrich_story(story, load_developers())
+
+
+@app.get("/api/admin/stories", response_model=list[AdminStoryOut], dependencies=[Depends(require_admin)])
+async def list_all_stories():
+    """List every story, drafts included. Requires X-API-Key header."""
+    devs = load_developers()
+    return [await enrich_story(s, devs) for s in sorted_stories(load_stories())]
+
+
+@app.post("/api/stories", response_model=AdminStoryOut, status_code=201, dependencies=[Depends(require_admin)])
+async def add_story(story_in: StoryIn):
+    """Add a story. Requires X-API-Key header."""
+    stories = load_stories()
+    if any(s["slug"] == story_in.slug for s in stories):
+        raise HTTPException(status_code=409, detail="A story with that slug already exists")
+    devs = load_developers()
+    validate_story(story_in, devs)
+
+    new_story = story_in.model_dump()
+    new_story["preview_token"] = secrets.token_urlsafe(16)
+    if not new_story["date"]:
+        new_story["date"] = time.strftime("%Y-%m-%d")
+    if new_story["pinned"]:
+        unpin_all(stories)
+    stories.append(new_story)
+    save_stories(stories)
+    revalidate_frontend()
+    return await enrich_story(new_story, devs)
+
+
+@app.put("/api/stories/{slug}", response_model=AdminStoryOut, dependencies=[Depends(require_admin)])
+async def update_story(slug: str, story_in: StoryIn):
+    """Replace a story. Requires X-API-Key header."""
+    stories = load_stories()
+    idx = next((i for i, s in enumerate(stories) if s["slug"] == slug), None)
+    if idx is None:
+        raise HTTPException(status_code=404, detail="Story not found")
+    if story_in.slug != slug and any(s["slug"] == story_in.slug for s in stories):
+        raise HTTPException(status_code=409, detail="A story with that slug already exists")
+    devs = load_developers()
+    validate_story(story_in, devs)
+
+    updated = story_in.model_dump()
+    updated["date"] = updated["date"] or stories[idx].get("date", "")
+    updated["preview_token"] = stories[idx].get("preview_token") or secrets.token_urlsafe(16)
+    if updated["pinned"]:
+        unpin_all(stories)
+    stories[idx] = updated
+    save_stories(stories)
+    revalidate_frontend()
+    return await enrich_story(updated, devs)
+
+
+@app.delete("/api/stories/{slug}", status_code=204, dependencies=[Depends(require_admin)])
+async def remove_story(slug: str):
+    """Remove a story. Requires X-API-Key header."""
+    stories = load_stories()
+    filtered = [s for s in stories if s["slug"] != slug]
+    if len(filtered) == len(stories):
+        raise HTTPException(status_code=404, detail="Story not found")
+    save_stories(filtered)
+    revalidate_frontend()
+
+
+# --- Listing applications (the /contact form) ---
+
+class ApplicationIn(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    github: str = Field(min_length=1, max_length=100)
+    x: str = Field(default="", max_length=100)
+    project: str = Field(min_length=1, max_length=300)
+    message: str = Field(min_length=1, max_length=4000)
+    # Honeypot: hidden on the form, so only bots fill it in
+    website: str = ""
+
+
+APPLICATION_LIMIT = 5  # per IP per hour
+_application_times: dict[str, list[float]] = {}
+
+
+def load_applications() -> list[dict]:
+    if not APPLICATIONS_FILE.exists():
+        return []
+    try:
+        with open(APPLICATIONS_FILE, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def save_applications(apps: list[dict]):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(APPLICATIONS_FILE, "w") as f:
+        json.dump(apps, f, indent=2)
+
+
+async def _telegram_broadcast(text: str):
+    """Send a message to every chat subscribed to the bot."""
+    chat_ids = _load_subscribers()
+    if not (chat_ids and TELEGRAM_BOT_TOKEN):
+        return
+    async with httpx.AsyncClient(timeout=5) as client:
+        for chat_id in list(chat_ids):
+            try:
+                await client.post(
+                    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                    json={"chat_id": chat_id, "text": text},
+                )
+            except httpx.RequestError:
+                pass
+
+
+def _application_alert_text(app_: dict) -> str:
+    lines = ["📝 New listing application · pumpboard.dev", ""]
+    lines.append(f"👤 {app_['name']} (github.com/{app_['github']})")
+    if app_["x"]:
+        lines.append(f"🐦 X: {app_['x']}")
+    lines.append(f"📦 {app_['project']}")
+    lines += ["", app_["message"][:1500]]
+    return "\n".join(lines)
+
+
+@app.post("/api/applications", status_code=201)
+async def submit_application(app_in: ApplicationIn, request: Request):
+    """Public: the /contact form. Stored for the admin and sent to the Telegram bot."""
+    if app_in.website:
+        return {"ok": True}  # a bot filled the honeypot; pretend it worked
+
+    ip = (request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+          or (request.client.host if request.client else ""))
+    now = time.time()
+    recent = [t for t in _application_times.get(ip, []) if now - t < 3600]
+    if len(recent) >= APPLICATION_LIMIT:
+        raise HTTPException(status_code=429, detail="Too many applications. Try again later.")
+    _application_times[ip] = recent + [now]
+
+    new_app = {
+        "id": uuid.uuid4().hex,
+        "name": app_in.name.strip(),
+        "github": app_in.github.strip().removeprefix("@"),
+        "x": app_in.x.strip(),
+        "project": app_in.project.strip(),
+        "message": app_in.message.strip(),
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
+    }
+    apps = load_applications()
+    apps.append(new_app)
+    save_applications(apps)
+
+    task = asyncio.create_task(_telegram_broadcast(_application_alert_text(new_app)))
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+    return {"ok": True}
+
+
+@app.get("/api/admin/applications", dependencies=[Depends(require_admin)])
+async def list_applications():
+    """List listing applications, newest first. Requires X-API-Key header."""
+    return list(reversed(load_applications()))
+
+
+@app.delete("/api/applications/{app_id}", status_code=204, dependencies=[Depends(require_admin)])
+async def remove_application(app_id: str):
+    """Remove a handled application. Requires X-API-Key header."""
+    apps = load_applications()
+    filtered = [a for a in apps if a.get("id") != app_id]
+    if len(filtered) == len(apps):
+        raise HTTPException(status_code=404, detail="Application not found")
+    save_applications(filtered)
 
 
 # --- Stats endpoints ---
 
 def compute_stats() -> dict:
-    """Derive stats from profiles; only transactions is stored manually."""
+    """Derive stats from profiles and visits; only transactions is stored manually."""
     stats = load_stats()
     devs = load_developers()
     stats["totalDonated"] = round(sum(d.get("totalClaimed", 0) or 0 for d in devs), 2)
     stats["developers"] = len(devs)
     stats["activeProjects"] = len([d for d in devs if d.get("repo")])
+    # Human page views from the visit tracker the Telegram bot reports on
+    stats["siteVisits"] = _visit_stats.get("total", 0) - _visit_stats.get("byDevice", {}).get("Bot", 0)
     return stats
 
 
@@ -834,16 +1220,47 @@ async def update_stats(stats: dict):
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_SIZE = 5 * 1024 * 1024  # 5MB
 
+# What each kind of upload must measure. Covers match the 1200x630 link-preview
+# size so the card, the post and the X/Telegram preview all show the same crop.
+# The admin page shows the same rules (IMAGE_RULES there); keep the two in step.
+IMAGE_RULES = {
+    "cover": {"ratio": 1200 / 630, "min_w": 1200, "min_h": 630, "label": "1200 x 630 (or larger, same shape)"},
+    "avatar": {"ratio": 1.0, "min_w": 200, "min_h": 200, "label": "square, at least 200 x 200"},
+    "inline": {"ratio": None, "min_w": 800, "min_h": 0, "label": "at least 800 wide"},
+}
+RATIO_TOLERANCE = 0.02  # 2%, so a 1200x628 export still passes
+
+
+def check_image_size(contents: bytes, kind: str):
+    """Reject an upload whose dimensions don't fit its kind's rule."""
+    rule = IMAGE_RULES[kind]
+    try:
+        width, height = Image.open(io.BytesIO(contents)).size
+    except (UnidentifiedImageError, OSError):
+        raise HTTPException(status_code=400, detail="Couldn't read that image")
+    if width < rule["min_w"] or height < rule["min_h"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Image is {width} x {height}. It needs to be {rule['label']}.",
+        )
+    if rule["ratio"] and abs(width / height - rule["ratio"]) / rule["ratio"] > RATIO_TOLERANCE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Image is {width} x {height}, the wrong shape. It needs to be {rule['label']}.",
+        )
+
 
 @app.post("/api/upload", dependencies=[Depends(require_admin)])
-async def upload_image(file: UploadFile):
-    """Upload an avatar image. Returns the permanent URL. Requires X-API-Key header."""
+async def upload_image(file: UploadFile, kind: Optional[Literal["cover", "avatar", "inline"]] = None):
+    """Upload an image; `kind` enforces its dimensions. Returns the permanent URL. Requires X-API-Key header."""
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG, WebP, GIF allowed")
 
     contents = await file.read()
     if len(contents) > MAX_SIZE:
         raise HTTPException(status_code=400, detail="File too large (max 5MB)")
+    if kind:
+        check_image_size(contents, kind)
 
     ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
     filename = f"{uuid.uuid4().hex}.{ext}"
@@ -864,50 +1281,63 @@ async def admin_login_page():
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PumpBoard Admin Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Same dark-theme tokens as the site and static/admin.html */
+  :root{
+    --pb-primary:#0b7d61;--pb-primary-hover:#0a6b53;--pb-accent:#2fbe98;--pb-danger:#f87171;
+    --pb-bg-primary:#0e1011;--pb-bg-secondary:#141719;--pb-bg-card:#15181a;
+    --pb-text-primary:#e9ecee;--pb-text-secondary:#a1aaaf;--pb-text-muted:#737c82;
+    --pb-border:rgba(255,255,255,0.09);--pb-border-hover:rgba(255,255,255,0.18);--pb-border-active:rgba(47,190,152,0.5);
+    --pb-radius-md:8px;--pb-radius-xl:14px;--pb-transition:0.15s ease;
+  }
   *{margin:0;padding:0;box-sizing:border-box}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    background:#0a0f1c;color:#e0e0e0;
-    min-height:100dvh;display:flex;align-items:center;justify-content:center;
-    padding:20px;position:relative;overflow:hidden;
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--pb-bg-primary);color:var(--pb-text-primary);
+    -webkit-font-smoothing:antialiased;
   }
-  body::before,body::after{content:"";position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none}
-  body::before{width:420px;height:420px;background:rgba(13,147,115,0.16);top:-120px;right:-120px}
-  body::after{width:360px;height:360px;background:rgba(78,205,196,0.10);bottom:-140px;left:-100px}
+  /* Centred in its own wrapper, so elements browser extensions add to body can't push it aside */
+  .wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px}
   .card{
-    position:relative;z-index:1;
-    background:rgba(15,23,41,0.88);
-    border:1px solid rgba(78,205,196,0.15);
-    border-radius:20px;padding:40px 30px;
-    width:100%;max-width:400px;text-align:center;
-    box-shadow:0 24px 64px rgba(0,0,0,0.45);
-    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    width:100%;max-width:380px;padding:36px 32px;
+    background:var(--pb-bg-card);border:1px solid var(--pb-border);border-radius:var(--pb-radius-xl);
+    box-shadow:0 8px 24px rgba(0,0,0,0.45);
   }
-  .logo{width:52px;height:52px;margin:0 auto 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:linear-gradient(135deg,#0d9373,#4ecdc4);box-shadow:0 8px 24px rgba(13,147,115,0.35)}
-  h1{font-size:1.35rem;margin-bottom:6px;background:linear-gradient(135deg,#0d9373,#4ecdc4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  p{color:#5a6f7e;font-size:0.85rem;margin-bottom:26px}
-  input{width:100%;padding:13px 16px;border-radius:10px;border:1px solid rgba(78,205,196,0.2);background:rgba(255,255,255,0.05);color:#e0e0e0;font-size:1rem;margin-bottom:14px;outline:none;transition:border-color .2s,box-shadow .2s}
-  input:focus{border-color:rgba(78,205,196,0.55);box-shadow:0 0 0 3px rgba(78,205,196,0.12)}
-  button{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#0d9373,#00d4aa);color:#fff;font-size:0.95rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s}
-  button:hover{opacity:0.92}
-  button:active{transform:scale(0.985)}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+  .mark{width:32px;height:32px;object-fit:contain;flex-shrink:0}
+  .brand span{font-weight:600;font-size:1.05rem}
+  h1{font-size:1.35rem;font-weight:600;margin-bottom:6px}
+  p{color:var(--pb-text-secondary);font-size:0.9rem;margin-bottom:24px}
+  label{display:block;font-size:0.82rem;font-weight:500;color:var(--pb-text-secondary);margin-bottom:6px}
+  input{width:100%;padding:10px 12px;border-radius:var(--pb-radius-md);border:1px solid var(--pb-border);background:var(--pb-bg-secondary);color:var(--pb-text-primary);font:inherit;font-size:0.95rem;margin-bottom:16px;outline:none;transition:border-color var(--pb-transition)}
+  input:hover{border-color:var(--pb-border-hover)}
+  input:focus{border-color:var(--pb-border-active)}
+  button{width:100%;padding:11px;border:none;border-radius:var(--pb-radius-md);background:var(--pb-primary);color:#fff;font:inherit;font-size:0.92rem;font-weight:500;cursor:pointer;transition:background-color var(--pb-transition)}
+  button:hover{background:var(--pb-primary-hover)}
   button:disabled{opacity:0.6;cursor:wait}
-  .err{color:#f87171;font-size:0.82rem;margin-top:14px;display:none}
+  :focus-visible{outline:2px solid var(--pb-accent);outline-offset:2px}
+  .err{color:var(--pb-danger);font-size:0.85rem;margin-top:14px;display:none}
   .card.shake{animation:shake .4s}
-  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
-  @media (max-width:420px){.card{padding:32px 22px}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+  @media (prefers-reduced-motion:reduce){.card.shake{animation:none}}
+  @media (max-width:420px){.card{padding:28px 22px}}
 </style></head><body>
+<main class="wrap">
 <div class="card" id="card">
-  <div class="logo">⚡</div>
-  <h1>PumpBoard Admin</h1>
-  <p>Enter your admin key to continue</p>
+  <div class="brand"><img class="mark" src="/admin/logo.png" alt=""><span>PumpBoard</span></div>
+  <h1>Admin login</h1>
+  <p>Enter your admin key to continue.</p>
   <form onsubmit="return tryLogin()">
-    <input type="password" id="key" placeholder="Admin key" autocomplete="current-password" autofocus />
-    <button type="submit" id="btn">Login</button>
+    <label for="key">Admin key</label>
+    <input type="password" id="key" autocomplete="current-password" autofocus />
+    <button type="submit" id="btn">Log in</button>
   </form>
-  <div class="err" id="err">Invalid key — try again</div>
+  <div class="err" id="err" role="alert">That key didn't work. Try again.</div>
 </div>
+</main>
 <script>
 function tryLogin(){
   var k=document.getElementById('key').value;
@@ -925,7 +1355,7 @@ function tryLogin(){
 }
 function loginFailed(){
   var btn=document.getElementById('btn');
-  btn.disabled=false;btn.textContent='Login';
+  btn.disabled=false;btn.textContent='Log in';
   document.getElementById('err').style.display='block';
   var c=document.getElementById('card');
   c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
@@ -944,3 +1374,10 @@ async def verify_admin_key(_: None = Depends(require_admin)):
 async def admin_dashboard():
     """Serve the admin dashboard (auth checked client-side via stored key)."""
     return FileResponse(STATIC_DIR / "admin.html")
+
+
+@app.get("/admin/logo.png")
+async def admin_logo():
+    """The site's logo for the admin pages; a copy of public/logo-icon.png,
+    since the frontend's files aren't reachable from here in local dev."""
+    return FileResponse(STATIC_DIR / "logo-icon.png")

@@ -4,50 +4,87 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PumpBoard Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* Same tokens as the site's dark theme (app/globals.css), so the admin
+       reads as part of PumpBoard. --pb-danger is admin-only. */
+    :root {
+      --pb-primary: #0b7d61;
+      --pb-primary-hover: #0a6b53;
+      --pb-accent: #2fbe98;
+      --pb-accent-dim: rgba(47, 190, 152, 0.1);
+      --pb-gold: #d4a537;
+      --pb-danger: #f87171;
+      --pb-danger-dim: rgba(248, 113, 113, 0.1);
+      --pb-bg-primary: #0e1011;
+      --pb-bg-secondary: #141719;
+      --pb-bg-tertiary: #1a1d1f;
+      --pb-bg-card: #15181a;
+      --pb-bg-card-hover: #1a1e20;
+      --pb-bg-glass: rgba(255, 255, 255, 0.04);
+      --pb-bg-navbar: rgba(14, 16, 17, 0.9);
+      --pb-text-primary: #e9ecee;
+      --pb-text-secondary: #a1aaaf;
+      --pb-text-muted: #737c82;
+      --pb-border: rgba(255, 255, 255, 0.09);
+      --pb-border-hover: rgba(255, 255, 255, 0.18);
+      --pb-border-active: rgba(47, 190, 152, 0.5);
+      --pb-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --pb-radius-sm: 6px;
+      --pb-radius-md: 8px;
+      --pb-radius-lg: 10px;
+      --pb-radius-xl: 14px;
+      --pb-transition: 0.15s ease;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0a0f1c;
-      color: #e0e0e0;
+      font-family: var(--font-sans);
+      background: var(--pb-bg-primary);
+      color: var(--pb-text-primary);
       min-height: 100vh;
+      font-size: 0.92rem;
+      -webkit-font-smoothing: antialiased;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      width: 520px;
-      height: 520px;
-      border-radius: 50%;
-      background: rgba(13, 147, 115, 0.07);
-      filter: blur(90px);
-      top: -160px;
-      right: -120px;
-      pointer-events: none;
+    button, input, select, textarea { font-family: inherit; }
+    a { color: var(--pb-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    :focus-visible {
+      outline: 2px solid var(--pb-accent);
+      outline-offset: 2px;
     }
 
     .container {
-      max-width: 960px;
+      max-width: 1120px;
       margin: 0 auto;
-      padding: 0 20px 48px;
-      position: relative;
+      padding: 0 24px 64px;
     }
 
+    /* ===== Header ===== */
     header {
       position: sticky;
       top: 0;
       z-index: 50;
+      background: var(--pb-bg-navbar);
+      backdrop-filter: saturate(180%) blur(12px);
+      -webkit-backdrop-filter: saturate(180%) blur(12px);
+      border-bottom: 1px solid var(--pb-border);
+    }
+
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      margin: 0 -20px 28px;
-      padding: 14px 20px;
-      background: rgba(10, 15, 28, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      gap: 16px;
     }
 
     .brand {
@@ -57,674 +94,1075 @@
       min-width: 0;
     }
 
-    .brand-logo {
-      width: 34px;
-      height: 34px;
+    /* The site's logo, at the size the site's navbar shows it */
+    .brand-mark {
+      width: 32px;
+      height: 32px;
       flex-shrink: 0;
+      object-fit: contain;
+    }
+
+    .brand-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .brand-tag {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--pb-accent);
+      background: var(--pb-accent-dim);
+      padding: 2px 8px;
+      border-radius: var(--pb-radius-sm);
+    }
+
+    .header-actions {
       display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #0d9373, #4ecdc4);
-      font-size: 1.1rem;
-    }
-
-    header h1 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      background: linear-gradient(135deg, #0d9373, #4ecdc4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .badge {
-      background: rgba(13, 147, 115, 0.15);
-      color: #4ecdc4;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .logout-btn {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #a0a0a0;
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 0.8rem;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--pb-radius-md);
+      font-size: 0.88rem;
+      font-weight: 500;
+      line-height: 1.2;
+      border: 1px solid transparent;
       cursor: pointer;
-      transition: all 0.2s;
+      white-space: nowrap;
+      transition: background-color var(--pb-transition), border-color var(--pb-transition), color var(--pb-transition);
     }
 
-    .logout-btn:hover { color: #f87171; border-color: rgba(239,68,68,0.4); }
+    .btn:disabled { opacity: 0.6; cursor: wait; }
 
-    /* Tabs */
+    .btn-primary { background: var(--pb-primary); color: #fff; }
+    .btn-primary:hover { background: var(--pb-primary-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--pb-text-primary);
+      border-color: var(--pb-border);
+    }
+    .btn-secondary:hover { background: var(--pb-bg-glass); border-color: var(--pb-border-hover); }
+
+    .btn-ghost { background: transparent; color: var(--pb-text-secondary); }
+    .btn-ghost:hover { color: var(--pb-text-primary); background: var(--pb-bg-glass); }
+
+    .btn-danger-ghost { background: transparent; color: var(--pb-text-secondary); }
+    .btn-danger-ghost:hover { color: var(--pb-danger); background: var(--pb-danger-dim); }
+
+    .btn-sm { padding: 6px 12px; font-size: 0.82rem; }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--pb-radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--pb-text-muted);
+      cursor: pointer;
+      transition: background-color var(--pb-transition), color var(--pb-transition);
+    }
+    .icon-btn:hover { background: var(--pb-bg-glass); color: var(--pb-text-primary); }
+    .icon-btn.danger:hover { background: var(--pb-danger-dim); color: var(--pb-danger); }
+
+    /* ===== Overview ===== */
+    .page-head {
+      padding: 32px 0 20px;
+    }
+
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle { color: var(--pb-text-secondary); }
+
+    .overview {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      padding: 16px 18px;
+      background: var(--pb-bg-card);
+      border: 1px solid var(--pb-border);
+      border-radius: var(--pb-radius-lg);
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--pb-text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 1.35rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ===== Section tabs ===== */
     .tabs {
       display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
+      gap: 4px;
+      border-bottom: 1px solid var(--pb-border);
+      margin-bottom: 20px;
+      overflow-x: auto;
     }
 
     .tab {
-      padding: 8px 20px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: transparent;
-      color: #a0a0a0;
-      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      color: var(--pb-text-secondary);
       font-size: 0.9rem;
-      transition: all 0.2s;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color var(--pb-transition), border-color var(--pb-transition);
     }
 
-    .tab:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .tab:hover { color: var(--pb-text-primary); }
+
     .tab.active {
-      background: linear-gradient(135deg, #0d9373, #0ba37f);
-      color: #fff;
-      border-color: transparent;
+      color: var(--pb-text-primary);
+      border-bottom-color: var(--pb-accent);
     }
 
-    /* Forms */
-    .form-section {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
+    .tab-count {
+      font-size: 0.75rem;
+      color: var(--pb-text-muted);
+      background: var(--pb-bg-tertiary);
+      padding: 1px 7px;
+      border-radius: var(--pb-radius-sm);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ===== Toolbar ===== */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .search {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 340px;
+    }
+
+    .search svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--pb-text-muted);
+      pointer-events: none;
+    }
+
+    .search input { padding-left: 34px; }
+
+    .segmented {
+      display: inline-flex;
+      padding: 3px;
+      gap: 2px;
+      background: var(--pb-bg-glass);
+      border: 1px solid var(--pb-border);
+      border-radius: var(--pb-radius-md);
+    }
+
+    .segmented button {
+      padding: 5px 12px;
+      border: none;
+      border-radius: var(--pb-radius-sm);
+      background: transparent;
+      color: var(--pb-text-secondary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .segmented button:hover { color: var(--pb-text-primary); }
+    .segmented button.active { background: var(--pb-bg-card); color: var(--pb-text-primary); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+
+    .toolbar .spacer { flex: 1; }
+
+    /* ===== Inputs ===== */
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: var(--pb-radius-md);
+      border: 1px solid var(--pb-border);
+      background: var(--pb-bg-secondary);
+      color: var(--pb-text-primary);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color var(--pb-transition);
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--pb-text-muted); }
+    input:hover, select:hover, textarea:hover { border-color: var(--pb-border-hover); }
+    input:focus, select:focus, textarea:focus { border-color: var(--pb-border-active); }
+    input:disabled { opacity: 0.55; cursor: not-allowed; }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+    /* Post editor: Write | Preview above the body */
+    .field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .modal .field-head .segmented { margin-bottom: 0; }
+
+    /* Application viewer */
+    .application-meta { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0 0 20px; font-size: 0.88rem; }
+    .application-meta dt { color: var(--pb-text-muted); }
+    .application-meta dd { margin: 0; color: var(--pb-text-primary); overflow-wrap: anywhere; }
+    .application-message { white-space: pre-wrap; line-height: 1.65; color: var(--pb-text-secondary); font-size: 0.92rem; padding-top: 16px; border-top: 1px solid var(--pb-border); }
+
+    /* The post as the site lays it out (app/journal/[slug] and journal.module.css) */
+    .post-preview {
+      min-height: 320px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 24px 28px;
+      border: 1px solid var(--pb-border);
+      border-radius: var(--pb-radius-md);
+      background: var(--pb-bg-primary);
+    }
+    .post-preview .pp-title { font-size: 2rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--pb-text-primary); margin: 0 0 12px; }
+    .post-preview .pp-excerpt { font-size: 1.05rem; line-height: 1.6; color: var(--pb-text-secondary); margin: 0 0 24px; }
+    .post-preview .pp-cover { display: block; width: 100%; height: auto; border-radius: var(--pb-radius-lg); margin-bottom: 32px; }
+    .post-preview .pp-body { font-size: 1rem; line-height: 1.85; color: var(--pb-text-secondary); }
+    .post-preview .pp-body p { margin: 0; }
+    .post-preview .pp-body p + p { margin-top: 20px; }
+    .post-preview .pp-body h2 { font-size: 1.4rem; font-weight: 600; line-height: 1.35; color: var(--pb-text-primary); margin: 40px 0 12px; }
+    .post-preview .pp-body h2:first-child { margin-top: 0; }
+    .post-preview .pp-body figure { margin: 32px 0; }
+    .post-preview .pp-body figure img { display: block; width: 100%; height: auto; border-radius: var(--pb-radius-lg); }
+    .post-preview .pp-body figcaption { margin-top: 10px; font-size: 0.85rem; text-align: center; color: var(--pb-text-muted); }
+    .post-preview .pp-empty { color: var(--pb-text-muted); font-size: 0.9rem; }
+
+    /* ===== Table ===== */
+    .table-card {
+      background: var(--pb-bg-card);
+      border: 1px solid var(--pb-border);
+      border-radius: var(--pb-radius-lg);
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--pb-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: var(--pb-bg-secondary);
+      border-bottom: 1px solid var(--pb-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--pb-border);
+      color: var(--pb-text-secondary);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background-color var(--pb-transition); }
+    tbody tr:hover { background: var(--pb-bg-card-hover); }
+
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.num { color: var(--pb-text-primary); }
+
+    .cell-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      object-fit: cover;
+      background: var(--pb-bg-tertiary);
+    }
+
+    .avatar.initials {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--pb-primary);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .thumb {
+      width: 64px;
+      height: 36px;
+      border-radius: var(--pb-radius-sm);
+      flex-shrink: 0;
+      object-fit: cover;
+      background: var(--pb-bg-tertiary);
+    }
+
+    .thumb.empty {
+      background: linear-gradient(135deg, var(--pb-primary), var(--pb-accent));
+    }
+
+    .cell-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .cell-title { color: var(--pb-text-primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; }
+    .cell-sub { font-size: 0.8rem; color: var(--pb-text-muted); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: var(--pb-radius-sm);
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .pill.developer { color: var(--pb-accent); background: var(--pb-accent-dim); }
+    .pill.creator { color: var(--pb-gold); background: rgba(212, 165, 55, 0.1); }
+    .pill.published { color: var(--pb-accent); background: var(--pb-accent-dim); }
+    .pill.draft { color: var(--pb-text-secondary); background: var(--pb-bg-tertiary); }
+
+    .actions { text-align: right; white-space: nowrap; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 16px !important;
+      color: var(--pb-text-muted);
+    }
+
+    .views {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ===== Stats panel ===== */
+    .settings-card {
+      max-width: 640px;
       padding: 24px;
-      margin-bottom: 32px;
+      background: var(--pb-bg-card);
+      border: 1px solid var(--pb-border);
+      border-radius: var(--pb-radius-lg);
     }
 
-    .form-section h2 {
-      font-size: 1.1rem;
-      margin-bottom: 20px;
-      color: #fff;
-    }
+    .settings-card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; }
+    .settings-card > p { color: var(--pb-text-secondary); margin-bottom: 20px; line-height: 1.6; }
 
+    /* ===== Forms ===== */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
     }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .field[hidden], .hint[hidden], .btn[hidden] { display: none; }
+    .field.full { grid-column: 1 / -1; }
+
+    .field label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--pb-text-secondary);
     }
 
-    .form-group.full { grid-column: 1 / -1; }
+    .field .hint { font-size: 0.78rem; color: var(--pb-text-muted); }
 
-    .form-group label {
-      font-size: 0.8rem;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    .image-field { display: flex; align-items: center; gap: 10px; }
+    .image-field input[type="text"] { flex: 1; }
 
-    .form-group input, .form-group textarea, .form-group select {
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-      border-color: #0d9373;
-    }
-
-    .form-group input:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      color: #4ecdc4;
-    }
-
-    .form-group textarea { resize: vertical; min-height: 60px; }
-
-    .form-actions {
-      margin-top: 20px;
-      display: flex;
-      gap: 12px;
-    }
-
-    .btn {
-      padding: 10px 24px;
-      border-radius: 8px;
-      border: none;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #0d9373, #0ba37f);
-      color: #fff;
-    }
-
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.06);
-      color: #a0a0a0;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
-
-    /* Table */
-    .table-section h2 {
-      font-size: 1.1rem;
-      margin-bottom: 16px;
-      color: #fff;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      text-align: left;
-      padding: 10px 14px;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #666;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    td {
-      padding: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      font-size: 0.9rem;
-    }
-
-    tr:hover td { background: rgba(255,255,255,0.02); }
-
-    .avatar-cell {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .avatar-cell img {
-      width: 32px;
-      height: 32px;
+    .image-preview {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       object-fit: cover;
-      background: rgba(255,255,255,0.1);
+      flex-shrink: 0;
+      border: 1px solid var(--pb-border);
+      display: none;
     }
 
-    .avatar-cell .initials {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #0d9373, #4ecdc4);
+    .image-preview.cover { width: 72px; height: 40px; border-radius: var(--pb-radius-sm); }
+
+    .upload-btn input { display: none; }
+    .field .inline-upload { align-self: flex-start; }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      width: 100%;
+      max-width: 640px;
+      background: var(--pb-bg-card);
+      border: 1px solid var(--pb-border);
+      border-radius: var(--pb-radius-xl);
+      box-shadow: var(--pb-shadow-lg);
+      animation: modalIn 0.15s ease;
+    }
+
+    .modal.wide { max-width: 780px; }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .modal-head {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #fff;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--pb-border);
     }
 
-    .type-badge {
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
+    .modal-head h2 { font-size: 1.05rem; font-weight: 600; }
+    .modal-body { padding: 24px; }
 
-    .type-badge.developer {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-    }
+    .modal .segmented { margin-bottom: 20px; }
 
-    .type-badge.creator {
-      background: rgba(236, 72, 153, 0.15);
-      color: #f472b6;
-    }
-
-    .delete-btn {
-      background: transparent;
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #ef4444;
-      padding: 4px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all 0.2s;
-    }
-
-    .delete-btn:hover {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: #ef4444;
-    }
-
-    /* Toast */
+    /* ===== Toast ===== */
     .toast {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      z-index: 100;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s;
-    }
-
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { background: #0d9373; color: #fff; }
-    .toast.error { background: #ef4444; color: #fff; }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px;
-      color: #555;
-    }
-
-    /* Edit button */
-    .edit-btn {
-      background: transparent;
-      border: 1px solid rgba(78, 205, 196, 0.3);
-      color: #4ecdc4;
-      padding: 4px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all 0.2s;
-      margin-right: 6px;
-    }
-    .edit-btn:hover {
-      background: rgba(78, 205, 196, 0.15);
-      border-color: #4ecdc4;
-    }
-
-    /* Modal */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal {
-      background: #0f1729;
-      border: 1px solid rgba(78,205,196,0.2);
-      border-radius: 16px;
-      padding: 32px;
-      width: 90%;
-      max-width: 560px;
-      max-height: 85vh;
-      overflow-y: auto;
-    }
-    .modal h2 {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, #0d9373, #4ecdc4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .modal .form-actions { justify-content: flex-end; }
-    .btn-cancel {
-      background: rgba(255,255,255,0.06);
-      color: #a0a0a0;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn-cancel:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
-
-    /* Avatar upload field */
-    .avatar-field {
+      z-index: 300;
       display: flex;
-      gap: 8px;
       align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--pb-radius-md);
+      background: var(--pb-bg-tertiary);
+      border: 1px solid var(--pb-border);
+      box-shadow: var(--pb-shadow-lg);
+      font-weight: 500;
+      transform: translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
-    .avatar-preview {
-      width: 38px;
-      height: 38px;
+
+    .toast::before {
+      content: "";
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      object-fit: cover;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.1);
-      display: none;
+      background: var(--pb-accent);
       flex-shrink: 0;
     }
-    .upload-btn {
-      cursor: pointer;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 12px;
-      margin: 0;
+
+    .toast.error::before { background: var(--pb-danger); }
+    .toast.show { transform: none; opacity: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
     }
 
-    /* ── Mobile ── */
-    @media (max-width: 640px) {
-      .container { padding: 0 14px 40px; }
-      header { margin: 0 -14px 22px; padding: 12px 14px; }
-      .form-section { padding: 18px 14px; }
-      .form-grid { grid-template-columns: 1fr; }
-      .tab { flex: 1; text-align: center; padding: 10px 8px; }
-      .form-actions { flex-wrap: wrap; }
-      .form-actions .btn { flex: 1; }
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .overview { grid-template-columns: repeat(3, 1fr); }
+    }
 
-      /* Profiles table becomes stacked cards */
-      table, tbody, tr, td { display: block; width: 100%; }
+    @media (max-width: 700px) {
+      .container, .header-inner { padding-left: 16px; padding-right: 16px; }
+      .overview { grid-template-columns: repeat(2, 1fr); }
+      .form-grid { grid-template-columns: 1fr; }
+      .brand-tag { display: none; }
+      .search { max-width: none; }
+      .modal-overlay { padding: 16px; }
+      .modal-head, .modal-body { padding-left: 18px; padding-right: 18px; }
+      .toast { left: 16px; right: 16px; }
+
+      /* Rows become cards */
       thead { display: none; }
-      tr {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px;
-        margin-bottom: 12px;
-        padding: 6px 14px;
-      }
-      tr:hover td { background: transparent; }
-      td {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        font-size: 0.85rem;
-      }
-      td:last-child { border-bottom: none; }
-      td::before {
-        content: attr(data-label);
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #5a6f7e;
-        flex-shrink: 0;
-      }
-      td[data-label="Profile"]::before, td.actions::before { display: none; }
-      td.actions { justify-content: flex-end; }
-      td.empty-state { justify-content: center; padding: 28px 0; }
-      .edit-btn, .delete-btn { padding: 8px 16px; font-size: 0.85rem; }
-      .modal { padding: 22px 18px; max-height: 92vh; }
-      .toast { left: 16px; right: 16px; text-align: center; }
+      table, tbody, tr, td { display: block; width: 100%; }
+      tbody tr { padding: 14px 16px; border-bottom: 1px solid var(--pb-border); }
+      tbody tr:last-child { border-bottom: none; }
+      td { padding: 4px 0; border: none; display: flex; justify-content: space-between; gap: 12px; }
+      td[data-label]::before { content: attr(data-label); color: var(--pb-text-muted); font-size: 0.8rem; flex-shrink: 0; }
+      td .val { text-align: right; min-width: 0; overflow-wrap: anywhere; }
+      td.cell-first { padding-bottom: 8px; }
+      td.cell-first::before { display: none; }
+      td.num { text-align: right; }
+      td.actions { justify-content: flex-end; padding-top: 8px; }
+      .cell-title { max-width: 220px; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
+  <header>
+    <div class="header-inner">
       <div class="brand">
-        <span class="brand-logo">⚡</span>
-        <h1>PumpBoard Admin</h1>
+        <img class="brand-mark" src="/admin/logo.png" alt="" />
+        <span class="brand-name">PumpBoard</span>
+        <span class="brand-tag">Admin</span>
       </div>
-      <div class="header-right">
-        <span class="badge" id="countBadge">0 profiles</span>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-      </div>
-    </header>
-
-    <!-- Add Form -->
-    <div class="form-section">
-      <h2>Add Profile</h2>
-      <div class="tabs">
-        <button class="tab active" onclick="switchForm('developer')">Developer</button>
-        <button class="tab" onclick="switchForm('creator')">Creator</button>
-      </div>
-
-      <!-- Developer Form -->
-      <form id="devForm" onsubmit="addDeveloper(event)">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>GitHub Username *</label>
-            <input type="text" id="dev_github" placeholder="e.g. torvalds" required />
-          </div>
-          <div class="form-group">
-            <label>Repo (owner/repo)</label>
-            <input type="text" id="dev_repo" placeholder="e.g. torvalds/linux" />
-          </div>
-          <div class="form-group">
-            <label>X Handle</label>
-            <input type="text" id="dev_x" placeholder="e.g. abiosoft" />
-          </div>
-          <div class="form-group">
-            <label>Tags (comma-separated)</label>
-            <input type="text" id="dev_tags" placeholder="e.g. Rust, Solana, DeFi" />
-          </div>
-          <div class="form-group full">
-            <label>Avatar (overrides GitHub photo)</label>
-            <div class="avatar-field">
-              <img id="dev_avatar_preview" class="avatar-preview" alt="" />
-              <input type="text" id="dev_avatar" placeholder="https://... or upload" style="flex:1" oninput="setAvatarPreview(this.id, this.value)" />
-              <label class="btn btn-cancel upload-btn">
-                📁 Upload
-                <input type="file" accept="image/*" onchange="uploadAvatar(this,'dev_avatar')" style="display:none" />
-              </label>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Total Claimed (USD)</label>
-            <input type="number" id="dev_claimed" placeholder="0" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label>SOL Amount</label>
-            <input type="number" id="dev_sol" placeholder="0" step="0.01" />
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">+ Add Developer</button>
-          <button type="reset" class="btn btn-secondary">Clear</button>
-        </div>
-      </form>
-
-      <!-- Creator Form -->
-      <form id="creatorForm" style="display:none" onsubmit="addCreator(event)">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Name *</label>
-            <input type="text" id="cr_name" placeholder="e.g. Jane Doe" required />
-          </div>
-          <div class="form-group">
-            <label>Avatar</label>
-            <div class="avatar-field">
-              <img id="cr_avatar_preview" class="avatar-preview" alt="" />
-              <input type="text" id="cr_avatar" placeholder="https://... or upload" style="flex:1" oninput="setAvatarPreview(this.id, this.value)" />
-              <label class="btn btn-cancel upload-btn">
-                📁 Upload
-                <input type="file" accept="image/*" onchange="uploadAvatar(this,'cr_avatar')" style="display:none" />
-              </label>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Instagram Handle</label>
-            <input type="text" id="cr_instagram" placeholder="e.g. janedoe" />
-          </div>
-          <div class="form-group">
-            <label>TikTok Handle</label>
-            <input type="text" id="cr_tiktok" placeholder="e.g. janedoecrypto" />
-          </div>
-          <div class="form-group">
-            <label>X (Twitter) Handle</label>
-            <input type="text" id="cr_x" placeholder="e.g. janedoe" />
-          </div>
-          <div class="form-group full">
-            <label>Bio</label>
-            <textarea id="cr_bio" placeholder="Short bio..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Tags (comma-separated)</label>
-            <input type="text" id="cr_tags" placeholder="e.g. Content, Community" />
-          </div>
-          <div class="form-group">
-            <label>Total Claimed (USD)</label>
-            <input type="number" id="cr_claimed" placeholder="0" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label>SOL Amount</label>
-            <input type="number" id="cr_sol" placeholder="0" step="0.01" />
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">+ Add Creator</button>
-          <button type="reset" class="btn btn-secondary">Clear</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Profiles Table -->
-    <div class="table-section">
-      <h2>Current Profiles</h2>
-      <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Profile</th>
-            <th>Type</th>
-            <th>Social</th>
-            <th>Repo</th>
-            <th>Claimed</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="6" class="empty-state">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="header-actions">
+        <a class="btn btn-ghost btn-sm" id="siteLink" href="#" target="_blank" rel="noopener">View site ↗</a>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Log out</button>
       </div>
     </div>
+  </header>
 
-    <!-- Platform Stats Editor -->
-    <div class="table-section">
-      <h2>Platform Stats</h2>
-      <p style="color:#5a6f7e;font-size:0.85rem;margin-bottom:16px">Total sponsored, developers, and active projects are calculated automatically from the profiles above. Only transactions is set manually.</p>
-      <form id="statsForm" onsubmit="saveStats(event)">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Total Sponsored (USD) — auto</label>
-            <input type="number" id="stat_totalDonated" disabled />
-          </div>
-          <div class="form-group">
-            <label>Developers — auto</label>
-            <input type="number" id="stat_developers" disabled />
-          </div>
-          <div class="form-group">
-            <label>Active Projects — auto</label>
-            <input type="number" id="stat_activeProjects" disabled />
-          </div>
-          <div class="form-group">
-            <label>Transactions</label>
-            <input type="number" id="stat_transactions" placeholder="89000" step="1" />
-          </div>
+  <main class="container">
+    <div class="page-head">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Manage profiles, Journal posts, applications and platform stats.</p>
+    </div>
+
+    <!-- Overview -->
+    <section class="overview" aria-label="Overview">
+      <div class="stat-card"><div class="stat-label">Total sponsored</div><div class="stat-value" id="ov_sponsored">—</div></div>
+      <div class="stat-card"><div class="stat-label">Profiles</div><div class="stat-value" id="ov_profiles">—</div></div>
+      <div class="stat-card"><div class="stat-label">Active projects</div><div class="stat-value" id="ov_projects">—</div></div>
+      <div class="stat-card"><div class="stat-label">Journal posts</div><div class="stat-value" id="ov_stories">—</div></div>
+      <div class="stat-card"><div class="stat-label">Post views</div><div class="stat-value" id="ov_views">—</div></div>
+    </section>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-panel="profiles" onclick="showPanel('profiles')">Profiles <span class="tab-count" id="countProfiles">0</span></button>
+      <button class="tab" role="tab" data-panel="stories" onclick="showPanel('stories')">Journal <span class="tab-count" id="countStories">0</span></button>
+      <button class="tab" role="tab" data-panel="applications" onclick="showPanel('applications')">Applications <span class="tab-count" id="countApplications">0</span></button>
+      <button class="tab" role="tab" data-panel="stats" onclick="showPanel('stats')">Platform stats</button>
+    </nav>
+
+    <!-- Profiles -->
+    <section class="panel active" id="panel-profiles">
+      <div class="toolbar">
+        <label class="search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="profileSearch" placeholder="Search name or GitHub" oninput="renderProfiles()" aria-label="Search profiles" />
+        </label>
+        <div class="segmented" id="profileFilter">
+          <button class="active" data-type="all" onclick="setProfileFilter('all')">All</button>
+          <button data-type="developer" onclick="setProfileFilter('developer')">Developers</button>
+          <button data-type="creator" onclick="setProfileFilter('creator')">Creators</button>
         </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Save Transactions</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary" onclick="openAddProfile()">+ Add profile</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Profile</th>
+              <th>Type</th>
+              <th>Links</th>
+              <th>Repo</th>
+              <th class="num">Claimed</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Stories -->
+    <section class="panel" id="panel-stories">
+      <div class="toolbar">
+        <label class="search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="storySearch" placeholder="Search title or author" oninput="renderStories()" aria-label="Search posts" />
+        </label>
+        <div class="segmented" id="storyFilter">
+          <button class="active" data-status="all" onclick="setStoryFilter('all')">All</button>
+          <button data-status="published" onclick="setStoryFilter('published')">Published</button>
+          <button data-status="draft" onclick="setStoryFilter('draft')">Drafts</button>
         </div>
-      </form>
+        <span class="spacer"></span>
+        <button class="btn btn-primary" onclick="openStoryEditor()">+ New post</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Post</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th class="num">Views</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="storyTableBody">
+            <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Listing applications from the /contact form -->
+    <section class="panel" id="panel-applications">
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Applicant</th>
+              <th>Project</th>
+              <th>X</th>
+              <th>Received</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="applicationTableBody">
+            <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Platform stats -->
+    <section class="panel" id="panel-stats">
+      <div class="settings-card">
+        <h2>Platform stats</h2>
+        <p>Total sponsored, developers and active projects are calculated from the profiles. Only transactions is set by hand.</p>
+        <form id="statsForm" onsubmit="saveStats(event)">
+          <div class="form-grid">
+            <div class="field">
+              <label for="stat_totalDonated">Total sponsored (USD)</label>
+              <input type="number" id="stat_totalDonated" disabled />
+              <span class="hint">Calculated</span>
+            </div>
+            <div class="field">
+              <label for="stat_developers">Developers</label>
+              <input type="number" id="stat_developers" disabled />
+              <span class="hint">Calculated</span>
+            </div>
+            <div class="field">
+              <label for="stat_activeProjects">Active projects</label>
+              <input type="number" id="stat_activeProjects" disabled />
+              <span class="hint">Calculated</span>
+            </div>
+            <div class="field">
+              <label for="stat_transactions">Transactions</label>
+              <input type="number" id="stat_transactions" placeholder="89000" step="1" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save transactions</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add Profile Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+      <div class="modal-head">
+        <h2 id="addTitle">Add profile</h2>
+        <button class="icon-btn" onclick="closeModal('addModal')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="segmented" id="addTypeSwitch">
+          <button class="active" data-form="developer" onclick="switchForm('developer')">Developer</button>
+          <button data-form="creator" onclick="switchForm('creator')">Creator</button>
+        </div>
+
+        <form id="devForm" onsubmit="addDeveloper(event)">
+          <div class="form-grid">
+            <div class="field">
+              <label for="dev_github">GitHub username *</label>
+              <input type="text" id="dev_github" placeholder="e.g. torvalds" required />
+            </div>
+            <div class="field">
+              <label for="dev_repo">Repo (owner/repo)</label>
+              <input type="text" id="dev_repo" placeholder="e.g. torvalds/linux" />
+            </div>
+            <div class="field">
+              <label for="dev_x">X handle</label>
+              <input type="text" id="dev_x" placeholder="e.g. abiosoft" />
+            </div>
+            <div class="field">
+              <label for="dev_tags">Tags (comma-separated)</label>
+              <input type="text" id="dev_tags" placeholder="e.g. Rust, Solana, DeFi" />
+            </div>
+            <div class="field full">
+              <label for="dev_avatar">Avatar (overrides GitHub photo)</label>
+              <div class="image-field">
+                <img id="dev_avatar_preview" class="image-preview" alt="" />
+                <input type="text" id="dev_avatar" placeholder="https://... or upload" oninput="setAvatarPreview(this.id, this.value)" />
+                <label class="btn btn-secondary upload-btn">Upload<input type="file" accept="image/*" onchange="uploadAvatar(this,'dev_avatar','avatar')" /></label>
+              </div>
+              <span class="hint">Square, at least 200 x 200.</span>
+            </div>
+            <div class="field full">
+              <label for="dev_project_icon">Project icon (Active Projects list)</label>
+              <div class="image-field">
+                <img id="dev_project_icon_preview" class="image-preview" alt="" />
+                <input type="text" id="dev_project_icon" placeholder="https://... or upload" oninput="setAvatarPreview(this.id, this.value)" />
+                <label class="btn btn-secondary upload-btn">Upload<input type="file" accept="image/*" onchange="uploadAvatar(this,'dev_project_icon','avatar')" /></label>
+              </div>
+              <span class="hint">The project's logo. Square, at least 200 x 200. Leave empty to use the repo owner's GitHub icon.</span>
+            </div>
+            <div class="field">
+              <label for="dev_claimed">Total claimed (USD)</label>
+              <input type="number" id="dev_claimed" placeholder="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="dev_sol">SOL amount</label>
+              <input type="number" id="dev_sol" placeholder="0" step="0.01" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add developer</button>
+          </div>
+        </form>
+
+        <form id="creatorForm" style="display:none" onsubmit="addCreator(event)">
+          <div class="form-grid">
+            <div class="field">
+              <label for="cr_name">Name *</label>
+              <input type="text" id="cr_name" placeholder="e.g. Jane Doe" required />
+            </div>
+            <div class="field">
+              <label for="cr_x">X handle</label>
+              <input type="text" id="cr_x" placeholder="e.g. janedoe" />
+            </div>
+            <div class="field">
+              <label for="cr_instagram">Instagram handle</label>
+              <input type="text" id="cr_instagram" placeholder="e.g. janedoe" />
+            </div>
+            <div class="field">
+              <label for="cr_tiktok">TikTok handle</label>
+              <input type="text" id="cr_tiktok" placeholder="e.g. janedoecrypto" />
+            </div>
+            <div class="field full">
+              <label for="cr_avatar">Avatar</label>
+              <div class="image-field">
+                <img id="cr_avatar_preview" class="image-preview" alt="" />
+                <input type="text" id="cr_avatar" placeholder="https://... or upload" oninput="setAvatarPreview(this.id, this.value)" />
+                <label class="btn btn-secondary upload-btn">Upload<input type="file" accept="image/*" onchange="uploadAvatar(this,'cr_avatar','avatar')" /></label>
+              </div>
+              <span class="hint">Square, at least 200 x 200.</span>
+            </div>
+            <div class="field full">
+              <label for="cr_bio">Bio</label>
+              <textarea id="cr_bio" placeholder="Short bio..."></textarea>
+            </div>
+            <div class="field full">
+              <label for="cr_tags">Tags (comma-separated)</label>
+              <input type="text" id="cr_tags" placeholder="e.g. Content, Community" />
+            </div>
+            <div class="field">
+              <label for="cr_claimed">Total claimed (USD)</label>
+              <input type="number" id="cr_claimed" placeholder="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="cr_sol">SOL amount</label>
+              <input type="number" id="cr_sol" placeholder="0" step="0.01" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add creator</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
-  <!-- Edit Modal -->
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="applicationModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="applicationTitle">
+      <div class="modal-head">
+        <h2 id="applicationTitle">Application</h2>
+        <button class="icon-btn" onclick="closeModal('applicationModal')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <dl class="application-meta" id="applicationMeta"></dl>
+        <p class="application-message" id="applicationMessage"></p>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="editModal">
-    <div class="modal">
-      <h2 id="editTitle">Edit Profile</h2>
-      <form onsubmit="saveEdit(event)">
-        <input type="hidden" id="edit_identifier" />
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Name</label>
-            <input type="text" id="edit_name" />
-          </div>
-          <div class="form-group">
-            <label>GitHub Username</label>
-            <input type="text" id="edit_github" />
-          </div>
-          <div class="form-group">
-            <label>Repo (owner/repo)</label>
-            <input type="text" id="edit_repo" />
-          </div>
-          <div class="form-group">
-            <label>Type</label>
-            <select id="edit_type">
-              <option value="developer">Developer</option>
-              <option value="creator">Creator</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Total Claimed (USD)</label>
-            <input type="number" id="edit_totalClaimed" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label>SOL Amount</label>
-            <input type="number" id="edit_solAmount" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label>Instagram</label>
-            <input type="text" id="edit_instagram" />
-          </div>
-          <div class="form-group">
-            <label>TikTok</label>
-            <input type="text" id="edit_tiktok" />
-          </div>
-          <div class="form-group">
-            <label>X (Twitter)</label>
-            <input type="text" id="edit_x" />
-          </div>
-          <div class="form-group">
-            <label>Avatar URL</label>
-            <div class="avatar-field">
-              <img id="edit_avatar_url_preview" class="avatar-preview" alt="" />
-              <input type="text" id="edit_avatar_url" style="flex:1" oninput="setAvatarPreview(this.id, this.value)" />
-              <label class="btn btn-cancel upload-btn">
-                📁 Upload
-                <input type="file" accept="image/*" onchange="uploadAvatar(this,'edit_avatar_url')" style="display:none" />
-              </label>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <div class="modal-head">
+        <h2 id="editTitle">Edit profile</h2>
+        <button class="icon-btn" onclick="closeModal('editModal')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="saveEdit(event)">
+          <div class="form-grid">
+            <div class="field">
+              <label for="edit_name">Name</label>
+              <input type="text" id="edit_name" />
+            </div>
+            <div class="field">
+              <label for="edit_github">GitHub username</label>
+              <input type="text" id="edit_github" />
+            </div>
+            <div class="field">
+              <label for="edit_repo">Repo (owner/repo)</label>
+              <input type="text" id="edit_repo" />
+            </div>
+            <div class="field">
+              <label for="edit_type">Type</label>
+              <select id="edit_type">
+                <option value="developer">Developer</option>
+                <option value="creator">Creator</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="edit_totalClaimed">Total claimed (USD)</label>
+              <input type="number" id="edit_totalClaimed" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="edit_solAmount">SOL amount</label>
+              <input type="number" id="edit_solAmount" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="edit_x">X (Twitter)</label>
+              <input type="text" id="edit_x" />
+            </div>
+            <div class="field">
+              <label for="edit_instagram">Instagram</label>
+              <input type="text" id="edit_instagram" />
+            </div>
+            <div class="field">
+              <label for="edit_tiktok">TikTok</label>
+              <input type="text" id="edit_tiktok" />
+            </div>
+            <div class="field full">
+              <label for="edit_avatar_url">Avatar URL</label>
+              <div class="image-field">
+                <img id="edit_avatar_url_preview" class="image-preview" alt="" />
+                <input type="text" id="edit_avatar_url" oninput="setAvatarPreview(this.id, this.value)" />
+                <label class="btn btn-secondary upload-btn">Upload<input type="file" accept="image/*" onchange="uploadAvatar(this,'edit_avatar_url','avatar')" /></label>
+              </div>
+              <span class="hint">Square, at least 200 x 200.</span>
+            </div>
+            <div class="field full">
+              <label for="edit_project_icon">Project icon (Active Projects list)</label>
+              <div class="image-field">
+                <img id="edit_project_icon_preview" class="image-preview" alt="" />
+                <input type="text" id="edit_project_icon" oninput="setAvatarPreview(this.id, this.value)" />
+                <label class="btn btn-secondary upload-btn">Upload<input type="file" accept="image/*" onchange="uploadAvatar(this,'edit_project_icon','avatar')" /></label>
+              </div>
+              <span class="hint">The project's logo. Square, at least 200 x 200. Leave empty to use the repo owner's GitHub icon.</span>
+            </div>
+            <div class="field full">
+              <label for="edit_bio">Bio</label>
+              <textarea id="edit_bio"></textarea>
+            </div>
+            <div class="field full">
+              <label for="edit_tags">Tags (comma-separated)</label>
+              <input type="text" id="edit_tags" />
             </div>
           </div>
-          <div class="form-group full">
-            <label>Bio</label>
-            <textarea id="edit_bio"></textarea>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
           </div>
-          <div class="form-group full">
-            <label>Tags (comma-separated)</label>
-            <input type="text" id="edit_tags" />
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <!-- Story Editor Modal -->
+  <div class="modal-overlay" id="storyModal">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="storyFormTitle">
+      <div class="modal-head">
+        <h2 id="storyFormTitle">New post</h2>
+        <button class="icon-btn" onclick="closeModal('storyModal')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="storyForm" onsubmit="saveStory(event)">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="story_title">Title *</label>
+              <input type="text" id="story_title" placeholder="e.g. From side project to thousands of users" required oninput="syncSlug()" />
+            </div>
+            <div class="field">
+              <label for="story_kind">Type</label>
+              <select id="story_kind" onchange="syncStoryKind()">
+                <option value="milestone">Milestone</option>
+                <option value="spotlight">Spotlight</option>
+                <option value="update" selected>Update</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="story_github" id="story_github_label">Developer</label>
+              <select id="story_github">
+                <option value="">Loading developers...</option>
+              </select>
+              <span class="hint" id="story_github_hint">Optional. Links the post to a listed developer.</span>
+            </div>
+            <div class="field" id="story_stat_field">
+              <label for="story_stat">Headline number</label>
+              <input type="text" id="story_stat" placeholder="e.g. $200K+" maxlength="16" />
+              <span class="hint">Shown big on the card and the home page banner.</span>
+            </div>
+            <div class="field full">
+              <label for="story_x_url">X post link</label>
+              <input type="url" id="story_x_url" placeholder="e.g. https://x.com/pumpboardnu/status/..." pattern="https://(www\.)?(x|twitter)\.com/\S+" title="A link to a post on x.com" />
+              <span class="hint">Optional. Adds a "View on X" button to the post.</span>
+            </div>
+            <div class="field">
+              <label for="story_author_name">Written by</label>
+              <input type="text" id="story_author_name" placeholder="e.g. PumpBoard Team" />
+              <span class="hint">Remembered on this browser. Clear it on a spotlight the developer wrote themselves.</span>
+            </div>
+            <div class="field full">
+              <label for="story_author_avatar">Avatar</label>
+              <div class="image-field">
+                <img id="story_author_avatar_preview" class="image-preview" alt="" />
+                <input type="text" id="story_author_avatar" placeholder="https://... or upload" oninput="setAvatarPreview(this.id, this.value)" />
+                <label class="btn btn-secondary upload-btn">Upload<input type="file" accept="image/*" onchange="uploadAvatar(this,'story_author_avatar','avatar')" /></label>
+              </div>
+              <span class="hint">Square, at least 200 x 200.</span>
+            </div>
+            <div class="field">
+              <label for="story_slug">URL slug *</label>
+              <input type="text" id="story_slug" placeholder="from-side-project-to-thousands-of-users" pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Lowercase letters, numbers and dashes" required oninput="_slugTouched = true" />
+              <span class="hint">pumpboard.dev/journal/<span id="slugPreview">…</span></span>
+            </div>
+            <div class="field">
+              <label for="story_published">Status</label>
+              <select id="story_published">
+                <option value="false">Draft</option>
+                <option value="true">Published</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="story_pinned">Position</label>
+              <select id="story_pinned">
+                <option value="false">Normal</option>
+                <option value="true">Pinned to top</option>
+              </select>
+              <span class="hint">A pinned post takes the big slot on the Journal. Pinning one unpins the last.</span>
+            </div>
+            <div class="field">
+              <label for="story_date">Date</label>
+              <input type="date" id="story_date" />
+            </div>
+            <div class="field full">
+              <label for="story_excerpt">Excerpt</label>
+              <input type="text" id="story_excerpt" placeholder="One or two sentences, shown on the card" />
+            </div>
+            <div class="field full">
+              <label for="story_image">Cover image</label>
+              <div class="image-field">
+                <img id="story_image_preview" class="image-preview cover" alt="" />
+                <input type="text" id="story_image" placeholder="https://... or upload" oninput="setAvatarPreview(this.id, this.value)" />
+                <label class="btn btn-secondary upload-btn">Upload<input type="file" accept="image/*" onchange="uploadAvatar(this,'story_image','cover')" /></label>
+              </div>
+              <span class="hint">1200 x 630, or larger in the same shape. The same size X and Telegram use for link previews.</span>
+            </div>
+            <div class="field full">
+              <div class="field-head">
+                <label for="story_body">Post</label>
+                <div class="segmented" id="bodyMode">
+                  <button type="button" class="active" data-mode="write" onclick="setBodyMode('write')">Write</button>
+                  <button type="button" data-mode="preview" onclick="setBodyMode('preview')">Preview</button>
+                </div>
+              </div>
+              <textarea id="story_body" rows="14" placeholder="Write the post..."></textarea>
+              <div id="story_preview" class="post-preview" hidden></div>
+              <span class="hint">Leave a blank line between paragraphs. Start a line with ## for a subheading. Images in the post need to be at least 800 wide.</span>
+              <label class="btn btn-secondary upload-btn inline-upload">Insert image at cursor<input type="file" accept="image/*" onchange="insertBodyImage(this)" /></label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('storyModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="storySubmit">Add post</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const API = window.location.origin;
     const ADMIN_KEY = sessionStorage.getItem('pb-admin-key') || '';
 
     if (!ADMIN_KEY) { window.location = '/admin'; }
+
+    // The public site lives on the frontend; locally that's the Next dev server
+    document.getElementById('siteLink').href =
+      ['localhost', '127.0.0.1'].includes(location.hostname) ? 'http://localhost:3000' : '/';
+
+    const ICONS = {
+      edit: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+      trash: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>',
+      eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+      link: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+      open: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+    };
 
     function authHeaders(extra = {}) {
       return { 'X-API-Key': ADMIN_KEY, ...extra };
@@ -735,19 +1173,83 @@
       window.location = '/admin';
     }
 
-    function switchForm(type) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById('devForm').style.display = type === 'developer' ? 'block' : 'none';
-      document.getElementById('creatorForm').style.display = type === 'creator' ? 'block' : 'none';
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function formatUSD(n) {
+      return '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+
+    function initials(s) {
+      return esc((s || '??').substring(0, 2).toUpperCase());
+    }
+
+    // A dead avatar URL falls back to initials, like the site does
+    function avatarFailed(img) {
+      const div = document.createElement('div');
+      div.className = 'avatar initials';
+      div.textContent = img.dataset.initials;
+      img.replaceWith(div);
     }
 
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.className = `toast ${type} show`;
-      setTimeout(() => t.classList.remove('show'), 3000);
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => t.classList.remove('show'), 3000);
     }
+
+    // --- Tabs and modals ---
+
+    function showPanel(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.panel === name));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+      history.replaceState(null, '', `#${name}`);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+      document.body.style.overflow = 'hidden';
+      const first = document.querySelector(`#${id} input:not([type=hidden]):not([disabled]), #${id} select`);
+      if (first) setTimeout(() => first.focus(), 50);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      if (!document.querySelector('.modal-overlay.active')) document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(overlay.id); });
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      const open = document.querySelector('.modal-overlay.active');
+      if (open) closeModal(open.id);
+    });
+
+    // --- Overview ---
+
+    let _profiles = [];
+    let _stories = [];
+    let _applications = [];
+
+    function renderOverview() {
+      const sponsored = _profiles.reduce((s, d) => s + (Number(d.totalClaimed) || 0), 0);
+      document.getElementById('ov_sponsored').textContent = formatUSD(sponsored);
+      document.getElementById('ov_profiles').textContent = _profiles.length.toLocaleString();
+      document.getElementById('ov_projects').textContent = _profiles.filter(d => d.repo).length.toLocaleString();
+      document.getElementById('ov_stories').textContent = _stories.length.toLocaleString();
+      document.getElementById('ov_views').textContent =
+        _stories.reduce((s, x) => s + (x.views || 0), 0).toLocaleString();
+      document.getElementById('countProfiles').textContent = _profiles.length;
+      document.getElementById('countStories').textContent = _stories.length;
+    }
+
+    // --- Platform stats ---
 
     async function loadStats() {
       try {
@@ -772,17 +1274,99 @@
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error();
-        showToast('Stats updated!');
+        showToast('Stats updated');
         loadStats();
       } catch { showToast('Failed to save stats', 'error'); }
     }
 
+    // --- Profiles ---
+
+    let _profileFilter = 'all';
     let _editId = '';
 
-    function editProfile(dev) {
+    function setProfileFilter(type) {
+      _profileFilter = type;
+      document.querySelectorAll('#profileFilter button').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+      renderProfiles();
+    }
+
+    async function loadProfiles() {
+      loadStats();  // profile changes drive the auto-computed stats
+      try {
+        const res = await fetch(`${API}/api/developers`);
+        _profiles = await res.json();
+        fillStoryDevelopers(_profiles);
+        renderOverview();
+        renderProfiles();
+      } catch {
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="6" class="empty-state">Failed to load profiles.</td></tr>';
+      }
+    }
+
+    function renderProfiles() {
+      const q = document.getElementById('profileSearch').value.trim().toLowerCase();
+      const rows = _profiles
+        .map((dev, i) => ({ dev, i }))
+        .filter(({ dev }) => _profileFilter === 'all' || dev.type === _profileFilter)
+        .filter(({ dev }) => !q || (dev.name || '').toLowerCase().includes(q) || (dev.github || '').toLowerCase().includes(q));
+
+      const body = document.getElementById('tableBody');
+      if (rows.length === 0) {
+        body.innerHTML = `<tr><td colspan="6" class="empty-state">${
+          _profiles.length ? 'No profiles match your search.' : 'No profiles yet. Add one to get started.'
+        }</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = rows.map(({ dev, i }) => {
+        const name = dev.name || dev.github;
+        const avatar = dev.avatar_url
+          ? `<img class="avatar" src="${esc(dev.avatar_url)}" alt="" data-initials="${initials(name)}" onerror="avatarFailed(this)" />`
+          : `<div class="avatar initials">${initials(name)}</div>`;
+        const links = [
+          dev.github && `<a href="https://github.com/${esc(dev.github)}" target="_blank" rel="noopener">GitHub</a>`,
+          dev.x && `<a href="https://x.com/${esc(dev.x)}" target="_blank" rel="noopener">X</a>`,
+          dev.instagram && `<a href="https://instagram.com/${esc(dev.instagram)}" target="_blank" rel="noopener">Instagram</a>`,
+          dev.tiktok && `<a href="https://tiktok.com/@${esc(dev.tiktok)}" target="_blank" rel="noopener">TikTok</a>`,
+        ].filter(Boolean).join(' · ') || '—';
+        const repo = dev.repo
+          ? `<a href="https://github.com/${esc(dev.repo)}" target="_blank" rel="noopener">${esc(dev.repo.split('/')[1] || dev.repo)}</a>`
+          : '—';
+        const sub = dev.github ? `@${esc(dev.github)}` : esc((dev.tags || []).join(', '));
+
+        return `<tr>
+          <td class="cell-first"><div class="cell-main">${avatar}<div class="cell-text"><span class="cell-title">${esc(name)}</span><span class="cell-sub">${sub}</span></div></div></td>
+          <td data-label="Type"><span class="val"><span class="pill ${esc(dev.type)}">${esc(dev.type)}</span></span></td>
+          <td data-label="Links"><span class="val">${links}</span></td>
+          <td data-label="Repo"><span class="val">${repo}</span></td>
+          <td data-label="Claimed" class="num"><span class="val">${formatUSD(dev.totalClaimed)}</span></td>
+          <td class="actions">
+            <button class="icon-btn" onclick="editProfile(${i})" aria-label="Edit ${esc(name)}" title="Edit">${ICONS.edit}</button>
+            <button class="icon-btn danger" onclick="deleteProfile(${i})" aria-label="Delete ${esc(name)}" title="Delete">${ICONS.trash}</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openAddProfile() {
+      document.getElementById('devForm').reset();
+      document.getElementById('creatorForm').reset();
+      switchForm('developer');
+      openModal('addModal');
+    }
+
+    function switchForm(type) {
+      document.querySelectorAll('#addTypeSwitch button').forEach(b => b.classList.toggle('active', b.dataset.form === type));
+      document.getElementById('devForm').style.display = type === 'developer' ? 'block' : 'none';
+      document.getElementById('creatorForm').style.display = type === 'creator' ? 'block' : 'none';
+      document.getElementById('addTitle').textContent = type === 'developer' ? 'Add developer' : 'Add creator';
+    }
+
+    function editProfile(i) {
+      const dev = _profiles[i];
       _editId = dev.github || dev.name || '';
-      document.getElementById('editTitle').textContent = `Edit: ${dev.name || dev.github}`;
-      document.getElementById('edit_identifier').value = _editId;
+      document.getElementById('editTitle').textContent = `Edit ${dev.name || dev.github}`;
       document.getElementById('edit_name').value = dev.name || '';
       document.getElementById('edit_github').value = dev.github || '';
       document.getElementById('edit_repo').value = dev.repo || '';
@@ -794,18 +1378,12 @@
       document.getElementById('edit_x').value = dev.x || '';
       document.getElementById('edit_avatar_url').value = dev.avatar_url || '';
       setAvatarPreview('edit_avatar_url', dev.avatar_url || '');
+      document.getElementById('edit_project_icon').value = dev.project_icon || '';
+      setAvatarPreview('edit_project_icon', dev.project_icon || '');
       document.getElementById('edit_bio').value = dev.bio || '';
       document.getElementById('edit_tags').value = (dev.tags || []).join(', ');
-      document.getElementById('editModal').classList.add('active');
+      openModal('editModal');
     }
-
-    function closeModal() {
-      document.getElementById('editModal').classList.remove('active');
-    }
-
-    document.getElementById('editModal').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
-    });
 
     async function saveEdit(e) {
       e.preventDefault();
@@ -820,6 +1398,7 @@
         tiktok: document.getElementById('edit_tiktok').value.trim(),
         x: document.getElementById('edit_x').value.trim(),
         avatar_url: document.getElementById('edit_avatar_url').value.trim(),
+        project_icon: document.getElementById('edit_project_icon').value.trim(),
         bio: document.getElementById('edit_bio').value.trim(),
         tags: document.getElementById('edit_tags').value.split(',').map(t => t.trim()).filter(Boolean),
       };
@@ -830,55 +1409,10 @@
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error();
-        showToast('Profile updated!');
-        closeModal();
+        showToast('Profile updated');
+        closeModal('editModal');
         loadProfiles();
       } catch { showToast('Failed to update profile', 'error'); }
-    }
-
-    async function loadProfiles() {
-      loadStats();  // profile changes drive the auto-computed stats
-      try {
-        const res = await fetch(`${API}/api/developers`);
-        const devs = await res.json();
-        document.getElementById('countBadge').textContent = `${devs.length} profile${devs.length !== 1 ? 's' : ''}`;
-
-        if (devs.length === 0) {
-          document.getElementById('tableBody').innerHTML =
-            '<tr><td colspan="6" class="empty-state">No profiles yet. Add one above!</td></tr>';
-          return;
-        }
-
-        document.getElementById('tableBody').innerHTML = devs.map(dev => {
-          const identifier = dev.github || dev.name || '?';
-          const avatarHtml = dev.avatar_url
-            ? `<img src="${dev.avatar_url}" alt="${dev.name || dev.github}" />`
-            : `<div class="initials">${(dev.name || dev.github || '??').substring(0, 2).toUpperCase()}</div>`;
-
-          const socialHtml = dev.type === 'creator'
-            ? [dev.instagram ? `IG: @${dev.instagram}` : '', dev.tiktok ? `TT: @${dev.tiktok}` : ''].filter(Boolean).join(', ') || '—'
-            : `GH: @${dev.github}`;
-
-          const repoHtml = dev.repo
-            ? `<a href="https://github.com/${dev.repo}" target="_blank" style="color:#4ecdc4;text-decoration:none">${dev.repo.split('/')[1] || dev.repo}</a>`
-            : '—';
-
-          return `<tr>
-            <td data-label="Profile"><div class="avatar-cell">${avatarHtml}<span>${dev.name || dev.github}</span></div></td>
-            <td data-label="Type"><span class="type-badge ${dev.type}">${dev.type}</span></td>
-            <td data-label="Social">${socialHtml}</td>
-            <td data-label="Repo">${repoHtml}</td>
-            <td data-label="Claimed">$${(dev.totalClaimed || 0).toLocaleString()}</td>
-            <td class="actions" style="white-space:nowrap">
-              <button class="edit-btn" onclick='editProfile(${JSON.stringify(dev).replace(/'/g, "&#39;")})'>Edit</button>
-              <button class="delete-btn" onclick="deleteProfile('${identifier}', '${dev.type}')">Delete</button>
-            </td>
-          </tr>`;
-        }).join('');
-      } catch (err) {
-        document.getElementById('tableBody').innerHTML =
-          '<tr><td colspan="5" class="empty-state">Failed to load profiles.</td></tr>';
-      }
     }
 
     async function addDeveloper(e) {
@@ -888,6 +1422,7 @@
         repo: document.getElementById('dev_repo').value.trim(),
         x: document.getElementById('dev_x').value.trim(),
         avatar_url: document.getElementById('dev_avatar').value.trim(),
+        project_icon: document.getElementById('dev_project_icon').value.trim(),
         type: 'developer',
         tags: document.getElementById('dev_tags').value.split(',').map(t => t.trim()).filter(Boolean),
         totalClaimed: parseFloat(document.getElementById('dev_claimed').value) || 0,
@@ -901,11 +1436,11 @@
           body: JSON.stringify(body),
         });
 
-        if (res.status === 409) { showToast('Developer already exists!', 'error'); return; }
+        if (res.status === 409) { showToast('Developer already exists', 'error'); return; }
         if (!res.ok) throw new Error();
 
         showToast(`Added @${body.github}`);
-        e.target.reset();
+        closeModal('addModal');
         loadProfiles();
       } catch { showToast('Failed to add developer', 'error'); }
     }
@@ -919,7 +1454,7 @@
         avatar_url: document.getElementById('cr_avatar').value.trim(),
         instagram: document.getElementById('cr_instagram').value.trim(),
         tiktok: document.getElementById('cr_tiktok').value.trim(),
-        x: document.getElementById('cr_x')?.value.trim() || '',
+        x: document.getElementById('cr_x').value.trim(),
         tags: document.getElementById('cr_tags').value.split(',').map(t => t.trim()).filter(Boolean),
         totalClaimed: parseFloat(document.getElementById('cr_claimed').value) || 0,
         solAmount: parseFloat(document.getElementById('cr_sol').value) || 0,
@@ -932,16 +1467,18 @@
           body: JSON.stringify(body),
         });
 
-        if (res.status === 409) { showToast('Creator already exists!', 'error'); return; }
+        if (res.status === 409) { showToast('Creator already exists', 'error'); return; }
         if (!res.ok) throw new Error();
 
         showToast(`Added ${body.name}`);
-        e.target.reset();
+        closeModal('addModal');
         loadProfiles();
       } catch { showToast('Failed to add creator', 'error'); }
     }
 
-    async function deleteProfile(identifier, type) {
+    async function deleteProfile(i) {
+      const dev = _profiles[i];
+      const identifier = dev.github || dev.name;
       if (!confirm(`Delete ${identifier}?`)) return;
 
       try {
@@ -956,15 +1493,58 @@
       } catch { showToast('Failed to delete', 'error'); }
     }
 
-    async function uploadAvatar(fileInput, targetId) {
+    // --- Images ---
+
+    // Mirrors IMAGE_RULES in main.py, which enforces them on upload; checked here
+    // first so a wrong size is caught before uploading, and for pasted URLs
+    const IMAGE_RULES = {
+      cover: { ratio: 1200 / 630, minW: 1200, minH: 630, label: '1200 x 630 (or larger, same shape)' },
+      avatar: { ratio: 1, minW: 200, minH: 200, label: 'square, at least 200 x 200' },
+      inline: { ratio: null, minW: 800, minH: 0, label: 'at least 800 wide' },
+    };
+
+    function imageSizeError(w, h, kind) {
+      const r = IMAGE_RULES[kind];
+      if (w < r.minW || h < r.minH) return `Image is ${w} x ${h}. It needs to be ${r.label}.`;
+      if (r.ratio && Math.abs(w / h - r.ratio) / r.ratio > 0.02) return `Image is ${w} x ${h}, the wrong shape. It needs to be ${r.label}.`;
+      return '';
+    }
+
+    // Resolves to the image's size, or null when it can't be loaded
+    function measureImage(src) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    async function fileSizeError(file, kind) {
+      const url = URL.createObjectURL(file);
+      const size = await measureImage(url);
+      URL.revokeObjectURL(url);
+      return size ? imageSizeError(size.w, size.h, kind) : '';  // unreadable: let the server decide
+    }
+
+    // For a URL typed into the field rather than uploaded
+    async function urlSizeError(url, kind) {
+      if (!url) return '';
+      const size = await measureImage(url.startsWith('/') ? `${API}${url}` : url);
+      return size ? imageSizeError(size.w, size.h, kind) : '';
+    }
+
+    async function uploadAvatar(fileInput, targetId, kind) {
       const file = fileInput.files[0];
       if (!file) return;
+      const sizeError = kind && await fileSizeError(file, kind);
+      if (sizeError) { showToast(sizeError, 'error'); fileInput.value = ''; return; }
 
       const formData = new FormData();
       formData.append('file', file);
 
       try {
-        const res = await fetch(`${API}/api/upload`, {
+        const res = await fetch(`${API}/api/upload${kind ? `?kind=${kind}` : ''}`, {
           method: 'POST',
           headers: { 'X-API-Key': ADMIN_KEY },
           body: formData,
@@ -979,7 +1559,7 @@
         const data = await res.json();
         document.getElementById(targetId).value = data.url;
         setAvatarPreview(targetId, data.url);
-        showToast('Image uploaded!');
+        showToast('Image uploaded');
       } catch {
         showToast('Upload failed', 'error');
       }
@@ -999,10 +1579,442 @@
       }
     }
 
-    document.getElementById('devForm').addEventListener('reset', () => setAvatarPreview('dev_avatar', ''));
+    document.getElementById('devForm').addEventListener('reset', () => {
+      setAvatarPreview('dev_avatar', '');
+      setAvatarPreview('dev_project_icon', '');
+    });
     document.getElementById('creatorForm').addEventListener('reset', () => setAvatarPreview('cr_avatar', ''));
 
+    // --- Stories ---
+
+    let _editSlug = '';  // set while the story editor is editing an existing story
+    let _slugTouched = false;
+    let _storyFilter = 'all';
+
+    function slugify(s) {
+      return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+
+    function updateSlugPreview() {
+      document.getElementById('slugPreview').textContent = document.getElementById('story_slug').value || '…';
+    }
+
+    function syncSlug() {
+      if (_slugTouched || _editSlug) return;
+      document.getElementById('story_slug').value = slugify(document.getElementById('story_title').value);
+      updateSlugPreview();
+    }
+
+    document.getElementById('story_slug').addEventListener('input', updateSlugPreview);
+
+    function fillStoryDevelopers(devs) {
+      const select = document.getElementById('story_github');
+      const current = select.value;
+      const options = devs
+        .filter(d => d.github)
+        .map(d => `<option value="${esc(d.github)}">${esc(d.name || d.github)} (@${esc(d.github)})</option>`);
+      select.innerHTML = '<option value="">Choose a developer</option>' + options.join('');
+      select.value = current;
+    }
+
+    const KIND_LABELS = { milestone: 'Milestone', spotlight: 'Spotlight', update: 'Update' };
+    const AUTHOR_KEY = 'pb-journal-author';
+
+    function siteBase() {
+      return document.getElementById('siteLink').href.replace(/\/$/, '');
+    }
+
+    // Spotlights are about one developer; milestones carry a headline number
+    function syncStoryKind() {
+      const kind = document.getElementById('story_kind').value;
+      const spotlight = kind === 'spotlight';
+      document.getElementById('story_github').required = spotlight;
+      document.getElementById('story_github_label').textContent = spotlight ? 'Developer *' : 'Developer';
+      document.getElementById('story_github_hint').hidden = spotlight;
+      document.getElementById('story_stat_field').hidden = kind !== 'milestone';
+    }
+
+    function loadSavedAuthor() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(AUTHOR_KEY) || '{}');
+        document.getElementById('story_author_name').value = saved.name || '';
+        document.getElementById('story_author_avatar').value = saved.avatar || '';
+        setAvatarPreview('story_author_avatar', saved.avatar || '');
+      } catch {}
+    }
+
+    function saveAuthor(name, avatar) {
+      try { localStorage.setItem(AUTHOR_KEY, JSON.stringify({ name, avatar })); } catch {}
+    }
+
+    // Uploads the image and puts ![](url) on its own lines where the cursor is
+    async function insertBodyImage(fileInput) {
+      const file = fileInput.files[0];
+      fileInput.value = '';
+      if (!file) return;
+      const sizeError = await fileSizeError(file, 'inline');
+      if (sizeError) { showToast(sizeError, 'error'); return; }
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch(`${API}/api/upload?kind=inline`, { method: 'POST', headers: authHeaders(), body: formData });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showToast(err.detail || 'Upload failed', 'error');
+          return;
+        }
+        const { url } = await res.json();
+        const area = document.getElementById('story_body');
+        const before = area.value.slice(0, area.selectionStart).replace(/\s*$/, '');
+        const after = area.value.slice(area.selectionEnd).replace(/^\s*/, '');
+        const line = `![](${url})`;
+        area.value = [before, line, after].filter(Boolean).join('\n\n');
+        area.focus();
+        const pos = (before ? before.length + 2 : 0) + 2;  // inside the [] so a caption can be typed
+        area.setSelectionRange(pos, pos);
+        showToast('Image added. Type a caption between the [ ] if you like.');
+      } catch {
+        showToast('Upload failed', 'error');
+      }
+    }
+
+    async function copyPreviewLink(i) {
+      const s = _stories[i];
+      const url = `${siteBase()}/journal/${encodeURIComponent(s.slug)}?preview=${encodeURIComponent(s.preview_token)}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Preview link copied');
+      } catch {
+        window.prompt('Copy the preview link', url);
+      }
+    }
+
+    function setStoryFilter(status) {
+      _storyFilter = status;
+      document.querySelectorAll('#storyFilter button').forEach(b => b.classList.toggle('active', b.dataset.status === status));
+      renderStories();
+    }
+
+    async function loadStories() {
+      try {
+        const res = await fetch(`${API}/api/admin/stories`, { headers: authHeaders() });
+        if (!res.ok) throw new Error();
+        _stories = await res.json();
+        renderOverview();
+        renderStories();
+      } catch {
+        document.getElementById('storyTableBody').innerHTML =
+          '<tr><td colspan="6" class="empty-state">Failed to load posts.</td></tr>';
+      }
+    }
+
+    function renderStories() {
+      const q = document.getElementById('storySearch').value.trim().toLowerCase();
+      const rows = _stories
+        .map((s, i) => ({ s, i }))
+        .filter(({ s }) => _storyFilter === 'all' || (_storyFilter === 'published') === !!s.published)
+        .filter(({ s }) => !q || [s.title, s.author_name, s.name, s.github].some(v => (v || '').toLowerCase().includes(q)));
+
+      const body = document.getElementById('storyTableBody');
+      if (rows.length === 0) {
+        body.innerHTML = `<tr><td colspan="6" class="empty-state">${
+          _stories.length ? 'No posts match your search.' : 'No posts yet. Write the first one.'
+        }</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = rows.map(({ s, i }) => {
+        const cover = s.image
+          ? `<img class="thumb" src="${esc(s.image)}" alt="" onerror="this.className='thumb empty';this.removeAttribute('src')" />`
+          : '<div class="thumb empty"></div>';
+        const status = s.published ? 'published' : 'draft';
+        const viewLink = s.published
+          ? `<a class="icon-btn" href="${siteBase()}/journal/${esc(s.slug)}" target="_blank" rel="noopener" aria-label="View ${esc(s.title)} on the site" title="View on site">${ICONS.open}</a>`
+          : `<button class="icon-btn" onclick="copyPreviewLink(${i})" aria-label="Copy preview link for ${esc(s.title)}" title="Copy preview link">${ICONS.link}</button>`;
+        const by = s.kind === 'spotlight' ? (s.name || s.github) : (s.author_name || 'PumpBoard Team');
+        return `<tr>
+          <td class="cell-first"><div class="cell-main">${cover}<div class="cell-text"><span class="cell-title">${esc(s.title)}</span><span class="cell-sub">${s.pinned ? 'Pinned · ' : ''}/journal/${esc(s.slug)}</span></div></div></td>
+          <td data-label="Type"><div class="cell-text"><span class="val">${esc(KIND_LABELS[s.kind] || s.kind)}</span><span class="cell-sub">${esc(by)}</span></div></td>
+          <td data-label="Status"><span class="val"><span class="pill ${status}">${status}</span></span></td>
+          <td data-label="Date"><span class="val">${esc(s.date) || '—'}</span></td>
+          <td data-label="Views" class="num"><span class="val"><span class="views">${ICONS.eye}${(s.views || 0).toLocaleString()}</span></span></td>
+          <td class="actions">
+            ${viewLink}
+            <button class="icon-btn" onclick="editStory(${i})" aria-label="Edit ${esc(s.title)}" title="Edit">${ICONS.edit}</button>
+            <button class="icon-btn danger" onclick="deleteStory(${i})" aria-label="Delete ${esc(s.title)}" title="Delete">${ICONS.trash}</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Same rules as renderBody on the site: blank lines split paragraphs,
+    // "## " starts a subheading, a line of just ![alt](url) is an image
+    const IMAGE_LINE = /^!\[([^\]]*)\]\(((?:https?:\/\/|\/)[^)\s]+)\)$/;
+
+    function renderPostPreview() {
+      const box = document.getElementById('story_preview');
+      const el = (tag, cls, text) => {
+        const n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (text !== undefined) n.textContent = text;
+        return n;
+      };
+      const title = document.getElementById('story_title').value.trim();
+      const excerpt = document.getElementById('story_excerpt').value.trim();
+      const cover = document.getElementById('story_image').value.trim();
+      const body = document.getElementById('story_body').value;
+
+      box.replaceChildren();
+      box.append(el('h1', 'pp-title', title || 'Untitled post'));
+      if (excerpt) box.append(el('p', 'pp-excerpt', excerpt));
+      if (cover) {
+        const img = el('img', 'pp-cover');
+        img.src = cover;
+        img.alt = '';
+        box.append(img);
+      }
+      const section = el('section', 'pp-body');
+      const blocks = body.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+      for (const block of blocks) {
+        const image = block.match(IMAGE_LINE);
+        if (image) {
+          const fig = el('figure');
+          const img = el('img');
+          img.src = image[2];
+          img.alt = image[1];
+          fig.append(img);
+          if (image[1]) fig.append(el('figcaption', '', image[1]));
+          section.append(fig);
+        } else if (block.startsWith('## ')) {
+          // A heading may run straight into its paragraph without a blank line
+          const [heading, ...rest] = block.split('\n');
+          section.append(el('h2', '', heading.slice(3)));
+          if (rest.length) section.append(el('p', '', rest.join('\n').trim()));
+        } else {
+          section.append(el('p', '', block));
+        }
+      }
+      if (!blocks.length) section.append(el('p', 'pp-empty', 'Nothing written yet.'));
+      box.append(section);
+    }
+
+    function setBodyMode(mode) {
+      const preview = mode === 'preview';
+      if (preview) renderPostPreview();
+      document.getElementById('story_body').hidden = preview;
+      document.getElementById('story_preview').hidden = !preview;
+      // Images go in at the cursor, so only while writing
+      document.querySelector('#storyForm .inline-upload').hidden = preview;
+      document.querySelectorAll('#bodyMode button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    }
+
+    function openStoryEditor() {
+      document.getElementById('storyForm').reset();
+      loadSavedAuthor();
+      openModal('storyModal');
+    }
+
+    function editStory(i) {
+      const s = _stories[i];
+      document.getElementById('storyForm').reset();
+      _editSlug = s.slug;
+      const select = document.getElementById('story_github');
+      // A post can outlive its developer's profile; keep it selectable so the edit can save
+      if (s.github && ![...select.options].some(o => o.value === s.github)) {
+        select.insertAdjacentHTML('beforeend', `<option value="${esc(s.github)}">@${esc(s.github)} (not listed)</option>`);
+      }
+      select.value = s.github || '';
+      document.getElementById('story_kind').value = s.kind || 'spotlight';
+      syncStoryKind();
+      document.getElementById('story_stat').value = s.stat || '';
+      document.getElementById('story_x_url').value = s.x_url || '';
+      document.getElementById('story_author_name').value = s.author_name || '';
+      document.getElementById('story_author_avatar').value = s.author_avatar || '';
+      setAvatarPreview('story_author_avatar', s.author_avatar || '');
+      document.getElementById('story_title').value = s.title;
+      document.getElementById('story_slug').value = s.slug;
+      updateSlugPreview();
+      document.getElementById('story_published').value = String(!!s.published);
+      document.getElementById('story_pinned').value = String(!!s.pinned);
+      document.getElementById('story_date').value = s.date || '';
+      document.getElementById('story_excerpt').value = s.excerpt || '';
+      document.getElementById('story_image').value = s.image || '';
+      setAvatarPreview('story_image', s.image || '');
+      document.getElementById('story_body').value = s.body || '';
+      document.getElementById('storyFormTitle').textContent = 'Edit post';
+      document.getElementById('storySubmit').textContent = 'Save post';
+      openModal('storyModal');
+    }
+
+    async function saveStory(e) {
+      e.preventDefault();
+      const kind = document.getElementById('story_kind').value;
+      const body = {
+        kind,
+        github: document.getElementById('story_github').value,
+        stat: kind === 'milestone' ? document.getElementById('story_stat').value.trim() : '',
+        x_url: document.getElementById('story_x_url').value.trim(),
+        author_name: document.getElementById('story_author_name').value.trim(),
+        author_avatar: document.getElementById('story_author_avatar').value.trim(),
+        title: document.getElementById('story_title').value.trim(),
+        slug: document.getElementById('story_slug').value.trim(),
+        published: document.getElementById('story_published').value === 'true',
+        pinned: document.getElementById('story_pinned').value === 'true',
+        date: document.getElementById('story_date').value,
+        excerpt: document.getElementById('story_excerpt').value.trim(),
+        image: document.getElementById('story_image').value.trim(),
+        body: document.getElementById('story_body').value.trim(),
+      };
+      const sizeError =
+        await urlSizeError(body.image, 'cover') || await urlSizeError(body.author_avatar, 'avatar');
+      if (sizeError) { showToast(sizeError, 'error'); return; }
+      const editing = !!_editSlug;
+      const submit = document.getElementById('storySubmit');
+      submit.disabled = true;
+      try {
+        const res = await fetch(
+          editing ? `${API}/api/stories/${encodeURIComponent(_editSlug)}` : `${API}/api/stories`,
+          {
+            method: editing ? 'PUT' : 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(body),
+          }
+        );
+        if (res.status === 409) { showToast('A post with that slug already exists', 'error'); return; }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showToast(typeof err.detail === 'string' ? err.detail : 'Check the post fields and try again', 'error');
+          return;
+        }
+        if (!editing) saveAuthor(body.author_name, body.author_avatar);
+        showToast(editing ? 'Post updated' : `Added "${body.title}"`);
+        closeModal('storyModal');
+        loadStories();
+        loadProfiles();  // a developer's story link depends on published stories
+      } catch {
+        showToast(editing ? 'Failed to update post' : 'Failed to add post', 'error');
+      } finally {
+        submit.disabled = false;
+      }
+    }
+
+    // --- Listing applications ---
+
+    async function loadApplications() {
+      try {
+        const res = await fetch(`${API}/api/admin/applications`, { headers: authHeaders() });
+        if (!res.ok) throw new Error();
+        _applications = await res.json();
+        renderApplications();
+      } catch {
+        document.getElementById('applicationTableBody').innerHTML =
+          '<tr><td colspan="5" class="empty-state">Failed to load applications.</td></tr>';
+      }
+    }
+
+    function githubUrl(s) {
+      const v = String(s || '').trim().replace(/^@/, '');
+      return /^https?:\/\//.test(v) ? v : `https://github.com/${v}`;
+    }
+
+    function renderApplications() {
+      document.getElementById('countApplications').textContent = _applications.length;
+      const body = document.getElementById('applicationTableBody');
+      if (_applications.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="empty-state">No applications yet. They arrive from the Contact page.</td></tr>';
+        return;
+      }
+      body.innerHTML = _applications.map((a, i) => {
+        const x = a.x ? esc(a.x) : '—';
+        return `<tr>
+          <td class="cell-first"><div class="cell-text"><span class="cell-title">${esc(a.name)}</span><a class="cell-sub" href="${esc(githubUrl(a.github))}" target="_blank" rel="noopener">@${esc(a.github)}</a></div></td>
+          <td data-label="Project"><div class="cell-text"><span class="val cell-title">${esc(a.project)}</span><span class="cell-sub">${esc(a.message.slice(0, 80))}${a.message.length > 80 ? '…' : ''}</span></div></td>
+          <td data-label="X"><span class="val">${x}</span></td>
+          <td data-label="Received"><span class="val">${esc((a.created_at || '').slice(0, 10)) || '—'}</span></td>
+          <td class="actions">
+            <button class="icon-btn" onclick="viewApplication(${i})" aria-label="Read the application from ${esc(a.name)}" title="Read">${ICONS.eye}</button>
+            <button class="icon-btn danger" onclick="deleteApplication(${i})" aria-label="Delete the application from ${esc(a.name)}" title="Delete">${ICONS.trash}</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function viewApplication(i) {
+      const a = _applications[i];
+      document.getElementById('applicationTitle').textContent = `Application from ${a.name}`;
+      const meta = document.getElementById('applicationMeta');
+      meta.replaceChildren();
+      const row = (label, value, href) => {
+        const dt = document.createElement('dt');
+        dt.textContent = label;
+        const dd = document.createElement('dd');
+        if (href) {
+          const link = document.createElement('a');
+          link.href = href;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.textContent = value;
+          dd.append(link);
+        } else {
+          dd.textContent = value;
+        }
+        meta.append(dt, dd);
+      };
+      row('GitHub', `@${a.github}`, githubUrl(a.github));
+      row('X', a.x || '—');
+      row('Project', a.project, /^(https?:\/\/|github\.com\/)/.test(a.project) ? githubUrl(a.project.replace(/^github\.com\//, '')) : '');
+      row('Received', (a.created_at || '').replace('T', ' ').replace('Z', ' UTC'));
+      document.getElementById('applicationMessage').textContent = a.message;
+      openModal('applicationModal');
+    }
+
+    async function deleteApplication(i) {
+      const a = _applications[i];
+      if (!confirm(`Delete the application from ${a.name}?`)) return;
+      try {
+        const res = await fetch(`${API}/api/applications/${encodeURIComponent(a.id)}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+        if (!res.ok) throw new Error();
+        showToast(`Deleted the application from ${a.name}`);
+        loadApplications();
+      } catch { showToast('Failed to delete application', 'error'); }
+    }
+
+    async function deleteStory(i) {
+      const s = _stories[i];
+      if (!confirm(`Delete "${s.title}"?`)) return;
+      try {
+        const res = await fetch(`${API}/api/stories/${encodeURIComponent(s.slug)}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+        if (!res.ok) throw new Error();
+        showToast(`Deleted "${s.title}"`);
+        loadStories();
+      } catch { showToast('Failed to delete post', 'error'); }
+    }
+
+    document.getElementById('storyForm').addEventListener('reset', () => {
+      _editSlug = '';
+      _slugTouched = false;
+      setAvatarPreview('story_image', '');
+      setAvatarPreview('story_author_avatar', '');
+      setBodyMode('write');
+      document.getElementById('slugPreview').textContent = '…';
+      document.getElementById('storyFormTitle').textContent = 'New post';
+      document.getElementById('storySubmit').textContent = 'Add post';
+      // reset() restores the form after this handler runs, so sync once it has
+      setTimeout(syncStoryKind);
+    });
+
+    const initialPanel = location.hash.slice(1);
+    if (['profiles', 'stories', 'applications', 'stats'].includes(initialPanel)) showPanel(initialPanel);
+
     loadProfiles();
+    loadStories();
+    loadApplications();
   </script>
 </body>
 </html>

@@ -165,10 +165,21 @@
 }
 
 @media (max-width: 480px) {
+  /* Four stats don't fit one row on a phone: two by two instead */
   .heroStats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     width: 100%;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .statDivider {
+    display: none;
+  }
+
+  .statLabel {
+    white-space: nowrap;
   }
 
   .statValue {

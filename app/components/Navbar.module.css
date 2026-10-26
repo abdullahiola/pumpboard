@@ -16,10 +16,12 @@
   border-bottom-color: var(--pb-border);
 }
 
+/* Three columns so the link group stays centred whatever the side widths */
 .navInner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
 }
 
 .logo {
@@ -46,7 +48,11 @@
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  padding: 4px;
+  background: var(--pb-bg-glass);
+  border: 1px solid var(--pb-border);
+  border-radius: var(--pb-radius-lg);
 }
 
 .navLink {
@@ -63,9 +69,24 @@
   background: var(--pb-bg-glass);
 }
 
+.navLinkActive,
+.navLinkActive:hover {
+  color: var(--pb-text-primary);
+  font-weight: 500;
+  background: var(--pb-bg-card);
+  box-shadow: var(--pb-shadow-sm);
+}
+
+/* Only shown inside the mobile media query; hidden here so a menu left open
+   while widening the window doesn't become a grid item */
+.backdrop {
+  display: none;
+}
+
 .navActions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
   z-index: 10;
 }
@@ -139,6 +160,7 @@
 
 @media (max-width: 768px) {
   .backdrop {
+    display: block;
     position: fixed;
     inset: 0;
     z-index: 4;
@@ -147,8 +169,15 @@
     -webkit-backdrop-filter: blur(4px);
   }
 
+  .navInner {
+    display: flex;
+    justify-content: space-between;
+  }
+
   .navLinks {
     position: fixed;
+    border: none;
+    border-radius: 0;
     top: 0;
     left: 0;
     right: 0;

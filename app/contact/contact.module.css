@@ -63,6 +63,39 @@
   margin: 0;
 }
 
+.submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.error {
+  font-size: 0.85rem;
+  color: var(--pb-danger);
+  margin: 0;
+}
+
+/* Shown in place of the form once it's sent */
+.sent {
+  margin-top: 20px;
+  max-width: 640px;
+  padding: 16px 18px;
+  border-radius: var(--pb-radius-md);
+  border: 1px solid var(--pb-border-active);
+  background: var(--pb-accent-dim);
+  color: var(--pb-text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Off-screen rather than display:none, which some bots skip */
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
 @media (max-width: 600px) {
   .row {
     grid-template-columns: 1fr;

@@ -92,6 +92,13 @@ export default function Hero({
               </span>
               <span className={styles.statLabel}>Transactions</span>
             </div>
+            <div className={styles.statDivider}></div>
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>
+                {stats ? formatShort(stats.siteVisits ?? 0) : "—"}
+              </span>
+              <span className={styles.statLabel}>Site Visits</span>
+            </div>
           </div>
         </div>
 

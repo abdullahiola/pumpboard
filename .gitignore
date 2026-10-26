@@ -67,3 +67,4 @@ backend/.env
 backend/data/github_cache.json
 backend/data/telegram_chat.json
 backend/data/visits.json
+backend/data/applications.json

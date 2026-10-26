@@ -1,0 +1,53 @@
+[
+  {
+    "slug": "200k-donated-to-developers",
+    "kind": "milestone",
+    "github": "",
+    "title": "Over $200K donated to open-source developers",
+    "excerpt": "PumpBoard has now sent more than $200,000 to the developers and creators building in the open.",
+    "body": "We just crossed a number we have been watching for a while: more than $200,000 donated to developers through PumpBoard.\n\nEvery dollar in that number went to someone building in the open, from small command-line tools to libraries other projects depend on.\n\n## What it means\n\nIt means the idea works. When a community gets behind a project, the people who build it can get paid for it, and every payment is public for anyone to check.\n\n## What's next\n\nWe will keep onboarding developers and sharing their stories here in the Journal. Thank you to everyone who has been a part of our journey so far.",
+    "image": "/uploads/b180dbd181194c1385c95cad7f634574.png",
+    "stat": "$200K+",
+    "x_url": "https://x.com/pumpboardnu/status/2114414277717111150",
+    "author_name": "PumpBoard Team",
+    "author_avatar": "",
+    "published": true,
+    "date": "2026-10-26",
+    "preview_token": "sz6P5FoJagZ3jHn02Q2H9Q",
+    "pinned": true
+  },
+  {
+    "slug": "kenneth-reitz-creator-of-requests-joins-pumpboard",
+    "kind": "spotlight",
+    "github": "kennethreitz",
+    "title": "HTTP for Humans: meet Kenneth Reitz of Requests",
+    "excerpt": "The developer behind Python's Requests library is now on PumpBoard, and already #2 on the leaderboard.",
+    "body": "Kenneth Reitz, the creator of Requests, is now on PumpBoard.\n\nIf you have written Python, there's a good chance you have used his work. Requests, the library he describes as \"HTTP for Humans\", has nearly 55,000 stars on GitHub and 39.5 billion downloads. He also wrote Pipenv.\n\n## Already #2 on the leaderboard\n\nHe has already claimed about $19,215 (183 SOL), which puts him second on the PumpBoard leaderboard.\n\n## Why it matters\n\nRequests sits underneath a huge number of the tools developers use every day. Seeing the person who built it get backed directly is exactly what PumpBoard is for.\n\nYou can follow Kenneth on X at @kennethreitz42, and find Requests on GitHub at psf/requests.",
+    "image": "/uploads/6784ec3a7b0a40ee81cc6aa5bc1cb197.jpg",
+    "stat": "",
+    "x_url": "",
+    "author_name": "PumpBoard Team",
+    "author_avatar": "",
+    "published": true,
+    "date": "2026-10-26",
+    "preview_token": "k2sJZ6nrjA8ZYv6xGMZd5w",
+    "pinned": false
+  },
+  {
+    "slug": "eric-fennis-creator-of-lucide-joins-pumpboard",
+    "kind": "spotlight",
+    "github": "ericfennis",
+    "title": "The icons behind your favorite apps: meet Eric Fennis of Lucide",
+    "excerpt": "The developer behind Lucide, the icon set used by shadcn/ui and Vercel, is now on PumpBoard.",
+    "body": "Eric Fennis, the creator and maintainer of Lucide, is now on PumpBoard.\n\nIf you have built a web app recently, there's a good chance it ships his icons. Lucide is an open-source icon library with more than 25,000 stars on GitHub, used by millions of developers. Projects like shadcn/ui and Vercel rely on it.\n\n## Already in the top 10\n\nHe has already claimed about $8,997 (85.69 SOL), which puts him sixth on the PumpBoard leaderboard.\n\n## Why it matters\n\nIcons are one of those things every product needs and nobody wants to draw from scratch. Lucide makes them free, consistent and easy to drop into any framework. Backing the person who keeps it going is exactly what PumpBoard is for.\n\nYou can follow Eric on X at @ericfennis, and find Lucide on GitHub at lucide-icons/lucide.",
+    "image": "/uploads/75eb73a244f449a09f6b8443618fceb3.jpg",
+    "stat": "",
+    "x_url": "",
+    "author_name": "PumpBoard Team",
+    "author_avatar": "",
+    "published": true,
+    "date": "2026-10-26",
+    "preview_token": "DddsKn8IaKManG3p4NwgZw",
+    "pinned": false
+  }
+]
