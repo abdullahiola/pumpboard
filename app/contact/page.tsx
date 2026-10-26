@@ -5,25 +5,42 @@ import Link from "next/link";
 import styles from "../components/LegalPage.module.css";
 import formStyles from "./contact.module.css";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
 export default function Contact() {
   const [name, setName] = useState("");
   const [github, setGithub] = useState("");
   const [xHandle, setXHandle] = useState("");
   const [project, setProject] = useState("");
   const [message, setMessage] = useState("");
+  // Honeypot: hidden from people, so only bots fill it in
+  const [website, setWebsite] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const subject = `PumpBoard listing application: ${github || name}`;
-    const body = [
-      `Name: ${name}`,
-      `GitHub: ${github}`,
-      `X / Twitter: ${xHandle || "-"}`,
-      `Project / repo: ${project}`,
-      "",
-      message,
-    ].join("\n");
-    window.location.href = `mailto:contact@pumpboard.dev?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setStatus("sending");
+    setError("");
+    try {
+      const res = await fetch(`${API_URL}/api/applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, github, x: xHandle, project, message, website }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(
+          res.status === 429 && typeof data.detail === "string"
+            ? data.detail
+            : "Something went wrong sending your application."
+        );
+      }
+      setStatus("sent");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong sending your application.");
+      setStatus("error");
+    }
   }
 
   return (
@@ -56,7 +73,23 @@ export default function Contact() {
             directly, but you can also apply here. Tell us who you are and
             what you build, and we&apos;ll get back to you.
           </p>
+          {status === "sent" ? (
+            <div className={formStyles.sent} role="status">
+              <strong>Application sent.</strong> Thanks, {name.split(" ")[0] || "there"}. We&apos;ll
+              look at {project} and get back to you on GitHub or X.
+            </div>
+          ) : (
           <form className={formStyles.form} onSubmit={handleSubmit}>
+            <input
+              type="text"
+              name="website"
+              className={formStyles.honeypot}
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
             <div className={formStyles.row}>
               <label className={formStyles.field}>
                 <span className={formStyles.label}>Name</span>
@@ -115,14 +148,21 @@ export default function Contact() {
                 required
               />
             </label>
-            <button type="submit" className={`btn-primary ${formStyles.submit}`}>
-              Send Application
+            <button
+              type="submit"
+              className={`btn-primary ${formStyles.submit}`}
+              disabled={status === "sending"}
+            >
+              {status === "sending" ? "Sending..." : "Send Application"}
             </button>
-            <p className={formStyles.hint}>
-              Submitting opens your email app with the application pre-filled,
-              addressed to contact@pumpboard.dev.
-            </p>
+            {status === "error" && (
+              <p className={formStyles.error} role="alert">
+                {error} You can also email us at{" "}
+                <a href="mailto:contact@pumpboard.dev">contact@pumpboard.dev</a>.
+              </p>
+            )}
           </form>
+          )}
         </section>
 
       </div>

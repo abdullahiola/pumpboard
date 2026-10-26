@@ -11,7 +11,7 @@ from typing import Literal, Optional
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -60,6 +60,8 @@ DATA_DIR = Path(__file__).parent / "data"
 DEVELOPERS_FILE = DATA_DIR / "developers.json"
 STATS_FILE = DATA_DIR / "stats.json"
 STORIES_FILE = DATA_DIR / "stories.json"
+# Listing applications from /contact; personal data, so kept out of git
+APPLICATIONS_FILE = DATA_DIR / "applications.json"
 STATIC_DIR = Path(__file__).parent / "static"
 UPLOADS_DIR = Path(__file__).parent / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1074,6 +1076,113 @@ async def remove_story(slug: str):
         raise HTTPException(status_code=404, detail="Story not found")
     save_stories(filtered)
     revalidate_frontend()
+
+
+# --- Listing applications (the /contact form) ---
+
+class ApplicationIn(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    github: str = Field(min_length=1, max_length=100)
+    x: str = Field(default="", max_length=100)
+    project: str = Field(min_length=1, max_length=300)
+    message: str = Field(min_length=1, max_length=4000)
+    # Honeypot: hidden on the form, so only bots fill it in
+    website: str = ""
+
+
+APPLICATION_LIMIT = 5  # per IP per hour
+_application_times: dict[str, list[float]] = {}
+
+
+def load_applications() -> list[dict]:
+    if not APPLICATIONS_FILE.exists():
+        return []
+    try:
+        with open(APPLICATIONS_FILE, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def save_applications(apps: list[dict]):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(APPLICATIONS_FILE, "w") as f:
+        json.dump(apps, f, indent=2)
+
+
+async def _telegram_broadcast(text: str):
+    """Send a message to every chat subscribed to the bot."""
+    chat_ids = _load_subscribers()
+    if not (chat_ids and TELEGRAM_BOT_TOKEN):
+        return
+    async with httpx.AsyncClient(timeout=5) as client:
+        for chat_id in list(chat_ids):
+            try:
+                await client.post(
+                    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                    json={"chat_id": chat_id, "text": text},
+                )
+            except httpx.RequestError:
+                pass
+
+
+def _application_alert_text(app_: dict) -> str:
+    lines = ["📝 New listing application · pumpboard.dev", ""]
+    lines.append(f"👤 {app_['name']} (github.com/{app_['github']})")
+    if app_["x"]:
+        lines.append(f"🐦 X: {app_['x']}")
+    lines.append(f"📦 {app_['project']}")
+    lines += ["", app_["message"][:1500]]
+    return "\n".join(lines)
+
+
+@app.post("/api/applications", status_code=201)
+async def submit_application(app_in: ApplicationIn, request: Request):
+    """Public: the /contact form. Stored for the admin and sent to the Telegram bot."""
+    if app_in.website:
+        return {"ok": True}  # a bot filled the honeypot; pretend it worked
+
+    ip = (request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+          or (request.client.host if request.client else ""))
+    now = time.time()
+    recent = [t for t in _application_times.get(ip, []) if now - t < 3600]
+    if len(recent) >= APPLICATION_LIMIT:
+        raise HTTPException(status_code=429, detail="Too many applications. Try again later.")
+    _application_times[ip] = recent + [now]
+
+    new_app = {
+        "id": uuid.uuid4().hex,
+        "name": app_in.name.strip(),
+        "github": app_in.github.strip().removeprefix("@"),
+        "x": app_in.x.strip(),
+        "project": app_in.project.strip(),
+        "message": app_in.message.strip(),
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
+    }
+    apps = load_applications()
+    apps.append(new_app)
+    save_applications(apps)
+
+    task = asyncio.create_task(_telegram_broadcast(_application_alert_text(new_app)))
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+    return {"ok": True}
+
+
+@app.get("/api/admin/applications", dependencies=[Depends(require_admin)])
+async def list_applications():
+    """List listing applications, newest first. Requires X-API-Key header."""
+    return list(reversed(load_applications()))
+
+
+@app.delete("/api/applications/{app_id}", status_code=204, dependencies=[Depends(require_admin)])
+async def remove_application(app_id: str):
+    """Remove a handled application. Requires X-API-Key header."""
+    apps = load_applications()
+    filtered = [a for a in apps if a.get("id") != app_id]
+    if len(filtered) == len(apps):
+        raise HTTPException(status_code=404, detail="Application not found")
+    save_applications(filtered)
 
 
 # --- Stats endpoints ---

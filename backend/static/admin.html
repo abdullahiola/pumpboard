@@ -335,6 +335,13 @@
 
     /* Post editor: Write | Preview above the body */
     .field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .modal .field-head .segmented { margin-bottom: 0; }
+
+    /* Application viewer */
+    .application-meta { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0 0 20px; font-size: 0.88rem; }
+    .application-meta dt { color: var(--pb-text-muted); }
+    .application-meta dd { margin: 0; color: var(--pb-text-primary); overflow-wrap: anywhere; }
+    .application-message { white-space: pre-wrap; line-height: 1.65; color: var(--pb-text-secondary); font-size: 0.92rem; padding-top: 16px; border-top: 1px solid var(--pb-border); }
 
     /* The post as the site lays it out (app/journal/[slug] and journal.module.css) */
     .post-preview {
@@ -667,7 +674,7 @@
   <main class="container">
     <div class="page-head">
       <h1 class="page-title">Dashboard</h1>
-      <p class="page-subtitle">Manage profiles, Journal posts and platform stats.</p>
+      <p class="page-subtitle">Manage profiles, Journal posts, applications and platform stats.</p>
     </div>
 
     <!-- Overview -->
@@ -682,6 +689,7 @@
     <nav class="tabs" role="tablist">
       <button class="tab active" role="tab" data-panel="profiles" onclick="showPanel('profiles')">Profiles <span class="tab-count" id="countProfiles">0</span></button>
       <button class="tab" role="tab" data-panel="stories" onclick="showPanel('stories')">Journal <span class="tab-count" id="countStories">0</span></button>
+      <button class="tab" role="tab" data-panel="applications" onclick="showPanel('applications')">Applications <span class="tab-count" id="countApplications">0</span></button>
       <button class="tab" role="tab" data-panel="stats" onclick="showPanel('stats')">Platform stats</button>
     </nav>
 
@@ -748,6 +756,26 @@
           </thead>
           <tbody id="storyTableBody">
             <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Listing applications from the /contact form -->
+    <section class="panel" id="panel-applications">
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Applicant</th>
+              <th>Project</th>
+              <th>X</th>
+              <th>Received</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="applicationTableBody">
+            <tr><td colspan="5" class="empty-state">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -906,6 +934,19 @@
   </div>
 
   <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="applicationModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="applicationTitle">
+      <div class="modal-head">
+        <h2 id="applicationTitle">Application</h2>
+        <button class="icon-btn" onclick="closeModal('applicationModal')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <dl class="application-meta" id="applicationMeta"></dl>
+        <p class="application-message" id="applicationMessage"></p>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="editModal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
       <div class="modal-head">
@@ -1194,6 +1235,7 @@
 
     let _profiles = [];
     let _stories = [];
+    let _applications = [];
 
     function renderOverview() {
       const sponsored = _profiles.reduce((s, d) => s + (Number(d.totalClaimed) || 0), 0);
@@ -1856,6 +1898,90 @@
       }
     }
 
+    // --- Listing applications ---
+
+    async function loadApplications() {
+      try {
+        const res = await fetch(`${API}/api/admin/applications`, { headers: authHeaders() });
+        if (!res.ok) throw new Error();
+        _applications = await res.json();
+        renderApplications();
+      } catch {
+        document.getElementById('applicationTableBody').innerHTML =
+          '<tr><td colspan="5" class="empty-state">Failed to load applications.</td></tr>';
+      }
+    }
+
+    function githubUrl(s) {
+      const v = String(s || '').trim().replace(/^@/, '');
+      return /^https?:\/\//.test(v) ? v : `https://github.com/${v}`;
+    }
+
+    function renderApplications() {
+      document.getElementById('countApplications').textContent = _applications.length;
+      const body = document.getElementById('applicationTableBody');
+      if (_applications.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="empty-state">No applications yet. They arrive from the Contact page.</td></tr>';
+        return;
+      }
+      body.innerHTML = _applications.map((a, i) => {
+        const x = a.x ? esc(a.x) : '—';
+        return `<tr>
+          <td class="cell-first"><div class="cell-text"><span class="cell-title">${esc(a.name)}</span><a class="cell-sub" href="${esc(githubUrl(a.github))}" target="_blank" rel="noopener">@${esc(a.github)}</a></div></td>
+          <td data-label="Project"><div class="cell-text"><span class="val cell-title">${esc(a.project)}</span><span class="cell-sub">${esc(a.message.slice(0, 80))}${a.message.length > 80 ? '…' : ''}</span></div></td>
+          <td data-label="X"><span class="val">${x}</span></td>
+          <td data-label="Received"><span class="val">${esc((a.created_at || '').slice(0, 10)) || '—'}</span></td>
+          <td class="actions">
+            <button class="icon-btn" onclick="viewApplication(${i})" aria-label="Read the application from ${esc(a.name)}" title="Read">${ICONS.eye}</button>
+            <button class="icon-btn danger" onclick="deleteApplication(${i})" aria-label="Delete the application from ${esc(a.name)}" title="Delete">${ICONS.trash}</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function viewApplication(i) {
+      const a = _applications[i];
+      document.getElementById('applicationTitle').textContent = `Application from ${a.name}`;
+      const meta = document.getElementById('applicationMeta');
+      meta.replaceChildren();
+      const row = (label, value, href) => {
+        const dt = document.createElement('dt');
+        dt.textContent = label;
+        const dd = document.createElement('dd');
+        if (href) {
+          const link = document.createElement('a');
+          link.href = href;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.textContent = value;
+          dd.append(link);
+        } else {
+          dd.textContent = value;
+        }
+        meta.append(dt, dd);
+      };
+      row('GitHub', `@${a.github}`, githubUrl(a.github));
+      row('X', a.x || '—');
+      row('Project', a.project, /^(https?:\/\/|github\.com\/)/.test(a.project) ? githubUrl(a.project.replace(/^github\.com\//, '')) : '');
+      row('Received', (a.created_at || '').replace('T', ' ').replace('Z', ' UTC'));
+      document.getElementById('applicationMessage').textContent = a.message;
+      openModal('applicationModal');
+    }
+
+    async function deleteApplication(i) {
+      const a = _applications[i];
+      if (!confirm(`Delete the application from ${a.name}?`)) return;
+      try {
+        const res = await fetch(`${API}/api/applications/${encodeURIComponent(a.id)}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+        if (!res.ok) throw new Error();
+        showToast(`Deleted the application from ${a.name}`);
+        loadApplications();
+      } catch { showToast('Failed to delete application', 'error'); }
+    }
+
     async function deleteStory(i) {
       const s = _stories[i];
       if (!confirm(`Delete "${s.title}"?`)) return;
@@ -1884,10 +2010,11 @@
     });
 
     const initialPanel = location.hash.slice(1);
-    if (['profiles', 'stories', 'stats'].includes(initialPanel)) showPanel(initialPanel);
+    if (['profiles', 'stories', 'applications', 'stats'].includes(initialPanel)) showPanel(initialPanel);
 
     loadProfiles();
     loadStories();
+    loadApplications();
   </script>
 </body>
 </html>

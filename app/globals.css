@@ -28,6 +28,7 @@
   --pb-text-secondary: #a1aaaf;
   --pb-text-muted: #737c82;
   --pb-text-accent: #2fbe98;
+  --pb-danger: #f87171; /* same as the admin */
 
   /* Borders */
   --pb-border: rgba(255, 255, 255, 0.09);
@@ -84,6 +85,7 @@
   --pb-text-secondary: #565f66;
   --pb-text-muted: #858e95;
   --pb-text-accent: #0a6f56;
+  --pb-danger: #c62828;
 
   --pb-border: rgba(15, 23, 20, 0.1);
   --pb-border-hover: rgba(15, 23, 20, 0.2);
